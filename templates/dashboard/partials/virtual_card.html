@@ -1,0 +1,82 @@
+{% load static %}
+<div class="relative w-full h-56 mx-auto rounded-xl overflow-hidden shadow-lg bg-gradient-to-br from-primary-600 to-primary-800 text-white">
+    <!-- Card chip and logo -->
+    <div class="absolute top-6 left-6 flex items-center space-x-2">
+        <div class="w-12 h-9 rounded-md bg-yellow-300 bg-opacity-90 flex items-center justify-center">
+            <div class="w-10 h-7 rounded border-2 border-yellow-600"></div>
+        </div>
+        <div class="text-xl font-bold tracking-wider">PrimeTrust</div>
+    </div>
+    
+    <!-- Card number -->
+    <div class="absolute top-24 left-6 right-6">
+        <div class="flex justify-between">
+            <span class="text-lg tracking-widest">
+                •••• •••• •••• {{ card.card_number|slice:"-4:" }}
+            </span>
+        </div>
+    </div>
+    
+    <!-- Card holder and expiry -->
+    <div class="absolute bottom-6 left-6 right-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <div class="text-xs opacity-75">Card Holder</div>
+                <div class="font-medium">{{ card.user.get_full_name }}</div>
+            </div>
+            <div>
+                <div class="text-xs opacity-75">Expires</div>
+                <div class="font-medium">{{ card.expiry_date|date:"m/y" }}</div>
+            </div>
+            <div>
+                {% if card.card_type == 'visa' %}
+                <div class="text-2xl font-bold italic">VISA</div>
+                {% else %}
+                <div class="text-2xl font-bold">MC</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Decorative elements -->
+    <div class="absolute top-0 right-0 w-40 h-40 -mt-10 -mr-10 rounded-full bg-primary-500 opacity-50"></div>
+    <div class="absolute bottom-0 left-0 w-32 h-32 -mb-10 -ml-10 rounded-full bg-primary-700 opacity-50"></div>
+</div>
+
+<div class="mt-4 flex justify-between items-center">
+    <div>
+        <p class="text-sm text-gray-500">Card details are masked for security.</p>
+    </div>
+    <a href="{% url 'dashboard:card_details' card_id=card.id %}" 
+       class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-primary-700 bg-primary-100 hover:bg-primary-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+       hx-get="{% url 'dashboard:card_details' card_id=card.id %}"
+       hx-target="#card-details-modal"
+       hx-swap="innerHTML"
+       hx-trigger="click"
+       onclick="document.getElementById('card-details-modal-container').classList.remove('hidden')">
+        View Details
+    </a>
+</div>
+
+<!-- Card Details Modal -->
+<div id="card-details-modal-container" class="hidden fixed z-10 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div id="card-details-modal" class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <!-- Modal content will be loaded here via HTMX -->
+        </div>
+    </div>
+</div>
+
+<script>
+    // Close modal when clicking outside
+    document.addEventListener('click', function(event) {
+        const modal = document.getElementById('card-details-modal');
+        const modalContainer = document.getElementById('card-details-modal-container');
+        
+        if (modal && modalContainer && !modal.contains(event.target) && modalContainer.contains(event.target)) {
+            modalContainer.classList.add('hidden');
+        }
+    });
+</script>

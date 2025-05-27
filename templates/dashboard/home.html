@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard - PrimeTrust{% endblock %}
+
+{% block content %}
+<div class="min-h-full">
+    {% include "dashboard/partials/header.html" with active_tab="home" %}
+
+    <main>
+        <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <!-- Account Balance Card -->
+            <div class="px-4 py-6 sm:px-0">
+                <div class="mb-8">
+                    {% include "dashboard/partials/balance_card.html" %}
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Virtual Card Section -->
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="px-4 py-5 sm:p-6">
+                            <h2 class="text-lg font-medium text-gray-900 mb-4">Virtual Card</h2>
+                            {% if virtual_cards %}
+                                {% include "dashboard/partials/virtual_card.html" with card=virtual_cards.0 %}
+                            {% else %}
+                                <div class="text-center py-8">
+                                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                    </svg>
+                                    <h3 class="mt-2 text-sm font-medium text-gray-900">No virtual cards</h3>
+                                    <p class="mt-1 text-sm text-gray-500">You don't have any virtual cards yet.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Recent Transactions Section -->
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="px-4 py-5 sm:p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-lg font-medium text-gray-900">Recent Transactions</h2>
+                                <a href="{% url 'dashboard:transactions' %}" class="text-sm font-medium text-primary-600 hover:text-primary-500">
+                                    View all
+                                </a>
+                            </div>
+                            {% include "dashboard/partials/recent_transactions.html" %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+{% block extra_js %}
+<script>
+    // Set up HTMX event listeners for real-time updates
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set up polling for balance updates every 30 seconds
+        setInterval(function() {
+            htmx.trigger('#balance-card', 'refresh-balance');
+        }, 30000);
+        
+        // Set up polling for transaction updates every 15 seconds
+        setInterval(function() {
+            htmx.trigger('#recent-transactions', 'refresh-transactions');
+        }, 15000);
+        
+        // Set up polling for notification updates every 20 seconds
+        setInterval(function() {
+            htmx.trigger('#notification-dropdown', 'refresh-notifications');
+        }, 20000);
+    });
+</script>
+{% endblock %}
+{% endblock %}

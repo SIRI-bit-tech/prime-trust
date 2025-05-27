@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}PrimeTrust - Modern Online Banking{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/landing.css' %}">
+<script src="{% static 'js/carousel.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section with Parallax -->
+<section class="parallax-section">
+    <div class="carousel-container">
+        <!-- Carousel slides -->
+        <div class="carousel-slide parallax-bg hero-bg-image"></div>
+        <div class="carousel-slide parallax-bg hero-bg-image-2 hidden"></div>
+        
+        <!-- Carousel content -->
+        <div class="carousel-content">
+            <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h1 class="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl">
+                    <span class="block text-primary-300">Banking for the</span>
+                    <span class="block text-primary-300">Digital Age</span>
+                </h1>
+                <p class="mt-6 text-xl max-w-md mx-auto text-white">
+                    Experience seamless, real-time banking with PrimeTrust's modern platform.
+                </p>
+                <div class="mt-10 flex justify-center space-x-4 md:mt-12">
+                    <div class="rounded-md shadow">
+                        <a href="{% url 'accounts:register' %}" class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 md:py-4 md:text-lg md:px-10">
+                            Get Started
+                        </a>
+                    </div>
+                    <div class="rounded-md shadow">
+                        <a href="{% url 'accounts:login' %}" class="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-primary-600 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10">
+                            Sign In
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Carousel indicators -->
+        <div class="carousel-indicators">
+            <span class="carousel-dot active" aria-label="Slide 1"></span>
+            <span class="carousel-dot" aria-label="Slide 2"></span>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-12 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="lg:text-center">
+            <h2 class="text-base text-primary-600 font-semibold tracking-wide uppercase">Features</h2>
+            <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+                Everything you need in one place
+            </p>
+            <p class="mt-4 max-w-2xl text-xl text-gray-500 lg:mx-auto">
+                PrimeTrust offers a comprehensive suite of banking features designed for modern life.
+            </p>
+        </div>
+
+        <div class="mt-10">
+            <div class="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                <div class="feature-card pt-6">
+                    <div class="flow-root bg-white rounded-lg px-6 pb-8 shadow-md h-full">
+                        <div class="-mt-6">
+                            <div>
+                                <span class="inline-flex items-center justify-center p-3 bg-primary-500 rounded-md shadow-lg">
+                                    <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                                    </svg>
+                                </span>
+                            </div>
+                            <h3 class="mt-8 text-lg font-medium text-gray-900 tracking-tight">Virtual Cards</h3>
+                            <p class="mt-5 text-base text-gray-500">
+                                Create and manage virtual credit cards for secure online shopping and transactions.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-card pt-6">
+                    <div class="flow-root bg-white rounded-lg px-6 pb-8 shadow-md h-full">
+                        <div class="-mt-6">
+                            <div>
+                                <span class="inline-flex items-center justify-center p-3 bg-primary-500 rounded-md shadow-lg">
+                                    <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                    </svg>
+                                </span>
+                            </div>
+                            <h3 class="mt-8 text-lg font-medium text-gray-900 tracking-tight">Instant Transfers</h3>
+                            <p class="mt-5 text-base text-gray-500">
+                                Send and receive money instantly between PrimeTrust accounts with real-time updates.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-card pt-6">
+                    <div class="flow-root bg-white rounded-lg px-6 pb-8 shadow-md h-full">
+                        <div class="-mt-6">
+                            <div>
+                                <span class="inline-flex items-center justify-center p-3 bg-primary-500 rounded-md shadow-lg">
+                                    <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                    </svg>
+                                </span>
+                            </div>
+                            <h3 class="mt-8 text-lg font-medium text-gray-900 tracking-tight">Enhanced Security</h3>
+                            <p class="mt-5 text-base text-gray-500">
+                                State-of-the-art security with email verification for every login and transaction.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section with Parallax -->
+<section class="parallax-section bg-gray-900">
+    <div class="parallax-bg how-it-works-bg-image"></div>
+    <div class="parallax-content">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="lg:text-center">
+                <h2 class="text-base text-primary-400 font-semibold tracking-wide uppercase">How It Works</h2>
+                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-white sm:text-4xl">
+                    Simple, Secure, Seamless
+                </p>
+                <p class="mt-4 max-w-2xl text-xl text-gray-300 lg:mx-auto">
+                    Getting started with PrimeTrust is easy and takes just minutes.
+                </p>
+            </div>
+
+            <div class="mt-10">
+                <div class="space-y-10 md:space-y-0 md:grid md:grid-cols-3 md:gap-x-8 md:gap-y-10">
+                    <div class="text-center">
+                        <div class="flex items-center justify-center h-12 w-12 rounded-md bg-primary-500 text-white mx-auto">
+                            <span class="text-xl font-bold">1</span>
+                        </div>
+                        <h3 class="mt-6 text-lg font-medium text-white">Create an Account</h3>
+                        <p class="mt-2 text-base text-gray-300">
+                            Sign up with your email and verify your identity to get started.
+                        </p>
+                    </div>
+
+                    <div class="text-center">
+                        <div class="flex items-center justify-center h-12 w-12 rounded-md bg-primary-500 text-white mx-auto">
+                            <span class="text-xl font-bold">2</span>
+                        </div>
+                        <h3 class="mt-6 text-lg font-medium text-white">Set Up Your Profile</h3>
+                        <p class="mt-2 text-base text-gray-300">
+                            Customize your profile and explore your new virtual banking dashboard.
+                        </p>
+                    </div>
+
+                    <div class="text-center">
+                        <div class="flex items-center justify-center h-12 w-12 rounded-md bg-primary-500 text-white mx-auto">
+                            <span class="text-xl font-bold">3</span>
+                        </div>
+                        <h3 class="mt-6 text-lg font-medium text-white">Start Banking</h3>
+                        <p class="mt-2 text-base text-gray-300">
+                            Send money, manage virtual cards, and track your transactions in real-time.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="bg-primary-700">
+    <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:py-16 lg:px-8 lg:flex lg:items-center lg:justify-between">
+        <h2 class="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+            <span class="block">Ready to get started?</span>
+            <span class="block text-primary-300">Join PrimeTrust today.</span>
+        </h2>
+        <div class="mt-8 flex lg:mt-0 lg:flex-shrink-0">
+            <div class="inline-flex rounded-md shadow">
+                <a href="{% url 'accounts:register' %}" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-primary-600 bg-white hover:bg-gray-50">
+                    Get Started
+                </a>
+            </div>
+            <div class="ml-3 inline-flex rounded-md shadow">
+                <a href="{% url 'accounts:login' %}" class="inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
+                    Sign In
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-white">
+    <div class="max-w-7xl mx-auto py-12 px-4 overflow-hidden sm:px-6 lg:px-8">
+        <nav class="-mx-5 -my-2 flex flex-wrap justify-center" aria-label="Footer">
+            <div class="px-5 py-2">
+                <a href="#" class="text-base text-gray-500 hover:text-gray-900">About</a>
+            </div>
+            <div class="px-5 py-2">
+                <a href="#" class="text-base text-gray-500 hover:text-gray-900">Features</a>
+            </div>
+            <div class="px-5 py-2">
+                <a href="#" class="text-base text-gray-500 hover:text-gray-900">Privacy</a>
+            </div>
+            <div class="px-5 py-2">
+                <a href="#" class="text-base text-gray-500 hover:text-gray-900">Terms</a>
+            </div>
+            <div class="px-5 py-2">
+                <a href="#" class="text-base text-gray-500 hover:text-gray-900">Contact</a>
+            </div>
+        </nav>
+        <p class="mt-8 text-center text-base text-gray-400">
+            &copy; 2025 PrimeTrust. All rights reserved.
+        </p>
+    </div>
+</footer>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Parallax scrolling effect
+    window.addEventListener('scroll', function() {
+        const parallaxBgs = document.querySelectorAll('.parallax-bg');
+        const scrollPosition = window.pageYOffset;
+        
+        parallaxBgs.forEach(bg => {
+            const section = bg.parentElement;
+            const sectionTop = section.offsetTop;
+            const sectionHeight = section.offsetHeight;
+            
+            // Check if section is in view
+            if (scrollPosition + window.innerHeight > sectionTop && 
+                scrollPosition < sectionTop + sectionHeight) {
+                // Calculate parallax offset
+                const yOffset = (scrollPosition - sectionTop) * 0.5;
+                bg.style.transform = `translate3d(0, ${yOffset}px, 0)`;
+            }
+        });
+    });
+</script>
+{% endblock %}

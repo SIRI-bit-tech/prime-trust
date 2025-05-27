@@ -1,0 +1,111 @@
+{% load static %}
+{% if notifications %}
+<div class="bg-white shadow overflow-hidden">
+    <ul role="list" class="divide-y divide-gray-200">
+        {% for notification in notifications %}
+        <li class="notification-item {% if not notification.is_read %}bg-primary-50{% endif %}" data-notification-id="{{ notification.id }}">
+            <div class="px-4 py-4 sm:px-6">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 pt-0.5">
+                        {% if notification.notification_type == 'transaction' %}
+                        <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-primary-100">
+                            <svg class="h-6 w-6 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </span>
+                        {% elif notification.notification_type == 'account' %}
+                        <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-blue-100">
+                            <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                            </svg>
+                        </span>
+                        {% elif notification.notification_type == 'security' %}
+                        <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-red-100">
+                            <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center justify-center h-10 w-10 rounded-full bg-gray-100">
+                            <svg class="h-6 w-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </span>
+                        {% endif %}
+                    </div>
+                    <div class="ml-3 flex-1">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">{{ notification.title }}</p>
+                                <p class="text-sm text-gray-500">{{ notification.message }}</p>
+                            </div>
+                            <div class="ml-2 flex-shrink-0 flex">
+                                <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                    {{ notification.get_notification_type_display }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-500 flex justify-between items-center">
+                            <span>{{ notification.created_at|date:"F j, Y, g:i a" }}</span>
+                            {% if not notification.is_read %}
+                            <a href="{% url 'dashboard:mark_notification_read' notification_id=notification.id %}" 
+                               class="text-xs text-primary-600 hover:text-primary-500 mark-read-button"
+                               hx-get="{% url 'dashboard:mark_notification_read' notification_id=notification.id %}"
+                               hx-trigger="click"
+                               hx-swap="none">
+                                Mark as read
+                            </a>
+                            {% endif %}
+                        </div>
+                        {% if notification.related_transaction %}
+                        <div class="mt-2">
+                            <a href="#" 
+                               class="text-xs text-primary-600 hover:text-primary-500"
+                               hx-get="{% url 'banking:transaction_details' transaction_id=notification.related_transaction.id %}"
+                               hx-target="#transaction-details-modal"
+                               hx-swap="innerHTML"
+                               hx-trigger="click"
+                               onclick="document.getElementById('transaction-details-modal-container').classList.remove('hidden')">
+                                View transaction details
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% else %}
+<div class="text-center py-12">
+    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+    </svg>
+    <h3 class="mt-2 text-sm font-medium text-gray-900">No notifications</h3>
+    <p class="mt-1 text-sm text-gray-500">You don't have any notifications yet.</p>
+</div>
+{% endif %}
+
+<!-- Transaction Details Modal -->
+<div id="transaction-details-modal-container" class="hidden fixed z-10 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div id="transaction-details-modal" class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <!-- Modal content will be loaded here via HTMX -->
+        </div>
+    </div>
+</div>
+
+<script>
+    // Close modal when clicking outside
+    document.addEventListener('click', function(event) {
+        const modal = document.getElementById('transaction-details-modal');
+        const modalContainer = document.getElementById('transaction-details-modal-container');
+        
+        if (modal && modalContainer && !modal.contains(event.target) && modalContainer.contains(event.target)) {
+            modalContainer.classList.add('hidden');
+        }
+    });
+</script>

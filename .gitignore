@@ -1,0 +1,109 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Coverage
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Uploaded media files
+media/
+profile_pics/
+
+# Static files collected with collectstatic
+static/admin/
+static/rest_framework/
+
+# Sensitive information
+*.pem
+*.key
+*.cert
+
+# Database backups
+*.dump
+*.sql
+*.sqlite3-backup
+
+# Node modules (if using JavaScript/frontend frameworks)
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Compiled CSS
+*.css.map
+
+# Compiled JavaScript
+*.js.map
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~.nib

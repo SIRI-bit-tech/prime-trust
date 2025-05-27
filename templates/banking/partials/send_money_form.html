@@ -1,0 +1,137 @@
+{% load static %}
+<div class="sm:flex sm:items-start">
+    <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-primary-100 sm:mx-0 sm:h-10 sm:w-10">
+        <svg class="h-6 w-6 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+    </div>
+    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+            Send Money
+        </h3>
+        <div class="mt-2">
+            <p class="text-sm text-gray-500">
+                Send money to another PrimeTrust user. They'll receive the funds instantly.
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="mt-5">
+    <form id="send-money-form" 
+          method="post" 
+          hx-post="{% url 'banking:send_money' %}" 
+          hx-target="#form-result" 
+          hx-swap="innerHTML"
+          hx-indicator="#form-indicator">
+        {% csrf_token %}
+        
+        <div class="space-y-6">
+            <div>
+                <label for="{{ form.recipient_email.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    {{ form.recipient_email.label }}
+                </label>
+                <div class="mt-1">
+                    {{ form.recipient_email }}
+                    <div id="recipient-check" class="mt-1 text-sm"></div>
+                    {% if form.recipient_email.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.recipient_email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div>
+                <label for="{{ form.from_account.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    {{ form.from_account.label }}
+                </label>
+                <div class="mt-1">
+                    {{ form.from_account }}
+                    {% if form.from_account.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.from_account.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div>
+                <label for="{{ form.amount.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    {{ form.amount.label }}
+                </label>
+                <div class="mt-1 relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span class="text-gray-500 sm:text-sm">$</span>
+                    </div>
+                    {{ form.amount }}
+                    {% if form.amount.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.amount.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div>
+                <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    {{ form.description.label }}
+                </label>
+                <div class="mt-1">
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.description.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div id="form-result"></div>
+        </div>
+    </form>
+</div>
+
+<div class="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
+    <button type="submit" 
+            form="send-money-form"
+            class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:col-start-2 sm:text-sm">
+        Send Money
+        <span id="form-indicator" class="htmx-indicator ml-2">
+            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        </span>
+    </button>
+    <button type="button" 
+            class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:col-start-1 sm:text-sm"
+            onclick="document.getElementById('send-money-modal-container').classList.add('hidden')">
+        Cancel
+    </button>
+</div>
+
+<script>
+    // Listen for transaction complete event
+    document.addEventListener('transactionComplete', function(event) {
+        // Show success message
+        document.getElementById('form-result').innerHTML = `
+            <div class="rounded-md bg-green-50 p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-green-800">${event.detail.message}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Reset form
+        document.getElementById('send-money-form').reset();
+        
+        // Close modal after 2 seconds
+        setTimeout(function() {
+            document.getElementById('send-money-modal-container').classList.add('hidden');
+            
+            // Refresh transactions and balance
+            htmx.trigger('#transactions-list', 'refresh-transactions');
+            htmx.trigger('#balance-card', 'refresh-balance');
+        }, 2000);
+    });
+</script>

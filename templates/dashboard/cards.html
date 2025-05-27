@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Virtual Cards - PrimeTrust{% endblock %}
+
+{% block content %}
+<div class="min-h-full">
+    {% include "dashboard/partials/header.html" with active_tab="cards" %}
+
+    <main>
+        <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <div class="px-4 py-6 sm:px-0">
+                <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                    <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Virtual Cards</h3>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">Your virtual cards for online payments.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Cards List -->
+                    <div id="cards-list">
+                        {% include "dashboard/partials/cards_list.html" %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Card Details Modal -->
+<div id="card-details-modal-container" class="hidden fixed z-10 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div id="card-details-modal" class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <!-- Modal content will be loaded here via HTMX -->
+        </div>
+    </div>
+</div>
+
+<script>
+    // Close modal when clicking outside
+    document.addEventListener('click', function(event) {
+        const modal = document.getElementById('card-details-modal');
+        const modalContainer = document.getElementById('card-details-modal-container');
+        
+        if (modal && modalContainer && !modal.contains(event.target) && modalContainer.contains(event.target)) {
+            modalContainer.classList.add('hidden');
+        }
+    });
+</script>
+{% endblock %}

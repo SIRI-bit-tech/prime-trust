@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Profile - PrimeTrust{% endblock %}
+
+{% block content %}
+<div class="min-h-full">
+    {% include "dashboard/partials/header.html" with active_tab="profile" %}
+
+    <div class="py-10">
+        <header>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h1 class="text-3xl font-bold leading-tight text-gray-900">Profile</h1>
+            </div>
+        </header>
+        <main>
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <div class="px-4 py-8 sm:px-0 space-y-8">
+                    <!-- Personal Information Section -->
+                    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                        <div class="px-4 py-5 sm:px-6">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Personal Information</h3>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">Update your account details and profile information.</p>
+                        </div>
+                        <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
+                            {% include "accounts/partials/profile_form.html" %}
+                        </div>
+                    </div>
+                    
+                    <!-- Security Section -->
+                    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                        <div class="px-4 py-5 sm:px-6">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Security</h3>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">Manage your password and account security.</p>
+                        </div>
+                        <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="text-base font-medium text-gray-900">Password</h4>
+                                    <p class="mt-1 text-sm text-gray-500">Update your password to keep your account secure.</p>
+                                </div>
+                                <a href="{% url 'accounts:change_password' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                                    Change Password
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}

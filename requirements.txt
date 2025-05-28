@@ -8,6 +8,7 @@ django-htmx==1.23.0
 django-meta==2.5.0
 django-robots==6.1
 pillow==11.2.1
+psycopg2-binary==2.9.10
 python-dateutil==2.9.0.post0
 python-dotenv==1.1.0
 sib-api-v3-sdk==7.6.0

@@ -2,30 +2,28 @@ services:
   - type: web
     name: primetrust
     runtime: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: ./build.sh
     startCommand: ./start.sh
     envVars:
       - key: PYTHON_VERSION
-        value: 3.10.0
+        value: "3.11"
       - key: DEBUG
-        value: "false"
+        value: "False"
       - key: SECRET_KEY
         generateValue: true
       - key: ALLOWED_HOSTS
-        value: .onrender.com
-      - key: EMAIL_BACKEND
-        value: django.core.mail.backends.smtp.EmailBackend
-      - key: EMAIL_HOST
-        value: smtp-relay.brevo.com
-      - key: EMAIL_PORT
-        value: 587
-      - key: EMAIL_USE_TLS
-        value: "true"
+        value: ".onrender.com"
+      - key: DEFAULT_FROM_EMAIL
+        value: "PrimeTrust <noreply@primetrust.com>"
+      - key: BREVO_API_KEY
+        sync: false  # Set this manually in dashboard
+      - key: META_SITE_DOMAIN
+        value: "primetrust.onrender.com"
       - key: DATABASE_URL
         fromDatabase:
           name: primetrust_db
           property: connectionString
-
+    
 databases:
   - name: primetrust_db
     plan: starter

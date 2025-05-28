@@ -1,6 +1,7 @@
 asgiref==3.8.1
 certifi==2025.4.26
 crispy-tailwind==1.0.3
+dj-database-url==2.3.0
 Django==5.2.1
 django-crispy-forms==2.4
 django-htmx==1.23.0

@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Allow: /accounts/login/
+Allow: /accounts/register/
+Allow: /pages/about/
+Allow: /pages/features/
+Allow: /pages/contact/
+Allow: /pages/privacy/
+Allow: /pages/terms/
+
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /banking/
+Disallow: /accounts/profile/
+
+Sitemap: https://primetrust.yourdomain.com/sitemap.xml

@@ -1,0 +1,271 @@
+<form id="loan-payment-form" 
+      hx-post="{% url 'dashboard:make-loan-payment' loan.id %}" 
+      hx-swap="none"
+      class="space-y-6">
+    {% csrf_token %}
+    
+    <div class="bg-gray-50 p-4 rounded-lg mb-6">
+        <h4 class="text-sm font-medium text-gray-900 mb-3">Loan Summary</h4>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <p class="text-xs text-gray-500">Loan Type</p>
+                <p class="font-medium">{{ loan.application.get_loan_type_display }}</p>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500">Current Balance</p>
+                <p class="font-medium">${{ loan.current_balance|floatformat:2 }}</p>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500">Interest Rate</p>
+                <p class="font-medium">{{ loan.interest_rate|floatformat:2 }}%</p>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500">Next Payment Due</p>
+                <p class="font-medium">{{ loan.next_payment_date|date:"M d, Y" }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Payment Amount -->
+    <div>
+        <label for="payment-amount" class="block text-sm font-medium text-gray-700 mb-1">
+            Payment Amount
+        </label>
+        <div class="mt-1 relative rounded-md shadow-sm">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <span class="text-gray-500 sm:text-sm">$</span>
+            </div>
+            <input type="number" 
+                   id="payment-amount" 
+                   name="amount" 
+                   min="0.01"
+                   step="0.01"
+                   max="{{ loan.current_balance|add:1000 }}"
+                   value="{{ loan.monthly_payment|floatformat:2 }}"
+                   class="focus:ring-primary-500 focus:border-primary-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md" 
+                   required>
+            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <span class="text-gray-500 sm:text-sm">USD</span>
+            </div>
+        </div>
+        <div class="mt-1 flex justify-between">
+            <button type="button" 
+                    class="text-xs text-primary-600 hover:text-primary-500"
+                    onclick="document.getElementById('payment-amount').value = '{{ loan.monthly_payment|floatformat:2 }}'">
+                Minimum: ${{ loan.monthly_payment|floatformat:2 }}
+            </button>
+            <button type="button" 
+                    class="text-xs text-primary-600 hover:text-primary-500"
+                    onclick="document.getElementById('payment-amount').value = '{{ loan.current_balance|floatformat:2 }}'">
+                Pay Full Balance: ${{ loan.current_balance|floatformat:2 }}
+            </button>
+        </div>
+    </div>
+    
+    <!-- Payment Date -->
+    <div>
+        <label for="payment-date" class="block text-sm font-medium text-gray-700 mb-1">
+            Payment Date
+        </label>
+        <input type="date" 
+               id="payment-date" 
+               name="payment_date" 
+               min="{% now 'Y-m-d' %}"
+               value="{% now 'Y-m-d' %}"
+               class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
+               required>
+    </div>
+    
+    <!-- Payment Method -->
+    <div>
+        <label for="payment-method" class="block text-sm font-medium text-gray-700 mb-1">
+            Payment Method
+        </label>
+        <select id="payment-method" 
+                name="payment_method" 
+                required
+                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
+            <option value="">Select a payment method</option>
+            {% for account in payment_methods %}
+                <option value="{{ account.id }}" {% if forloop.first %}selected{% endif %}>
+                    {{ account.get_account_type_display }} - {{ account.account_number|slice:"-4" }} (${{ account.balance|floatformat:2 }})
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <!-- Payment Type -->
+    <div class="flex items-center">
+        <input id="recurring-payment" 
+               name="is_recurring" 
+               type="checkbox" 
+               class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+        <label for="recurring-payment" class="ml-2 block text-sm text-gray-700">
+            Set up recurring payments
+        </label>
+    </div>
+    
+    <!-- Recurring Payment Options (initially hidden) -->
+    <div id="recurring-options" class="hidden pl-6 border-l-2 border-gray-200">
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label for="frequency" class="block text-sm font-medium text-gray-700 mb-1">
+                    Frequency
+                </label>
+                <select id="frequency" 
+                        name="frequency" 
+                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
+                    <option value="monthly">Monthly</option>
+                    <option value="biweekly">Bi-weekly</option>
+                    <option value="weekly">Weekly</option>
+                </select>
+            </div>
+            <div>
+                <label for="end-date" class="block text-sm font-medium text-gray-700 mb-1">
+                    End Date (optional)
+                </label>
+                <input type="date" 
+                       id="end-date" 
+                       name="end_date"
+                       min="{% now 'Y-m-d' %}"
+                       class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
+            </div>
+        </div>
+    </div>
+    
+    <!-- Payment Summary -->
+    <div class="bg-gray-50 p-4 rounded-lg">
+        <h4 class="text-sm font-medium text-gray-900 mb-3">Payment Summary</h4>
+        <div class="space-y-2">
+            <div class="flex justify-between">
+                <span class="text-sm text-gray-600">Payment Amount</span>
+                <span id="summary-amount" class="text-sm font-medium">$0.00</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-sm text-gray-600">Payment Date</span>
+                <span id="summary-date" class="text-sm">{% now "M d, Y" %}</span>
+            </div>
+            <div class="pt-2 mt-2 border-t border-gray-200">
+                <div class="flex justify-between">
+                    <span class="text-sm font-medium">Payment Total</span>
+                    <span id="summary-total" class="text-lg font-bold">$0.00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Submit Button -->
+    <div class="flex justify-end space-x-3 pt-2">
+        <button type="button"
+                onclick="document.getElementById('modal').classList.add('hidden')"
+                class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+            Cancel
+        </button>
+        <button type="submit"
+                class="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+            Submit Payment
+        </button>
+    </div>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('loan-payment-form');
+    const amountInput = document.getElementById('payment-amount');
+    const dateInput = document.getElementById('payment-date');
+    const recurringCheckbox = document.getElementById('recurring-payment');
+    const recurringOptions = document.getElementById('recurring-options');
+    
+    // Format currency
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(amount);
+    };
+    
+    // Update payment summary
+    const updateSummary = () => {
+        const amount = parseFloat(amountInput.value) || 0;
+        const date = dateInput.value ? new Date(dateInput.value).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        }) : '';
+        
+        document.getElementById('summary-amount').textContent = formatCurrency(amount);
+        document.getElementById('summary-date').textContent = date || 'Select a date';
+        document.getElementById('summary-total').textContent = formatCurrency(amount);
+    };
+    
+    // Toggle recurring payment options
+    recurringCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            recurringOptions.classList.remove('hidden');
+        } else {
+            recurringOptions.classList.add('hidden');
+        }
+    });
+    
+    // Initialize date picker with today's date
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.value = today;
+    
+    // Add event listeners
+    amountInput.addEventListener('input', updateSummary);
+    dateInput.addEventListener('change', updateSummary);
+    
+    // Handle form submission
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(form);
+        const amount = parseFloat(formData.get('amount'));
+        const paymentMethod = formData.get('payment_method');
+        
+        if (!paymentMethod) {
+            alert('Please select a payment method');
+            return;
+        }
+        
+        if (amount <= 0) {
+            alert('Payment amount must be greater than zero');
+            return;
+        }
+        
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                // Show success message
+                htmx.trigger('#loans-container', 'refreshLoans');
+                document.getElementById('modal').classList.add('hidden');
+                showNotification('Payment submitted successfully!', 'success');
+                
+                // Reset form
+                form.reset();
+                updateSummary();
+            } else {
+                throw new Error(result.error || 'Failed to submit payment');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification(error.message || 'An error occurred', 'error');
+        }
+    });
+    
+    // Initial summary update
+    updateSummary();
+});
+</script>

@@ -1,0 +1,304 @@
+{% extends 'dashboard/banking_base.html' %}
+{% load static %}
+
+{% block title %}Pay Bills - PrimeTrust{% endblock %}
+
+{% block page_title %}Pay Bills{% endblock %}
+{% block page_subtitle %}Manage and pay your bills in one place{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/forms.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/pay_bills.js' %}"></script>
+{% endblock %}
+
+{% block banking_content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Pay Bill Form -->
+    <div class="lg:col-span-2">
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                    Pay a Bill
+                </h3>
+            </div>
+            <div class="px-4 py-5 sm:p-6">
+                <form id="pay-bill-form" hx-post="{% url 'dashboard:pay-bills' %}" hx-swap="none">
+                    {% csrf_token %}
+                    <div class="space-y-6">
+                        <!-- Biller Selection -->
+                        <div>
+                            <label for="biller" class="block text-sm font-medium text-gray-700">Pay To</label>
+                            <select id="biller" name="biller" required
+                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
+                                <option value="">Select a biller</option>
+                                {% for biller in billers %}
+                                <option value="{{ biller.id }}">{{ biller.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Account Selection -->
+                        <div>
+                            <label for="account" class="block text-sm font-medium text-gray-700">From Account</label>
+                            <select id="account" name="account" required
+                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
+                                <option value="">Select an account</option>
+                                {% for account in accounts %}
+                                <option value="{{ account.id }}">
+                                    {{ account.get_account_type_display }} - {{ account.account_number }} 
+                                    (${{ account.balance|floatformat:2 }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Account Number with Biller -->
+                        <div>
+                            <label for="account_number" class="block text-sm font-medium text-gray-700">
+                                Account Number with Biller
+                            </label>
+                            <input type="text" id="account_number" name="account_number" required
+                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                                placeholder="Your account number with the biller">
+                        </div>
+
+                        <!-- Payment Amount -->
+                        <div>
+                            <label for="amount" class="block text-sm font-medium text-gray-700">Amount</label>
+                            <div class="mt-1 relative rounded-md shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <span class="text-gray-500 sm:text-sm">$</span>
+                                </div>
+                                <input type="number" name="amount" id="amount" required step="0.01" min="0.01"
+                                    class="focus:ring-primary-500 focus:border-primary-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md"
+                                    placeholder="0.00">
+                            </div>
+                        </div>
+
+                        <!-- Payment Method -->
+                        <div>
+                            <label for="payment_method" class="block text-sm font-medium text-gray-700">Payment Method</label>
+                            <select id="payment_method" name="payment_method" required
+                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
+                                <option value="ach">Bank Account (ACH)</option>
+                                <option value="debit_card">Debit Card</option>
+                            </select>
+                        </div>
+
+                        <!-- Payment Date -->
+                        <div>
+                            <label for="scheduled_date" class="block text-sm font-medium text-gray-700">Payment Date</label>
+                            <input type="date" name="scheduled_date" id="scheduled_date" required
+                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                                min="{{ today|date:'Y-m-d' }}">
+                        </div>
+
+                        <!-- Recurring Payment Option -->
+                        <div>
+                            <div class="flex items-center">
+                                <input id="is_recurring" name="is_recurring" type="checkbox"
+                                    class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded">
+                                <label for="is_recurring" class="ml-2 block text-sm text-gray-700">
+                                    Set up as recurring payment
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Recurring Options -->
+                        <div id="recurring-options" class="hidden space-y-4 pl-6 border-l-2 border-gray-200">
+                            <div>
+                                <label for="frequency" class="block text-sm font-medium text-gray-700">Frequency</label>
+                                <select id="frequency" name="frequency"
+                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
+                                    <option value="weekly">Weekly</option>
+                                    <option value="biweekly">Bi-weekly</option>
+                                    <option value="monthly" selected>Monthly</option>
+                                    <option value="quarterly">Quarterly</option>
+                                    <option value="yearly">Yearly</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="end_date" class="block text-sm font-medium text-gray-700">End Date (Optional)</label>
+                                <input type="date" name="end_date" id="end_date"
+                                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                                    min="{{ today|date:'Y-m-d' }}">
+                                <p class="mt-1 text-xs text-gray-500">Leave blank for ongoing payments</p>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div>
+                            <label for="notes" class="block text-sm font-medium text-gray-700">Notes (Optional)</label>
+                            <textarea id="notes" name="notes" rows="2"
+                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                                placeholder="Add any notes about this payment"></textarea>
+                        </div>
+
+
+
+                        <div class="flex justify-end">
+                            <button type="button"
+                                class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                class="ml-3 inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                                Schedule Payment
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Bills -->
+    <div>
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                    Upcoming Bills
+                </h3>
+            </div>
+            <div class="flow-root px-4 py-5 sm:p-6">
+                <ul role="list" class="divide-y divide-gray-200">
+                    {% for bill in upcoming_bills|slice:":5" %}
+                    <li class="py-4">
+                        <div class="flex items-center space-x-4">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-gray-900 truncate">
+                                    {{ bill.name }}
+                                </p>
+                                <p class="text-sm text-gray-500 truncate">
+                                    Due {{ bill.due_date|date:"M d, Y" }} - ${{ bill.amount|floatformat:2 }}
+                                </p>
+                            </div>
+                            <div>
+                                <button type="button"
+                                    class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                                    Pay Now
+                                </button>
+                            </div>
+                        </div>
+                    </li>
+                    {% empty %}
+                    <li class="text-center py-4">
+                        <p class="text-sm text-gray-500">No upcoming bills</p>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment History -->
+<div class="mt-8">
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
+                Payment History
+            </h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Date
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Description
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Account
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Amount
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for payment in payment_history|slice:":5" %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ payment.date|date:"M d, Y" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {{ payment.description }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ payment.account }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            ${{ payment.amount|floatformat:2 }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                {{ payment.status|title }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-sm text-gray-500">
+                            No payment history
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="bg-gray-50 px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+            <div class="flex-1 flex justify-between sm:hidden">
+                <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Previous
+                </a>
+                <a href="#" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Next
+                </a>
+            </div>
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700">
+                        Showing <span class="font-medium">1</span> to <span class="font-medium">5</span> of <span class="font-medium">5</span> results
+                    </p>
+                </div>
+                <div>
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                        <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <span class="sr-only">Previous</span>
+                            <!-- Heroicon name: solid/chevron-left -->
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                        <a href="#" aria-current="page" class="z-10 bg-primary-50 border-primary-500 text-primary-600 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                            1
+                        </a>
+                        <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                            2
+                        </a>
+                        <a href="#" class="bg-white border-gray-300 text-gray-500 hover:bg-gray-50 relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                            3
+                        </a>
+                        <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                            <span class="sr-only">Next</span>
+                            <!-- Heroicon name: solid/chevron-right -->
+                            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -3,8 +3,11 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import RegexValidator
 from django.utils import timezone
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 import random
 import string
+import uuid
 
 class CustomUser(AbstractUser):
     email = models.EmailField(_('email address'), unique=True)
@@ -56,3 +59,31 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.get_full_name()}'s Profile"
+
+
+@receiver(post_save, sender=CustomUser)
+def create_user_profile(sender, instance, created, **kwargs):
+    """Create a UserProfile and accounts for new users"""
+    if created:
+        # Create user profile
+        UserProfile.objects.create(user=instance)
+        
+        # Import here to avoid circular import
+        from banking.models import Account
+        
+        # Create a checking account with a unique account number
+        # The routing number and virtual card will be created automatically by the Account model's save method
+        checking_account = Account.objects.create(
+            user=instance,
+            account_number=f"PT{uuid.uuid4().hex[:8].upper()}",
+            account_type='checking',
+            balance=0.00
+        )
+        
+        # Also create a savings account
+        Account.objects.create(
+            user=instance,
+            account_number=f"PS{uuid.uuid4().hex[:8].upper()}",
+            account_type='savings',
+            balance=0.00
+        )

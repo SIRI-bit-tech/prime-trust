@@ -1,0 +1,71 @@
+<!-- Quick Actions Section -->
+<div class="mt-8">
+    <h2 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
+    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+        <!-- Transfer Money -->
+        <a href="{% url 'dashboard:transfer' %}" 
+           class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col items-center text-center">
+            <div class="bg-primary-100 p-3 rounded-full mb-2">
+                <svg class="h-6 w-6 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+            </div>
+            <span class="text-sm font-medium text-gray-700">Transfer</span>
+        </a>
+
+        <!-- Pay Bills -->
+        <a href="{% url 'dashboard:pay-bills' %}" 
+           class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col items-center text-center">
+            <div class="bg-green-100 p-3 rounded-full mb-2">
+                <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+            </div>
+            <span class="text-sm font-medium text-gray-700">Pay Bills</span>
+        </a>
+
+        <!-- Loans -->
+        <a href="{% url 'dashboard:loans' %}" 
+           class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col items-center text-center">
+            <div class="bg-yellow-100 p-3 rounded-full mb-2">
+                <svg class="h-6 w-6 text-yellow-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <span class="text-sm font-medium text-gray-700">Loans</span>
+        </a>
+
+        <!-- Investments -->
+        <a href="{% url 'dashboard:investments' %}" 
+           class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col items-center text-center">
+            <div class="bg-blue-100 p-3 rounded-full mb-2">
+                <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+            </div>
+            <span class="text-sm font-medium text-gray-700">Investments</span>
+        </a>
+
+        <!-- Insurance -->
+        <a href="{% url 'dashboard:insurance' %}" 
+           class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col items-center text-center">
+            <div class="bg-purple-100 p-3 rounded-full mb-2">
+                <svg class="h-6 w-6 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+            </div>
+            <span class="text-sm font-medium text-gray-700">Insurance</span>
+        </a>
+
+        <!-- More Services -->
+        <a href="{% url 'dashboard:services' %}" 
+           class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col items-center text-center">
+            <div class="bg-gray-100 p-3 rounded-full mb-2">
+                <svg class="h-6 w-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                </svg>
+            </div>
+            <span class="text-sm font-medium text-gray-700">More Services</span>
+        </a>
+    </div>
+</div>

@@ -1,16 +1,22 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, JsonResponse
-from django.db import transaction
+from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
-from django.utils import timezone
+from django.db import transaction
 from django.db.models import Q
-from django_htmx.http import trigger_client_event
+from django.utils import timezone
+from decimal import Decimal
 import uuid
 
 from accounts.models import CustomUser
-from .models import Account, Transaction, VirtualCard, Notification
-from .forms import SendMoneyForm
+from .models import Account, Transaction, Notification
+from .forms import SendMoneyForm, DepositForm
+from django_htmx.http import trigger_client_event
+
+@login_required
+def payment_fields(request):
+    """Return payment fields for HTMX requests"""
+    return render(request, 'banking/partials/payment_fields.html')
 
 @login_required
 def send_money(request):
@@ -52,14 +58,14 @@ def send_money(request):
                         messages.error(request, 'Insufficient funds')
                         return redirect('dashboard:home')
                     
-                    # Create transaction record
+                    # Create transaction record with real-time processing
                     transaction_ref = f"TRF{uuid.uuid4().hex[:8].upper()}"
                     new_transaction = Transaction.objects.create(
                         from_account=from_account,
                         to_account=recipient_account,
                         amount=amount,
                         transaction_type='transfer',
-                        status='completed',  # Auto-approve for demo purposes
+                        status='completed',
                         description=description,
                         reference=transaction_ref
                     )
@@ -107,8 +113,19 @@ def send_money(request):
     else:
         form = SendMoneyForm(user=user)
     
+    # Get current time for greeting
+    from datetime import datetime
+    current_hour = datetime.now().hour
+    greeting = "Good Evening"
+    if current_hour < 12:
+        greeting = "Good Morning"
+    elif current_hour < 18:
+        greeting = "Good Afternoon"
+    
     context = {
+        'greeting': greeting,
         'form': form,
+        'active_tab': 'send_money'
     }
     
     if request.htmx:
@@ -136,15 +153,96 @@ def check_recipient(request):
 @login_required
 def get_transaction_details(request, transaction_id):
     """Get details of a specific transaction"""
-    user = request.user
-    accounts = Account.objects.filter(user=user)
-    
-    # Use a filter expression with Q objects for OR condition
-    filter_condition = Q(id=transaction_id) & (Q(from_account__in=accounts) | Q(to_account__in=accounts))
-    transaction = get_object_or_404(Transaction, filter_condition)
+    # Allow viewing transactions where the user is either sender or recipient
+    user_filter = Q(from_account__user=request.user) | Q(to_account__user=request.user)
+    transaction = get_object_or_404(Transaction.objects.filter(user_filter), id=transaction_id)
     
     context = {
-        'transaction': transaction,
+        'transaction': transaction
     }
     
     return render(request, 'banking/partials/transaction_details.html', context)
+
+@login_required
+def deposit(request):
+    """Deposit money into an account"""
+    user = request.user
+    
+    if request.method == 'POST':
+        form = DepositForm(request.POST, user=user)
+        if form.is_valid():
+            to_account = form.cleaned_data['to_account']
+            amount = form.cleaned_data['amount']
+            payment_method = form.cleaned_data['payment_method']
+            
+            # Process the payment in real-time
+            
+            # Create the transaction
+            with transaction.atomic():
+                # Generate a reference number
+                transaction_ref = f"DEP{uuid.uuid4().hex[:8].upper()}"
+                
+                # Create transaction record with real-time processing
+                new_transaction = Transaction.objects.create(
+                    to_account=to_account,
+                    amount=amount,
+                    transaction_type='deposit',
+                    status='completed',
+                    description=f"Deposit via {dict(form.fields['payment_method'].choices)[payment_method]}",
+                    reference=transaction_ref
+                )
+                
+                # Update account balance
+                to_account.balance += amount
+                to_account.save()
+                
+                # Create notification
+                Notification.objects.create(
+                    user=user,
+                    notification_type='transaction',
+                    title='Deposit Successful',
+                    message=f"You deposited ${amount} into your {to_account.get_account_type_display()} account",
+                    related_transaction=new_transaction
+                )
+            
+            if request.htmx:
+                response = HttpResponse()
+                trigger_client_event(response, 'depositComplete', {
+                    'message': f"Successfully deposited ${amount} into your account"
+                })
+                return response
+            
+            messages.success(request, f"Successfully deposited ${amount} into your account")
+            return redirect('dashboard:home')
+    else:
+        form = DepositForm(user=user)
+    
+    # Get current time for greeting
+    from datetime import datetime
+    current_hour = datetime.now().hour
+    greeting = "Good Evening"
+    if current_hour < 12:
+        greeting = "Good Morning"
+    elif current_hour < 18:
+        greeting = "Good Afternoon"
+    
+    context = {
+        'greeting': greeting,
+        'form': form,
+        'active_tab': 'deposit'
+    }
+    
+    if request.htmx:
+        return render(request, 'banking/partials/deposit_form.html', context)
+    return render(request, 'banking/deposit.html', context)
+
+@login_required
+def payment_fields(request):
+    """Return the appropriate payment fields based on the selected payment method"""
+    payment_method = request.GET.get('payment_method', 'credit_card')
+    
+    context = {
+        'payment_method': payment_method
+    }
+    
+    return render(request, 'banking/partials/payment_fields.html', context)

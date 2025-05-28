@@ -1,0 +1,31 @@
+{% load static %}
+
+<!-- Primary Meta Tags -->
+<meta name="title" content="{% block meta_title %}{{ meta_title|default:'PrimeTrust - Secure Online Banking' }}{% endblock %}">
+<meta name="description" content="{% block meta_description %}{{ meta_description|default:'PrimeTrust offers secure online banking services with real-time transactions, account management, and financial tools.' }}{% endblock %}">
+<meta name="keywords" content="{% block meta_keywords %}{{ meta_keywords|default:'banking, online banking, secure banking, digital banking, financial services' }}{% endblock %}">
+<meta name="author" content="PrimeTrust">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="{{ request.build_absolute_uri }}">
+<meta property="og:title" content="{% block og_title %}{{ meta_title|default:'PrimeTrust - Secure Online Banking' }}{% endblock %}">
+<meta property="og:description" content="{% block og_description %}{{ meta_description|default:'PrimeTrust offers secure online banking services with real-time transactions, account management, and financial tools.' }}{% endblock %}">
+<meta property="og:image" content="{% block og_image %}{% static 'img/primetrust-logo.png' %}{% endblock %}">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:url" content="{{ request.build_absolute_uri }}">
+<meta name="twitter:title" content="{% block twitter_title %}{{ meta_title|default:'PrimeTrust - Secure Online Banking' }}{% endblock %}">
+<meta name="twitter:description" content="{% block twitter_description %}{{ meta_description|default:'PrimeTrust offers secure online banking services with real-time transactions, account management, and financial tools.' }}{% endblock %}">
+<meta name="twitter:image" content="{% block twitter_image %}{% static 'img/primetrust-logo.png' %}{% endblock %}">
+
+<!-- Canonical URL -->
+<link rel="canonical" href="{{ request.build_absolute_uri }}">
+
+<!-- Favicon -->
+<link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
+<link rel="apple-touch-icon" sizes="180x180" href="{% static 'img/apple-touch-icon.png' %}">
+<link rel="icon" type="image/png" sizes="32x32" href="{% static 'img/favicon-32x32.png' %}">
+<link rel="icon" type="image/png" sizes="16x16" href="{% static 'img/favicon-16x16.png' %}">
+<link rel="manifest" href="{% static 'site.webmanifest' %}">

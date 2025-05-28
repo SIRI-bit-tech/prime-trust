@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Deposit Funds - PrimeTrust{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- Mobile top navigation (only visible on small screens) -->
+    <div class="md:hidden bg-primary-600 text-white">
+        <div class="flex items-center justify-between h-16 px-4">
+            <div class="flex-shrink-0">
+                <img class="h-8 w-auto" src="{% static 'images/logo-white.svg' %}" alt="PrimeTrust">
+            </div>
+            <div class="flex items-center">
+                <!-- Notification icon -->
+                <button type="button" 
+                        class="relative p-1 rounded-full text-primary-100 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-primary-800 focus:ring-white"
+                        id="mobile-notification-button"
+                        hx-get="{% url 'dashboard:notifications' %}"
+                        hx-target="#mobile-notification-dropdown"
+                        hx-swap="innerHTML"
+                        hx-trigger="click">
+                    <span class="sr-only">View notifications</span>
+                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    {% if notifications %}
+                    <span class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-primary-600"></span>
+                    {% endif %}
+                </button>
+                
+                <!-- User profile -->
+                <div class="ml-3">
+                    {% if request.user.profile.profile_picture %}
+                    <img class="h-8 w-8 rounded-full" src="{{ request.user.profile.profile_picture.url }}" alt="">
+                    {% else %}
+                    <div class="h-8 w-8 rounded-full bg-primary-300 flex items-center justify-center text-primary-800 font-semibold">
+                        {{ request.user.first_name|first }}{{ request.user.last_name|first }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div id="mobile-notification-dropdown" class="hidden px-4 py-2 bg-white shadow-lg rounded-t-lg">
+            <!-- Notification content will be loaded here via HTMX -->
+        </div>
+    </div>
+    
+    <!-- Desktop layout -->
+    <div class="flex h-screen overflow-hidden bg-gray-50">
+        <!-- Sidebar for desktop -->
+        <div class="hidden md:flex md:flex-shrink-0">
+            <div class="w-64">
+                {% include "dashboard/partials/sidebar.html" with active_tab=active_tab %}
+            </div>
+        </div>
+        
+        <!-- Main content -->
+        <div class="flex flex-col flex-1 overflow-auto pb-16 md:pb-0">
+            <main class="flex-1 relative py-6 focus:outline-none">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+                    <header class="mb-6">
+                        <h1 class="text-2xl font-semibold text-gray-900">{{ greeting }}, {{ request.user.first_name }}</h1>
+                        <p class="mt-1 text-sm text-gray-500">Deposit funds to your account</p>
+                    </header>
+                    <div class="px-4 py-6 sm:px-0">
+                    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                        <div class="px-4 py-5 sm:px-6">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900">Deposit Information</h3>
+                            <p class="mt-1 max-w-2xl text-sm text-gray-500">Add funds to your PrimeTrust account.</p>
+                        </div>
+                        <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
+                            <div id="deposit-form-container">
+                                {% include "banking/partials/deposit_form.html" %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('htmx:afterSwap', function(event) {
+        // Show/hide payment method fields based on selection
+        if (event.detail.target.id === 'payment-fields') {
+            const paymentMethod = document.getElementById('id_payment_method').value;
+            document.querySelectorAll('[data-payment-method]').forEach(function(el) {
+                const methods = el.dataset.paymentMethod.split(',');
+                if (methods.includes(paymentMethod)) {
+                    el.closest('.form-group').style.display = 'block';
+                } else {
+                    el.closest('.form-group').style.display = 'none';
+                }
+            });
+        }
+    });
+
+    // Initial setup for payment fields
+    document.addEventListener('DOMContentLoaded', function() {
+        const paymentMethod = document.getElementById('id_payment_method').value;
+        document.querySelectorAll('[data-payment-method]').forEach(function(el) {
+            const methods = el.dataset.paymentMethod.split(',');
+            if (methods.includes(paymentMethod)) {
+                el.closest('.form-group').style.display = 'block';
+            } else {
+                el.closest('.form-group').style.display = 'none';
+            }
+        });
+    });
+
+    // Listen for deposit completion event
+    document.body.addEventListener('depositComplete', function(event) {
+        const message = event.detail.message;
+        
+        // Show success message
+        const successMessage = document.createElement('div');
+        successMessage.className = 'rounded-md bg-green-50 p-4 mb-6';
+        successMessage.innerHTML = `
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-green-800">Success!</h3>
+                    <div class="mt-2 text-sm text-green-700">
+                        <p>${message}</p>
+                    </div>
+                    <div class="mt-4">
+                        <div class="-mx-2 -my-1.5 flex">
+                            <a href="/dashboard/" class="bg-green-50 px-2 py-1.5 rounded-md text-sm font-medium text-green-800 hover:bg-green-100">
+                                Go to Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        const formContainer = document.getElementById('deposit-form-container');
+        formContainer.innerHTML = '';
+        formContainer.appendChild(successMessage);
+    });
+</script>
+{% endblock %}

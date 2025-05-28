@@ -18,6 +18,9 @@
                            class="{% if active_tab == 'transactions' %}bg-primary-700 text-white{% else %}text-primary-100 hover:bg-primary-500 hover:text-white{% endif %} px-3 py-2 rounded-md text-sm font-medium">
                             Transactions
                         </a>
+                        
+
+                        
                         <a href="{% url 'dashboard:cards' %}" 
                            class="{% if active_tab == 'cards' %}bg-primary-700 text-white{% else %}text-primary-100 hover:bg-primary-500 hover:text-white{% endif %} px-3 py-2 rounded-md text-sm font-medium">
                             Cards
@@ -113,6 +116,9 @@
                class="{% if active_tab == 'transactions' %}bg-primary-700 text-white{% else %}text-primary-100 hover:bg-primary-500 hover:text-white{% endif %} block px-3 py-2 rounded-md text-base font-medium">
                 Transactions
             </a>
+            
+
+            
             <a href="{% url 'dashboard:cards' %}" 
                class="{% if active_tab == 'cards' %}bg-primary-700 text-white{% else %}text-primary-100 hover:bg-primary-500 hover:text-white{% endif %} block px-3 py-2 rounded-md text-base font-medium">
                 Cards
@@ -174,6 +180,18 @@
                 notificationDropdown.classList.toggle('hidden');
             } else if (!notificationDropdown.contains(event.target)) {
                 notificationDropdown.classList.add('hidden');
+            }
+        }
+        
+        // Handle banking dropdown
+        const bankingButton = document.getElementById('banking-menu-button');
+        const bankingDropdown = document.getElementById('banking-dropdown');
+        
+        if (bankingButton && bankingDropdown) {
+            if (bankingButton.contains(event.target)) {
+                // Don't add any code here as the toggle is handled by the onclick attribute
+            } else if (!bankingDropdown.contains(event.target)) {
+                bankingDropdown.classList.add('hidden');
             }
         }
     });

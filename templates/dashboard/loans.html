@@ -1,0 +1,225 @@
+{% extends 'dashboard/banking_base.html' %}
+{% load humanize %}
+
+{% block title %}Loans - PrimeTrust{% endblock %}
+
+{% block page_title %}Loans{% endblock %}
+{% block page_subtitle %}Manage your loans and apply for new ones{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/forms.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/loans.js' %}"></script>
+{% endblock %}
+
+{% block banking_content %}
+<div class="space-y-8">
+    <!-- Loan Application Form -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:px-6 flex justify-between items-center border-b border-gray-200">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
+                Apply for a New Loan
+            </h3>
+            <button id="show-application-btn" class="text-sm text-primary-600 hover:text-primary-800">
+                Apply for a New Loan
+            </button>
+        </div>
+        
+        <div id="loan-application-form" class="hidden px-4 py-5 sm:p-6">
+            <form id="new-loan-form" hx-post="{% url 'dashboard:loans' %}" hx-swap="none">
+                {% csrf_token %}
+                <div class="space-y-6">
+                    <!-- Loan Amount -->
+                    <div>
+                        <label for="loan-amount" class="block text-sm font-medium text-gray-700">
+                            Loan Amount
+                            <span id="loan-amount-value" class="text-primary-600">$5,000</span>
+                        </label>
+                        <input type="range" id="loan-amount" name="amount" min="1000" max="50000" step="100" 
+                               value="5000" class="mt-2 w-full">
+                        <div class="flex justify-between text-xs text-gray-500 mt-1">
+                            <span>$1,000</span>
+                            <span>$50,000</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Loan Purpose -->
+                    <div>
+                        <label for="loan-purpose" class="block text-sm font-medium text-gray-700">
+                            Loan Purpose
+                        </label>
+                        <select id="loan-purpose" name="purpose" required
+                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
+                            <option value="">Select a purpose</option>
+                            <option value="personal">Personal Loan</option>
+                            <option value="debt_consolidation">Debt Consolidation</option>
+                            <option value="home_improvement">Home Improvement</option>
+                            <option value="car">Auto Loan</option>
+                            <option value="medical">Medical Expenses</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Loan Term -->
+                    <div>
+                        <label for="loan-term" class="block text-sm font-medium text-gray-700">
+                            Loan Term
+                        </label>
+                        <select id="loan-term" name="term" required
+                            class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
+                            <option value="12">12 months</option>
+                            <option value="24">24 months</option>
+                            <option value="36" selected>36 months</option>
+                            <option value="48">48 months</option>
+                            <option value="60">60 months</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Loan Estimate -->
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="text-sm font-medium text-gray-900 mb-3">Loan Estimate</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-xs text-gray-500">Monthly Payment</p>
+                                <p id="monthly-payment" class="font-medium">$0.00</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500">Total Interest</p>
+                                <p id="total-interest" class="font-medium">$0.00</p>
+                            </div>
+                            <div class="col-span-2 pt-2 border-t border-gray-200">
+                                <p class="text-xs text-gray-500">Total Payment</p>
+                                <p id="total-payment" class="font-medium text-lg">$0.00</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <div class="flex justify-end pt-2">
+                        <button type="submit"
+                            class="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                            Submit Application
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Active Loans -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
+                Active Loans
+            </h3>
+        </div>
+        
+        {% if active_loans %}
+            <div class="divide-y divide-gray-200">
+                {% for loan in active_loans %}
+                <div class="px-4 py-5 sm:px-6">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="text-base font-medium text-gray-900">
+                                {{ loan.application.get_loan_type_display }}
+                                <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Active
+                                </span>
+                            </h4>
+                            <p class="mt-1 text-sm text-gray-500">
+                                {{ loan.account.account_number }} • Opened {{ loan.start_date|date:"M d, Y" }}
+                            </p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-medium text-gray-900">${{ loan.current_balance|intcomma }}</p>
+                            <p class="text-xs text-gray-500">Next Payment: {{ loan.next_payment_date|date:"M d, Y" }}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Loan Progress -->
+                    <div class="mt-4">
+                        <div class="flex justify-between text-sm text-gray-600 mb-1">
+                            <span>Paid: ${{ loan.amount_paid|default:0|intcomma }}</span>
+                            <span>Remaining: ${{ loan.current_balance|intcomma }}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-primary-600 h-2.5 rounded-full progress-bar" 
+                                 data-width="{% if loan.original_amount %}{% widthratio loan.amount_paid|default:0 loan.original_amount 100 %}{% else %}0{% endif %}">
+                            </div>
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    const progressBars = document.querySelectorAll('.progress-bar');
+                                    progressBars.forEach(bar => {
+                                        bar.style.width = bar.dataset.width + '%';
+                                    });
+                                });
+                            </script>
+                        </div>
+                        <div class="mt-2 text-right">
+                            <a href="{% url 'dashboard:loan-detail' loan.id %}" 
+                               class="text-sm font-medium text-primary-600 hover:text-primary-500">
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="px-4 py-12 text-center">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">No active loans</h3>
+                <p class="mt-1 text-sm text-gray-500">Apply for a new loan to get started.</p>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Recent Applications -->
+    {% if applications %}
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
+                Recent Applications
+            </h3>
+        </div>
+        <div class="divide-y divide-gray-200">
+            {% for app in applications %}
+            <div class="px-4 py-4 sm:px-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-900">
+                                {{ app.get_loan_type_display }} - ${{ app.amount|intcomma }}
+                            </h4>
+                            <p class="text-sm text-gray-500">
+                                Applied on {{ app.created_at|date:"M d, Y" }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        {% if app.status == 'pending' %}
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                {{ app.get_status_display }}
+                            </span>
+                        {% elif app.status == 'approved' %}
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                {{ app.get_status_display }}
+                            </span>
+                        {% elif app.status == 'rejected' %}
+                            <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                {{ app.get_status_display }}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

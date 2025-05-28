@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Privacy Policy - PrimeTrust Banking{% endblock %}
+
+{% block content %}
+<div class="min-h-full">
+    <!-- Header -->
+    <header class="bg-white shadow">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center">
+                <h1 class="text-3xl font-bold text-gray-900">Privacy Policy</h1>
+                <a href="{% url 'landing' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
+                    Back to Home
+                </a>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main content -->
+    <main>
+        <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <div class="px-4 py-6 sm:px-0">
+                <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                    <div class="px-4 py-5 sm:px-6">
+                        <h2 class="text-lg leading-6 font-medium text-gray-900">Privacy Policy</h2>
+                        <p class="mt-1 max-w-2xl text-sm text-gray-500">Last updated: May 27, 2025</p>
+                    </div>
+                    <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
+                        <div class="prose max-w-none">
+                            <h3>1. Introduction</h3>
+                            <p>
+                                At PrimeTrust, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our banking platform. Please read this privacy policy carefully. If you do not agree with the terms of this privacy policy, please do not access the platform.
+                            </p>
+                            
+                            <h3>2. Information We Collect</h3>
+                            <p>
+                                We collect information that you provide directly to us when you:
+                            </p>
+                            <ul>
+                                <li>Register for an account</li>
+                                <li>Update your profile</li>
+                                <li>Conduct transactions</li>
+                                <li>Contact customer support</li>
+                                <li>Respond to surveys or promotions</li>
+                            </ul>
+                            <p>
+                                This information may include your name, email address, phone number, date of birth, address, government-issued identification numbers, financial information, and any other information you choose to provide.
+                            </p>
+                            
+                            <h3>3. How We Use Your Information</h3>
+                            <p>
+                                We may use the information we collect about you for various purposes, including to:
+                            </p>
+                            <ul>
+                                <li>Provide, maintain, and improve our services</li>
+                                <li>Process transactions and send related information</li>
+                                <li>Verify your identity and prevent fraud</li>
+                                <li>Send technical notices, updates, security alerts, and support messages</li>
+                                <li>Respond to your comments, questions, and customer service requests</li>
+                                <li>Comply with legal obligations</li>
+                            </ul>
+                            
+                            <h3>4. Security</h3>
+                            <p>
+                                We implement appropriate technical and organizational measures to protect the security of your personal information. However, please be aware that no security system is impenetrable and we cannot guarantee the absolute security of our systems. In the event that any information under our control is compromised as a result of a breach of security, we will take reasonable steps to investigate the situation and, where appropriate, notify those individuals whose information may have been compromised.
+                            </p>
+                            
+                            <h3>5. Your Rights</h3>
+                            <p>
+                                Depending on your location, you may have certain rights regarding your personal information, such as:
+                            </p>
+                            <ul>
+                                <li>The right to access your personal information</li>
+                                <li>The right to rectify inaccurate personal information</li>
+                                <li>The right to request the deletion of your personal information</li>
+                                <li>The right to restrict processing of your personal information</li>
+                                <li>The right to data portability</li>
+                                <li>The right to object to processing of your personal information</li>
+                            </ul>
+                            
+                            <h3>6. Changes to This Privacy Policy</h3>
+                            <p>
+                                We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last updated" date at the top of this Privacy Policy. You are advised to review this Privacy Policy periodically for any changes.
+                            </p>
+                            
+                            <h3>7. Contact Us</h3>
+                            <p>
+                                If you have any questions about this Privacy Policy, please contact us at:
+                            </p>
+                            <p>
+                                Email: privacy@primetrust.com<br>
+                                Address: 123 Finance Street, Banking District, New York, NY 10001
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-white">
+        <div class="max-w-7xl mx-auto py-12 px-4 overflow-hidden sm:px-6 lg:px-8">
+            <nav class="-mx-5 -my-2 flex flex-wrap justify-center" aria-label="Footer">
+                <div class="px-5 py-2">
+                    <a href="{% url 'pages:about' %}" class="text-base text-gray-500 hover:text-gray-900">About</a>
+                </div>
+                <div class="px-5 py-2">
+                    <a href="{% url 'pages:features' %}" class="text-base text-gray-500 hover:text-gray-900">Features</a>
+                </div>
+                <div class="px-5 py-2">
+                    <a href="{% url 'pages:privacy' %}" class="text-base text-gray-500 hover:text-gray-900">Privacy</a>
+                </div>
+                <div class="px-5 py-2">
+                    <a href="{% url 'pages:terms' %}" class="text-base text-gray-500 hover:text-gray-900">Terms</a>
+                </div>
+                <div class="px-5 py-2">
+                    <a href="{% url 'pages:contact' %}" class="text-base text-gray-500 hover:text-gray-900">Contact</a>
+                </div>
+            </nav>
+            <p class="mt-8 text-center text-base text-gray-400">
+                &copy; 2025 PrimeTrust. All rights reserved.
+            </p>
+        </div>
+    </footer>
+</div>
+{% endblock %}

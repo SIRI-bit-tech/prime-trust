@@ -42,13 +42,15 @@ class CustomUserCreationForm(UserCreationForm):
         
         if commit:
             user.save()
-            # Create user profile with additional fields
-            UserProfile.objects.create(
+            # Use get_or_create to avoid IntegrityError
+            UserProfile.objects.get_or_create(
                 user=user,
-                date_of_birth=self.cleaned_data['date_of_birth'],
-                city=self.cleaned_data['city'],
-                state=self.cleaned_data['state'],
-                address=self.cleaned_data['address']
+                defaults={
+                    'date_of_birth': self.cleaned_data['date_of_birth'],
+                    'city': self.cleaned_data['city'],
+                    'state': self.cleaned_data['state'],
+                    'address': self.cleaned_data['address']
+                }
             )
         
         return user

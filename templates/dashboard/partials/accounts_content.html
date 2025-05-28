@@ -1,0 +1,112 @@
+{% load static %}
+<div class="space-y-6">
+    <!-- Total Balance Card -->
+    <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h2 class="text-lg font-medium text-gray-900">Total Balance</h2>
+            <div class="mt-2 flex items-center">
+                <p class="text-3xl font-semibold text-gray-900">${{ total_balance|floatformat:2 }}</p>
+                <span class="ml-2 px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                    All Accounts
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Accounts List -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-md">
+        {% if accounts %}
+        <ul class="divide-y divide-gray-200">
+            {% for account in accounts %}
+            <li class="{% if forloop.first %}rounded-t-lg{% elif forloop.last %}rounded-b-lg{% endif %} hover:bg-gray-50">
+                <div class="px-4 py-4 sm:px-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-12 w-12 rounded-full bg-{{ account.account_type }}-100 flex items-center justify-center">
+                                {% if account.account_type == 'checking' %}
+                                <svg class="h-6 w-6 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                </svg>
+                                {% else %}
+                                <svg class="h-6 w-6 text-secondary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                {% endif %}
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">
+                                    {{ account.get_account_type_display }} Account
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    Account ending in {{ account.account_number|slice:"-4:" }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ml-2 flex-shrink-0 flex flex-col items-end">
+                            <p class="text-lg font-medium text-gray-900">${{ account.balance|floatformat:2 }}</p>
+                            <p class="text-xs text-gray-500">Available Balance</p>
+                        </div>
+                    </div>
+                    <div class="mt-2 flex justify-between text-sm text-gray-500">
+                        <div>
+                            <span class="font-medium">Account Number:</span>
+                            <span class="ml-1">{{ account.account_number }}</span>
+                        </div>
+                        <div>
+                            <span class="font-medium">Routing Number:</span>
+                            <span class="ml-1">{{ account.routing_number|default:'N/A' }}</span>
+                        </div>
+                    </div>
+                    <div class="mt-3 flex space-x-3">
+                        <a href="{% url 'banking:deposit' %}?account={{ account.id }}" 
+                           class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-primary-700 bg-primary-100 hover:bg-primary-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                            Deposit
+                        </a>
+                        <a href="{% url 'banking:send_money' %}?from_account={{ account.id }}" 
+                           class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-secondary-700 bg-secondary-100 hover:bg-secondary-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary-500">
+                            Send Money
+                        </a>
+                        <button type="button" 
+                                class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                            View Details
+                        </button>
+                    </div>
+                </div>
+            </li>
+            {% empty %}
+            <li class="px-4 py-6 text-center text-gray-500">
+                <p>No accounts found. Please contact support if you believe this is an error.</p>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:px-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Quick Actions</h3>
+        </div>
+        <div class="border-t border-gray-200 px-4 py-5 sm:p-0">
+            <dl class="sm:divide-y sm:divide-gray-200">
+                <div class="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                    <dt class="text-sm font-medium text-gray-500">
+                        Need to manage your accounts?
+                    </dt>
+                    <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                        <div class="flex space-x-3">
+                            <a href="{% url 'banking:deposit' %}" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                                Make a Deposit
+                            </a>
+                            <a href="{% url 'banking:send_money' %}" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-secondary-600 hover:bg-secondary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-secondary-500">
+                                Send Money
+                            </a>
+                            <a href="#" class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                                Open New Account
+                            </a>
+                        </div>
+                    </dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+</div>

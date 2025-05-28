@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Features - PrimeTrust Banking{% endblock %}
+
+{% block content %}
+<div class="min-h-full">
+    <!-- Header -->
+    <header class="bg-white shadow">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center">
+                <h1 class="text-3xl font-bold text-gray-900">Features</h1>
+                <a href="{% url 'landing' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
+                    Back to Home
+                </a>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main content -->
+    <main>
+        <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <div class="px-4 py-6 sm:px-0">
+                <!-- Feature Overview -->
+                <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-8">
+                    <div class="px-4 py-5 sm:px-6">
+                        <h2 class="text-lg leading-6 font-medium text-gray-900">Feature Overview</h2>
+                        <p class="mt-1 max-w-2xl text-sm text-gray-500">Discover what makes PrimeTrust the ideal banking solution.</p>
+                    </div>
+                    <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
+                        <p class="text-base text-gray-700 mb-4">
+                            PrimeTrust offers a comprehensive suite of banking features designed for the modern digital lifestyle. Our platform combines security, convenience, and innovation to provide you with the best banking experience possible.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Feature Grid -->
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    <!-- Secure Authentication -->
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="px-4 py-5 sm:p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 bg-primary-500 rounded-md p-3">
+                                    <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                </div>
+                                <div class="ml-5">
+                                    <h3 class="text-lg leading-6 font-medium text-gray-900">Secure Authentication</h3>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <p class="text-sm text-gray-500">
+                                    Two-factor authentication with email verification ensures your account remains secure. Every login and transaction is verified for maximum security.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Real-time Transactions -->
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="px-4 py-5 sm:p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 bg-primary-500 rounded-md p-3">
+                                    <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
+                                </div>
+                                <div class="ml-5">
+                                    <h3 class="text-lg leading-6 font-medium text-gray-900">Real-time Transactions</h3>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <p class="text-sm text-gray-500">
+                                    Send and receive money instantly with real-time transaction updates. No more waiting for days to see your balance update.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Virtual Cards -->
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="px-4 py-5 sm:p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 bg-primary-500 rounded-md p-3">
+                                    <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                    </svg>
+                                </div>
+                                <div class="ml-5">
+                                    <h3 class="text-lg leading-6 font-medium text-gray-900">Virtual Cards</h3>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <p class="text-sm text-gray-500">
+                                    Create and manage virtual cards for online shopping with customizable spending limits and expiration dates.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Expense Tracking -->
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="px-4 py-5 sm:p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 bg-primary-500 rounded-md p-3">
+                                    <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                    </svg>
+                                </div>
+                                <div class="ml-5">
+                                    <h3 class="text-lg leading-6 font-medium text-gray-900">Expense Tracking</h3>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <p class="text-sm text-gray-500">
+                                    Monitor your spending with detailed categorization and visual reports to help you manage your finances better.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Savings Goals -->
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="px-4 py-5 sm:p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 bg-primary-500 rounded-md p-3">
+                                    <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div class="ml-5">
+                                    <h3 class="text-lg leading-6 font-medium text-gray-900">Savings Goals</h3>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <p class="text-sm text-gray-500">
+                                    Set and track savings goals with automated transfers to help you reach your financial objectives.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Mobile Banking -->
+                    <div class="bg-white overflow-hidden shadow rounded-lg">
+                        <div class="px-4 py-5 sm:p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 bg-primary-500 rounded-md p-3">
+                                    <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <div class="ml-5">
+                                    <h3 class="text-lg leading-6 font-medium text-gray-900">Mobile Banking</h3>
+                                </div>
+                            </div>
+                            <div class="mt-4">
+                                <p class="text-sm text-gray-500">
+                                    Access your accounts anytime, anywhere with our responsive web application optimized for all devices.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="bg-white">
+        <div class="max-w-7xl mx-auto py-12 px-4 overflow-hidden sm:px-6 lg:px-8">
+            <nav class="-mx-5 -my-2 flex flex-wrap justify-center" aria-label="Footer">
+                <div class="px-5 py-2">
+                    <a href="{% url 'pages:about' %}" class="text-base text-gray-500 hover:text-gray-900">About</a>
+                </div>
+                <div class="px-5 py-2">
+                    <a href="{% url 'pages:features' %}" class="text-base text-gray-500 hover:text-gray-900">Features</a>
+                </div>
+                <div class="px-5 py-2">
+                    <a href="{% url 'pages:privacy' %}" class="text-base text-gray-500 hover:text-gray-900">Privacy</a>
+                </div>
+                <div class="px-5 py-2">
+                    <a href="{% url 'pages:terms' %}" class="text-base text-gray-500 hover:text-gray-900">Terms</a>
+                </div>
+                <div class="px-5 py-2">
+                    <a href="{% url 'pages:contact' %}" class="text-base text-gray-500 hover:text-gray-900">Contact</a>
+                </div>
+            </nav>
+            <p class="mt-8 text-center text-base text-gray-400">
+                &copy; 2025 PrimeTrust. All rights reserved.
+            </p>
+        </div>
+    </footer>
+</div>
+{% endblock %}

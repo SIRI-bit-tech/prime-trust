@@ -9,12 +9,20 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-change-this-in-production')
+SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key-here')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,.onrender.com').split(',')
+
+# Configure SSL for production
+SECURE_SSL_REDIRECT = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+SECURE_HSTS_PRELOAD = not DEBUG
 
 # Application definition
 INSTALLED_APPS = [
@@ -24,20 +32,26 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sitemaps',  # For sitemap generation
+    'django.contrib.sites',     # Required for sitemaps
     
     # Third-party
     'django_htmx',
     'crispy_forms',
     'crispy_tailwind',
+    'robots',                   # For robots.txt management
+    'meta',                     # For meta tags management
     
     # Local
     'accounts.apps.AccountsConfig',
     'banking.apps.BankingConfig',
     'dashboard.apps.DashboardConfig',
+    'pages.apps.PagesConfig',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Added for static files in production
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -101,9 +115,26 @@ USE_I18N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Use WhiteNoise for static files in production
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Configure database for Render
+try:
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.config(
+            default='sqlite:///' + os.path.join(BASE_DIR, 'db.sqlite3'),
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+except ImportError:
+    # Fallback if dj_database_url is not installed yet
+    pass
 
 # Media files
 MEDIA_URL = '/media/'
@@ -120,16 +151,93 @@ LOGIN_REDIRECT_URL = 'dashboard:home'
 LOGOUT_REDIRECT_URL = 'accounts:login'
 LOGIN_URL = 'accounts:login'
 
-# Email Backend Configuration
-if DEBUG:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-else:
-    EMAIL_BACKEND = os.getenv('EMAIL_BACKEND')
-    EMAIL_HOST = os.getenv('EMAIL_HOST')
-    EMAIL_PORT = os.getenv('EMAIL_PORT')
-    EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS') == 'True'
-    EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+# Security settings for production
+if not DEBUG:
+    # HTTPS settings
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    
+    # Content security policy
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_BROWSER_XSS_FILTER = True
+    X_FRAME_OPTIONS = 'DENY'
+
+# Email Configuration
+# Note: We're using Brevo API directly for sending emails, not Django's SMTP
+# SMTP settings are commented out as they're not needed with the Brevo API
+# EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+# EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp-relay.brevo.com')
+# EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
+# EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+# EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+# EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+
+# We still need DEFAULT_FROM_EMAIL for the sender information
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'PrimeTrust <noreply@primetrust.com>')
+
+# Brevo API Configuration - This is what we're actually using for emails
+BREVO_API_KEY = os.getenv('BREVO_API_KEY', '')
+BREVO_ENABLED = bool(BREVO_API_KEY)  # Enable Brevo if API key is provided
+
+# Site ID for django.contrib.sites
+SITE_ID = 1
+
+# SEO Settings
+META_SITE_PROTOCOL = 'https' if not DEBUG else 'http'
+META_SITE_DOMAIN = os.getenv('META_SITE_DOMAIN', 'primetrust.yourdomain.com')
+META_SITE_NAME = 'PrimeTrust'
+META_SITE_TYPE = 'website'
+META_INCLUDE_KEYWORDS = ['banking', 'online banking', 'secure banking', 'digital banking', 'financial services']
+META_DEFAULT_KEYWORDS = ['PrimeTrust', 'banking', 'secure banking', 'online banking']
+META_DESCRIPTION_LENGTH = 300
+META_USE_OG_PROPERTIES = True
+META_USE_TWITTER_PROPERTIES = True
+META_USE_SCHEMAORG_PROPERTIES = True
+META_USE_TITLE_TAG = True
+META_DEFAULT_IMAGE = 'img/primetrust-logo.png'
+
+# Logging configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'debug.log'),
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+        },
+        'accounts': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'INFO',
+    },
+}
 
 # Crispy Forms
 CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwindcss"

@@ -1,0 +1,240 @@
+<form id="new-loan-form" 
+      hx-post="{% url 'dashboard:loans' %}" 
+      hx-swap="none"
+      class="space-y-6">
+    {% csrf_token %}
+    
+    <!-- Loan Amount -->
+    <div>
+        <label for="loan-amount" class="block text-sm font-medium text-gray-700">
+            Loan Amount
+            <span id="loan-amount-value" class="text-primary-600">$5,000</span>
+        </label>
+        <input type="range" 
+               id="loan-amount" 
+               name="amount" 
+               min="1000" 
+               max="50000" 
+               step="100" 
+               value="5000"
+               class="mt-2 w-full"
+               required>
+        <div class="flex justify-between text-xs text-gray-500 mt-1">
+            <span>$1,000</span>
+            <span>$50,000</span>
+        </div>
+    </div>
+    
+    <!-- Loan Type -->
+    <div>
+        <label for="loan-type" class="block text-sm font-medium text-gray-700">
+            Loan Type
+        </label>
+        <select id="loan-type" 
+                name="loan_type" 
+                required
+                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
+            <option value="">Select a loan type</option>
+            {% for value, label in loan_types.items %}
+                <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <!-- Loan Term -->
+    <div>
+        <label for="loan-term" class="block text-sm font-medium text-gray-700">
+            Loan Term (months)
+        </label>
+        <select id="loan-term" 
+                name="term" 
+                required
+                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
+            {% for term in loan_terms %}
+                <option value="{{ term }}" {% if term == 36 %}selected{% endif %}>
+                    {{ term }} months ({{ term|div:12 }} years)
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <!-- Employment Status -->
+    <div>
+        <label for="employment-status" class="block text-sm font-medium text-gray-700">
+            Employment Status
+        </label>
+        <select id="employment-status" 
+                name="employment_status" 
+                required
+                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md">
+            <option value="">Select employment status</option>
+            <option value="employed">Employed</option>
+            <option value="self_employed">Self-Employed</option>
+            <option value="retired">Retired</option>
+            <option value="student">Student</option>
+            <option value="unemployed">Unemployed</option>
+        </select>
+    </div>
+    
+    <!-- Annual Income -->
+    <div>
+        <label for="annual-income" class="block text-sm font-medium text-gray-700">
+            Annual Income
+        </label>
+        <div class="mt-1 relative rounded-md shadow-sm">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <span class="text-gray-500 sm:text-sm">$</span>
+            </div>
+            <input type="number" 
+                   id="annual-income" 
+                   name="annual_income" 
+                   required
+                   min="0"
+                   step="1000"
+                   class="focus:ring-primary-500 focus:border-primary-500 block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md" 
+                   placeholder="0">
+            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <span class="text-gray-500 sm:text-sm" id="price-currency">USD</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Loan Estimate -->
+    <div class="bg-gray-50 p-4 rounded-lg">
+        <h4 class="text-sm font-medium text-gray-900 mb-3">Loan Estimate</h4>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <p class="text-xs text-gray-500">Monthly Payment</p>
+                <p id="monthly-payment" class="font-medium">$0.00</p>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500">Total Interest</p>
+                <p id="total-interest" class="font-medium">$0.00</p>
+            </div>
+            <div class="col-span-2 pt-2 border-t border-gray-200">
+                <p class="text-xs text-gray-500">Total Payment</p>
+                <p id="total-payment" class="font-medium text-lg">$0.00</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Submit Button -->
+    <div class="flex justify-end space-x-3 pt-2">
+        <button type="button"
+                id="cancel-application"
+                class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+            Cancel
+        </button>
+        <button type="submit"
+                class="inline-flex justify-center py-2 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+            Submit Application
+        </button>
+    </div>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize loan calculator
+    const form = document.getElementById('new-loan-form');
+    const amountInput = document.getElementById('loan-amount');
+    const amountValue = document.getElementById('loan-amount-value');
+    const termSelect = document.getElementById('loan-term');
+    const monthlyPaymentEl = document.getElementById('monthly-payment');
+    const totalInterestEl = document.getElementById('total-interest');
+    const totalPaymentEl = document.getElementById('total-payment');
+    
+    // Format currency
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(amount);
+    };
+    
+    // Calculate loan details
+    const calculateLoan = () => {
+        const amount = parseFloat(amountInput.value) || 0;
+        const term = parseInt(termSelect.value) || 36;
+        
+        // Simple interest calculation (in a real app, this would be more complex)
+        const interestRate = 0.08; // 8% annual interest
+        const monthlyRate = interestRate / 12;
+        const monthlyPayment = (amount * monthlyRate * Math.pow(1 + monthlyRate, term)) / 
+                            (Math.pow(1 + monthlyRate, term) - 1);
+        
+        const totalPayment = monthlyPayment * term;
+        const totalInterest = totalPayment - amount;
+        
+        // Update the UI
+        monthlyPaymentEl.textContent = formatCurrency(monthlyPayment);
+        totalInterestEl.textContent = formatCurrency(totalInterest);
+        totalPaymentEl.textContent = formatCurrency(totalPayment);
+    };
+    
+    // Update amount display when slider changes
+    amountInput.addEventListener('input', function() {
+        amountValue.textContent = formatCurrency(this.value);
+        calculateLoan();
+    });
+    
+    // Recalculate when term changes
+    termSelect.addEventListener('change', calculateLoan);
+    
+    // Handle form submission
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(form);
+        
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                // Show success message
+                htmx.trigger('#loan-application-form', 'loanApplicationSuccess', result);
+                
+                // Close the form and refresh the loans list
+                htmx.trigger('#loans-container', 'refreshLoans');
+                
+                // Reset form
+                form.reset();
+                calculateLoan();
+                
+                // Show success notification
+                showNotification('Loan application submitted successfully!', 'success');
+            } else {
+                throw new Error(result.error || 'Failed to submit application');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification(error.message || 'An error occurred', 'error');
+        }
+    });
+    
+    // Cancel button
+    document.getElementById('cancel-application').addEventListener('click', function() {
+        form.reset();
+        htmx.remove('#loan-application-form');
+    });
+    
+    // Initial calculation
+    calculateLoan();
+    
+    // Show notification helper
+    function showNotification(message, type = 'info') {
+        // This would be replaced with your notification system
+        alert(`${type.toUpperCase()}: ${message}`);
+    }
+});
+</script>

@@ -95,24 +95,45 @@ def resend_verification(request, user_id):
 
 def user_login(request):
     """User login view with password and email verification"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
     if request.user.is_authenticated:
         return redirect('dashboard:home')
         
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
-            # Get the user from the cleaned data (set in the form's clean method)
-            user = form.cleaned_data['user']
-            
-            # Generate and send login verification code
-            code = user.generate_verification_code()
-            send_login_code_email(user, code)
-            
-            # Store password in session for later use after verification
-            request.session['temp_user_id'] = user.id
-            
-            # Redirect to login verification
-            return redirect('accounts:verify_login', user_id=user.id)
+            try:
+                # Get the user from the cleaned data (set in the form's clean method)
+                user = form.cleaned_data['user']
+                logger.info(f"Login attempt for user: {user.email}")
+                
+                # Generate and send login verification code
+                code = user.generate_verification_code()
+                logger.info(f"Generated verification code for user: {user.email}")
+                
+                # Send the login code email with error handling
+                try:
+                    send_login_code_email(user, code)
+                    logger.info(f"Login code email sent to: {user.email}")
+                except Exception as e:
+                    logger.error(f"Error sending login code email: {str(e)}")
+                    messages.error(request, f"Error sending verification code. Please try again.")
+                    return redirect('accounts:login')
+                
+                # Store user ID in session for later use after verification
+                request.session['temp_user_id'] = user.id
+                
+                # Show success message
+                messages.success(request, f"Verification code sent to {user.email}")
+                
+                # Redirect to login verification
+                return redirect('accounts:verify_login', user_id=user.id)
+            except Exception as e:
+                logger.error(f"Unexpected error in login view: {str(e)}")
+                messages.error(request, "An unexpected error occurred. Please try again.")
+                return redirect('accounts:login')
     else:
         form = LoginForm()
     
@@ -208,7 +229,18 @@ def profile(request):
         user_form = ProfileUpdateForm(instance=user)
         profile_form = UserProfileUpdateForm(instance=user_profile)
     
+    # Get current time for greeting
+    from datetime import datetime
+    current_hour = datetime.now().hour
+    greeting = "Good Evening"
+    if current_hour < 12:
+        greeting = "Good Morning"
+    elif current_hour < 18:
+        greeting = "Good Afternoon"
+    
     context = {
+        'greeting': greeting,
+        'active_tab': 'profile',
         'user_form': user_form,
         'profile_form': profile_form
     }
@@ -238,7 +270,20 @@ def change_password(request):
     else:
         form = PasswordChangeForm(user)
     
-    context = {'form': form}
+    # Get current time for greeting
+    from datetime import datetime
+    current_hour = datetime.now().hour
+    greeting = "Good Evening"
+    if current_hour < 12:
+        greeting = "Good Morning"
+    elif current_hour < 18:
+        greeting = "Good Afternoon"
+    
+    context = {
+        'greeting': greeting,
+        'active_tab': 'profile',
+        'form': form
+    }
     
     if request.htmx:
         return render(request, 'accounts/partials/password_change_form.html', context)
@@ -253,10 +298,11 @@ def send_verification_email(user, code):
         'code': code
     })
     plain_message = strip_tags(html_message)
-    from_email = settings.DEFAULT_FROM_EMAIL
     to_email = user.email
     
-    send_mail(subject, plain_message, from_email, [to_email], html_message=html_message)
+    # Use Brevo API for sending emails
+    from .utils import send_email_with_brevo
+    send_email_with_brevo(to_email, subject, html_message, plain_message)
 
 def send_login_code_email(user, code):
     """Send login verification code"""
@@ -266,7 +312,8 @@ def send_login_code_email(user, code):
         'code': code
     })
     plain_message = strip_tags(html_message)
-    from_email = settings.DEFAULT_FROM_EMAIL
     to_email = user.email
     
-    send_mail(subject, plain_message, from_email, [to_email], html_message=html_message)
+    # Use Brevo API for sending emails
+    from .utils import send_email_with_brevo
+    send_email_with_brevo(to_email, subject, html_message, plain_message)

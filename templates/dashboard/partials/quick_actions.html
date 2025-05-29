@@ -1,18 +1,7 @@
 <!-- Quick Actions Section -->
 <div class="mt-8">
     <h2 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
-    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-        <!-- Transfer Money -->
-        <a href="{% url 'dashboard:transfer' %}" 
-           class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col items-center text-center">
-            <div class="bg-primary-100 p-3 rounded-full mb-2">
-                <svg class="h-6 w-6 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                </svg>
-            </div>
-            <span class="text-sm font-medium text-gray-700">Transfer</span>
-        </a>
-
+    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <!-- Pay Bills -->
         <a href="{% url 'dashboard:pay-bills' %}" 
            class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col items-center text-center">

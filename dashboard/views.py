@@ -4,11 +4,15 @@ from django.http import HttpResponse, JsonResponse
 from django.db.models import Sum, Q
 from django_htmx.http import trigger_client_event
 from django.views.decorators.http import require_http_methods
-
+from datetime import timedelta
+from django.utils import timezone
+from decimal import Decimal
 from accounts.models import CustomUser
 from banking.models import Account, Transaction, VirtualCard, Notification
 from banking.models_bills import Biller, BillPayment, Payee, ScheduledPayment
 from banking.models_loans import LoanApplication, LoanAccount, LoanPayment
+from .views_investments_insurance import *
+# from .views_loans import *
 
 @login_required
 def home(request):

@@ -1,0 +1,82 @@
+<div class="space-y-6">
+    <!-- Active Policies -->
+    <div>
+        <h2 class="text-lg font-medium text-gray-900 mb-4">Active Policies</h2>
+        {% if active_policies %}
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {% for policy in active_policies %}
+            <div class="bg-white overflow-hidden shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-purple-500 rounded-md p-3">
+                            <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dl>
+                                <dt class="text-sm font-medium text-gray-500 truncate">
+                                    {{ policy.get_policy_type_display }}
+                                </dt>
+                                <dd class="flex items-baseline">
+                                    <div class="text-2xl font-semibold text-gray-900">
+                                        ${{ policy.coverage_amount|floatformat:2 }}
+                                    </div>
+                                    <div class="ml-2 flex items-baseline text-sm font-semibold text-green-600">
+                                        {{ policy.provider }}
+                                    </div>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <div class="text-sm text-gray-500">
+                            <p>Policy #: {{ policy.policy_number }}</p>
+                            <p>Monthly Premium: ${{ policy.monthly_premium|floatformat:2 }}</p>
+                            <p>Start Date: {{ policy.start_date|date:"M d, Y" }}</p>
+                            {% if policy.end_date %}
+                            <p>End Date: {{ policy.end_date|date:"M d, Y" }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="mt-4">
+                            <a href="{% url 'dashboard:insurance_policy_detail' policy.id %}" class="text-sm font-medium text-primary-600 hover:text-primary-500">
+                                View details<span class="sr-only"> {{ policy.policy_number }} details</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12 bg-white shadow rounded-lg">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No active policies</h3>
+            <p class="mt-1 text-sm text-gray-500">Get started by adding a new insurance policy.</p>
+            <div class="mt-6">
+                <button type="button" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                    <svg class="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                    </svg>
+                    New Policy
+                </button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Recent Claims -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:px-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Recent Claims</h3>
+            <p class="mt-1 max-w-2xl text-sm text-gray-500">Track the status of your recent insurance claims.</p>
+        </div>
+        <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+            <div class="text-center py-12 text-gray-500">
+                <p>No recent claims found.</p>
+            </div>
+        </div>
+    </div>
+</div>

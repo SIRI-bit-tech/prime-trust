@@ -3,6 +3,7 @@ from .models import Account, VirtualCard, Transaction, Notification
 from .models_loans import LoanApplication, LoanAccount, LoanPayment
 from .models_bills import Biller, BillPayment, Payee, ScheduledPayment
 from .admin_loans_bills import *
+from .admin_investments_insurance import *
 
 @admin.register(Account)
 class AccountAdmin(admin.ModelAdmin):

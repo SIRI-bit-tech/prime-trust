@@ -25,8 +25,12 @@ urlpatterns = [
     
     # Investments and Insurance
     path('investments/', views.investments, name='investments'),
+    path('investments/new/', views.new_investment, name='new_investment'),
     path('investments/<int:account_id>/', views.investment_detail, name='investment_detail'),
+    path('investments/<int:pk>/edit/', views.new_investment, name='edit_investment'),
     path('insurance/', views.insurance, name='insurance'),
+    path('insurance/new/', views.new_insurance_policy, name='new_insurance_policy'),
+    path('insurance/policy/<int:pk>/edit/', views.new_insurance_policy, name='edit_insurance_policy'),
     path('insurance/policy/<int:policy_id>/', views.insurance_policy_detail, name='insurance_policy_detail'),
     path('services/', views.services, name='services'),
     

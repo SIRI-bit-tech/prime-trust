@@ -10,6 +10,7 @@ from django.utils.html import strip_tags
 from django.utils import timezone
 from django.http import HttpResponse, HttpResponseRedirect
 from django_htmx.http import trigger_client_event
+import logging
 
 from .models import CustomUser, UserProfile
 from .forms import (
@@ -21,8 +22,10 @@ from .forms import (
     PasswordChangeForm
 )
 
+logger = logging.getLogger(__name__)
+
 def register(request):
-    """User registration view with password and email verification"""
+    """User registration view with security question"""
     if request.user.is_authenticated:
         return redirect('dashboard:home')
         
@@ -30,16 +33,27 @@ def register(request):
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            # Generate and send verification code
-            code = user.generate_verification_code()
-            send_verification_email(user, code)
             
-            # Redirect to verification page
-            return redirect('accounts:verify_email', user_id=user.id)
+            # Set security question and answer
+            security_question = request.POST.get('security_question')
+            security_answer = request.POST.get('security_answer')
+            
+            if security_question and security_answer:
+                user.set_security_question(security_question, security_answer)
+                
+                # Log the user in directly
+                login(request, user)
+                messages.success(request, 'Registration successful! You are now logged in.')
+                return redirect('dashboard:home')
+            else:
+                messages.error(request, 'Please provide a security question and answer.')
     else:
         form = CustomUserCreationForm()
     
-    context = {'form': form}
+    context = {
+        'form': form,
+        'security_questions': CustomUser.SECURITY_QUESTIONS
+    }
     if request.htmx:
         return render(request, 'accounts/partials/register_form.html', context)
     return render(request, 'accounts/register.html', context)
@@ -94,42 +108,18 @@ def resend_verification(request, user_id):
     return response
 
 def user_login(request):
-    """User login view with password and email verification"""
-    import logging
-    logger = logging.getLogger(__name__)
-    
+    """User login view with security question verification"""
     if request.user.is_authenticated:
         return redirect('dashboard:home')
-        
+    
     if request.method == 'POST':
-        form = LoginForm(request.POST)
+        form = LoginForm(request, data=request.POST)
         if form.is_valid():
             try:
-                # Get the user from the cleaned data (set in the form's clean method)
-                user = form.cleaned_data['user']
-                logger.info(f"Login attempt for user: {user.email}")
-                
-                # Generate and send login verification code
-                code = user.generate_verification_code()
-                logger.info(f"Generated verification code for user: {user.email}")
-                
-                # Send the login code email with error handling
-                try:
-                    send_login_code_email(user, code)
-                    logger.info(f"Login code email sent to: {user.email}")
-                except Exception as e:
-                    logger.error(f"Error sending login code email: {str(e)}")
-                    messages.error(request, f"Error sending verification code. Please try again.")
-                    return redirect('accounts:login')
-                
-                # Store user ID in session for later use after verification
+                user = form.get_user()
+                # Store user ID in session for security question verification
                 request.session['temp_user_id'] = user.id
-                
-                # Show success message
-                messages.success(request, f"Verification code sent to {user.email}")
-                
-                # Redirect to login verification
-                return redirect('accounts:verify_login', user_id=user.id)
+                return redirect('accounts:verify_security_question')
             except Exception as e:
                 logger.error(f"Unexpected error in login view: {str(e)}")
                 messages.error(request, "An unexpected error occurred. Please try again.")

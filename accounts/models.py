@@ -16,36 +16,44 @@ class CustomUser(AbstractUser):
         message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed."
     )
     phone_number = models.CharField(validators=[phone_regex], max_length=17, blank=True)
-    email_verified = models.BooleanField(default=False)
-    verification_code = models.CharField(max_length=6, blank=True, null=True)
-    verification_code_created_at = models.DateTimeField(blank=True, null=True)
-
+    
+    # Security question fields
+    SECURITY_QUESTIONS = [
+        ('mother_maiden', "What is your mother's maiden name?"),
+        ('pet_name', "What was your first pet's name?"),
+        ('birth_city', "In what city were you born?"),
+        ('school_name', "What was the name of your first school?"),
+        ('favorite_color', "What is your favorite color?"),
+        ('favorite_food', "What is your favorite food?"),
+    ]
+    
+    security_question = models.CharField(
+        max_length=50,
+        choices=SECURITY_QUESTIONS,
+        blank=True,
+        null=True
+    )
+    security_answer = models.CharField(max_length=255, blank=True, null=True)
+    
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
     def __str__(self):
         return self.email
     
-    def generate_verification_code(self):
-        """Generate a 6-digit verification code and save it to the user model."""
-        code = ''.join(random.choices(string.digits, k=6))
-        self.verification_code = code
-        self.verification_code_created_at = timezone.now()
+    def set_security_question(self, question, answer):
+        """Set the security question and hashed answer."""
+        from django.contrib.auth.hashers import make_password
+        self.security_question = question
+        self.security_answer = make_password(answer.lower().strip())
         self.save()
-        return code
     
-    def verify_email(self, code):
-        """Verify the user's email with the provided code."""
-        # Check if code is valid and not expired (valid for 10 minutes)
-        if (self.verification_code == code and 
-            self.verification_code_created_at and 
-            timezone.now() < self.verification_code_created_at + timezone.timedelta(minutes=10)):
-            self.email_verified = True
-            self.verification_code = None
-            self.verification_code_created_at = None
-            self.save()
-            return True
-        return False
+    def check_security_answer(self, answer):
+        """Verify the security answer."""
+        from django.contrib.auth.hashers import check_password
+        if not self.security_answer:
+            return False
+        return check_password(answer.lower().strip(), self.security_answer)
 
 class UserProfile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='profile')

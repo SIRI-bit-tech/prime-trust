@@ -1,0 +1,64 @@
+{% load static %}
+
+<!-- Mobile menu, show/hide based on menu state. -->
+<div class="lg:hidden" role="dialog" aria-modal="true">
+    <!-- Background backdrop, show/hide based on slide-over state. -->
+    <div class="fixed inset-0 z-50"></div>
+    <div class="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
+        <div class="flex items-center justify-between">
+            <a href="{% url 'dashboard:index' %}" class="-m-1.5 p-1.5">
+                <span class="sr-only">PrimeTrust</span>
+                <img class="h-8 w-auto" src="{% static 'images/logo.svg' %}" alt="PrimeTrust">
+            </a>
+            <button type="button" class="-m-2.5 rounded-md p-2.5 text-gray-700" onclick="toggleMobileMenu()">
+                <span class="sr-only">Close menu</span>
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <div class="mt-6 flow-root">
+            <div class="-my-6 divide-y divide-gray-500/10">
+                <div class="space-y-2 py-6">
+                    <a href="{% url 'dashboard:index' %}" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">Dashboard</a>
+                    <a href="{% url 'dashboard:accounts' %}" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">Accounts</a>
+                    <a href="{% url 'dashboard:transactions' %}" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">Transactions</a>
+                    <a href="{% url 'dashboard:cards' %}" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">Cards</a>
+                    <a href="{% url 'dashboard:investments' %}" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">Investments</a>
+                    <a href="{% url 'dashboard:insurance' %}" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">Insurance</a>
+                    <a href="{% url 'dashboard:loans' %}" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">Loans</a>
+                    <a href="{% url 'dashboard:more_services' %}" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">More Services</a>
+                </div>
+                <div class="py-6">
+                    <a href="{% url 'accounts:profile' %}" class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">Profile</a>
+                    <a href="{% url 'accounts:settings' %}" class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">Settings</a>
+                    <form method="post" action="{% url 'accounts:logout' %}" class="-mx-3 block w-full text-left">
+                        {% csrf_token %}
+                        <button type="submit" class="w-full px-3 py-2.5 text-left text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">
+                            Sign out
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleMobileMenu() {
+    const mobileMenu = document.querySelector('.mobile-menu-container');
+    if (mobileMenu) {
+        mobileMenu.classList.toggle('hidden');
+    }
+}
+
+// Close mobile menu when clicking outside
+document.addEventListener('click', function(event) {
+    const mobileMenu = document.querySelector('.mobile-menu-container');
+    const menuButton = document.querySelector('[aria-label="Open main menu"]');
+    
+    if (mobileMenu && !mobileMenu.contains(event.target) && event.target !== menuButton && !menuButton.contains(event.target)) {
+        mobileMenu.classList.add('hidden');
+    }
+});
+</script>

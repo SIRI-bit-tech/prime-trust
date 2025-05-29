@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sitemaps',  # For sitemap generation
     'django.contrib.sites',     # Required for sitemaps
+    'django.contrib.humanize',  # For human-friendly data formatting
     
     # Third-party
     'django_htmx',

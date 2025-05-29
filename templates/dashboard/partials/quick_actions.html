@@ -47,8 +47,9 @@
         </a>
 
         <!-- More Services -->
-        <a href="{% url 'dashboard:services' %}" 
-           class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col items-center text-center">
+        <a href="{% url 'dashboard:more_services' %}" 
+           class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200 flex flex-col items-center text-center"
+           {% if request.resolver_match.url_name == 'more_services' %}data-current="true"{% endif %}>
             <div class="bg-gray-100 p-3 rounded-full mb-2">
                 <svg class="h-6 w-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />

@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .views_more_services import more_services
 
 app_name = 'dashboard'
 
@@ -37,4 +38,7 @@ urlpatterns = [
     # HTMX updates
     path('balance-update/', views.balance_update, name='balance_update'),
     path('transactions-update/', views.transactions_update, name='transactions_update'),
+    
+    # More Services
+    path('more-services/', more_services, name='more_services'),
 ]

@@ -13,7 +13,7 @@ urlpatterns = [
     
     # Banking Features
     path('transfer/', views.transfer_money, name='transfer'),
-    path('pay-bills/', views.pay_bills, name='pay_bills'),
+    path('pay-bills/', views.pay_bills, name='pay-bills'),
     
     # Loans
     path('loans/', views.loans, name='loans'),

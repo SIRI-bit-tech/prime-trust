@@ -132,6 +132,42 @@ def user_login(request):
         return render(request, 'accounts/partials/login_form.html', context)
     return render(request, 'accounts/login.html', context)
 
+def verify_security_question(request):
+    """Verify user's security question"""
+    if request.user.is_authenticated:
+        return redirect('dashboard:home')
+        
+    user_id = request.session.get('temp_user_id')
+    if not user_id:
+        messages.error(request, 'Session expired. Please log in again.')
+        return redirect('accounts:login')
+        
+    user = get_object_or_404(CustomUser, id=user_id)
+    
+    if request.method == 'POST':
+        answer = request.POST.get('security_answer', '').strip()
+        if user.check_security_answer(answer):
+            # Security answer is correct, log the user in
+            login(request, user)
+            
+            # Clean up session
+            if 'temp_user_id' in request.session:
+                del request.session['temp_user_id']
+                
+            messages.success(request, f'Welcome back, {user.first_name}!')
+            return redirect('dashboard:home')
+        else:
+            messages.error(request, 'Incorrect answer. Please try again.')
+    
+    context = {
+        'security_question': user.get_security_question_display(),
+        'user_email': user.email
+    }
+    
+    if request.htmx:
+        return render(request, 'accounts/partials/security_question_form.html', context)
+    return render(request, 'accounts/verify_security_question.html', context)
+
 def verify_login(request, user_id):
     """Verify login with code after password authentication"""
     user = get_object_or_404(CustomUser, id=user_id)

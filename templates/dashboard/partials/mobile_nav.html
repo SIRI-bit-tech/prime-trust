@@ -30,8 +30,7 @@
                     <a href="{% url 'dashboard:more_services' %}" class="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">More Services</a>
                 </div>
                 <div class="py-6">
-                    <a href="{% url 'accounts:profile' %}" class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">Profile</a>
-                    <a href="{% url 'accounts:settings' %}" class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">Settings</a>
+                    <a href="{% url 'accounts:profile' %}" class="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">Profile & Settings</a>
                     <form method="post" action="{% url 'accounts:logout' %}" class="-mx-3 block w-full text-left">
                         {% csrf_token %}
                         <button type="submit" class="w-full px-3 py-2.5 text-left text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50">

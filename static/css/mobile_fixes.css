@@ -1,0 +1,41 @@
+/* Mobile safe area fixes */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .safe-bottom {
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+    
+    .safe-area-inset-bottom {
+        height: calc(env(safe-area-inset-bottom) + 0.5rem) !important;
+    }
+}
+
+/* Ensure content doesn't hide behind fixed header and bottom nav */
+.main-content {
+    padding-top: 4rem; /* Height of the header */
+    padding-bottom: 5rem; /* Height of the bottom nav + some extra space */
+    min-height: 100vh;
+}
+
+/* For mobile devices */
+@media (max-width: 767px) {
+    /* Fix for iOS Safari viewport height */
+    @supports (-webkit-touch-callout: none) {
+        .min-h-screen {
+            min-height: -webkit-fill-available;
+        }
+    }
+    
+    .main-content {
+        padding-top: 4.5rem; /* Slightly more space for fixed header */
+        padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+    }
+    
+    /* Ensure fixed header is above content */
+    header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 40;
+    }
+}

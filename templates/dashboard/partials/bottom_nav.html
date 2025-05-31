@@ -1,6 +1,8 @@
 <!-- Bottom Navigation for Mobile - Kuda Style -->
-<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-lg z-40">
-    <div class="flex justify-around items-center h-16 px-1">
+<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 shadow-lg z-40 safe-bottom">
+    <!-- Safe area inset for devices with notches -->
+    <div class="h-4 bg-white w-full"></div>
+    <div class="flex justify-around items-center h-16 px-1 bg-white">
         <!-- Home -->
         <a href="{% url 'dashboard:home' %}" class="flex flex-col items-center justify-center flex-1 h-full text-gray-500 hover:text-primary-600 transition-colors {% if active_tab == 'home' %}text-primary-600{% endif %}">
             <div class="relative p-2 rounded-full {% if active_tab == 'home' %}bg-primary-50{% endif %}">
@@ -54,6 +56,8 @@
             </button>
         </form>
     </div>
+    <!-- Safe area inset for devices with home indicators -->
+    <div class="h-4 bg-white w-full safe-area-inset-bottom"></div>
 </nav>
 
 <!-- Add padding to the bottom of the content to account for the fixed bottom nav -->

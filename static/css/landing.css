@@ -1,7 +1,8 @@
 /* Landing page specific styles */
 .parallax-section {
     position: relative;
-    height: 100vh;
+    width: 100%;
+    min-height: 100vh;
     overflow: hidden;
     display: flex;
     align-items: center;
@@ -35,6 +36,24 @@
     .parallax-bg {
         height: 100%;
         transform: translateZ(-1px) scale(1.5);
+    }
+}
+
+/* Mobile-specific styles */
+@media (max-width: 767px) {
+    .parallax-section {
+        height: -webkit-fill-available; /* Fix for mobile viewport units */
+        height: 100vh; /* Fallback for older browsers */
+        min-height: -webkit-fill-available;
+    }
+    
+    .carousel-content {
+        padding: 1rem;
+    }
+    
+    .carousel-content h1 {
+        font-size: 2rem;
+        line-height: 1.2;
     }
 }
 

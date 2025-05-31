@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib import admin
 from .models import Account, VirtualCard, Transaction, Notification
 from .models_loans import LoanApplication, LoanAccount, LoanPayment
@@ -64,15 +65,33 @@ class TransactionAdmin(admin.ModelAdmin):
         }),
     )
 
+class NotificationForm(forms.ModelForm):
+    send_to_all = forms.BooleanField(
+        label='Send to all users',
+        required=False,
+        help_text='If checked, this notification will be sent to all active users.'
+    )
+    
+    class Meta:
+        model = Notification
+        fields = '__all__'
+
 @admin.register(Notification)
 class NotificationAdmin(admin.ModelAdmin):
+    form = NotificationForm
     list_display = ('title', 'user', 'notification_type', 'is_read', 'created_at')
     list_filter = ('notification_type', 'is_read', 'created_at')
     search_fields = ('title', 'message', 'user__email')
     readonly_fields = ('created_at',)
+    actions = ['mark_as_read', 'mark_as_unread', 'resend_notification']
     fieldsets = (
         ('Notification Details', {
             'fields': ('user', 'notification_type', 'title', 'message', 'is_read')
+        }),
+        ('Batch Sending', {
+            'fields': ('send_to_all',),
+            'classes': ('collapse',),
+            'description': 'Use these options to send notifications to multiple users.'
         }),
         ('Related Transaction', {
             'fields': ('related_transaction',),
@@ -83,6 +102,51 @@ class NotificationAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+    
+    def save_model(self, request, obj, form, change):
+        from .utils import send_notification
+        
+        if not change and form.cleaned_data.get('send_to_all'):
+            # If this is a new notification and 'send to all' is checked
+            obj.save()  # Save the original instance first
+            send_notification(
+                user='all',
+                notification_type=obj.notification_type,
+                title=obj.title,
+                message=obj.message,
+                related_transaction=obj.related_transaction
+            )
+            return
+        
+        # For normal saves
+        super().save_model(request, obj, form, change)
+    
+    def mark_as_read(self, request, queryset):
+        updated = queryset.update(is_read=True)
+        self.message_user(request, f"Marked {updated} notifications as read.")
+    mark_as_read.short_description = "Mark selected notifications as read"
+    
+    def mark_as_unread(self, request, queryset):
+        updated = queryset.update(is_read=False)
+        self.message_user(request, f"Marked {updated} notifications as unread.")
+    mark_as_unread.short_description = "Mark selected notifications as unread"
+    
+    def resend_notification(self, request, queryset):
+        from .utils import send_notification
+        
+        count = 0
+        for notification in queryset:
+            send_notification(
+                user=notification.user,
+                notification_type=notification.notification_type,
+                title=notification.title,
+                message=notification.message,
+                related_transaction=notification.related_transaction
+            )
+            count += 1
+            
+        self.message_user(request, f"Resent {count} notifications.")
+    resend_notification.short_description = "Resend selected notifications"
 
 # Register loan and bill models
 # Note: Models are registered using @admin.register decorator in admin_loans_bills.py

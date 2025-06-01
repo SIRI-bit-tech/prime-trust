@@ -1,19 +1,35 @@
-/* Mobile safe area fixes */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-    .safe-bottom {
-        padding-bottom: env(safe-area-inset-bottom);
-    }
-    
-    .safe-area-inset-bottom {
-        height: calc(env(safe-area-inset-bottom) + 0.5rem) !important;
-    }
+/* Mobile menu styles */
+#mobile-menu {
+    transition: opacity 0.3s ease-in-out;
+    z-index: 50;
 }
 
-/* Ensure content doesn't hide behind fixed header and bottom nav */
+#mobile-menu:not(.hidden) {
+    opacity: 1;
+}
+
+#mobile-menu.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#mobile-menu > div > div {
+    transition: transform 0.3s ease-in-out;
+    background-color: white;
+    width: 85%;
+    max-width: 20rem;
+    margin-left: auto;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Main content adjustments */
 .main-content {
-    padding-top: 4rem; /* Height of the header */
-    padding-bottom: 5rem; /* Height of the bottom nav + some extra space */
-    min-height: 100vh;
+    min-height: calc(100vh - 4rem);
+    padding-top: 1rem;
+    padding-bottom: 1rem;
 }
 
 /* For mobile devices */
@@ -26,16 +42,47 @@
     }
     
     .main-content {
-        padding-top: 4.5rem; /* Slightly more space for fixed header */
-        padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+        padding-top: 1rem;
+        padding-bottom: 1rem;
     }
     
-    /* Ensure fixed header is above content */
-    header {
+    /* Hide scrollbar when menu is open */
+    body.menu-open {
+        overflow: hidden;
         position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 40;
+        width: 100%;
+        height: 100%;
+    }
+    
+    /* Menu navigation styles */
+    #mobile-menu nav {
+        overflow-y: auto;
+        /* Remove -webkit-overflow-scrolling as it's not widely supported */
+        /* overscroll-behavior is kept for better UX where supported */
+        overscroll-behavior: contain;
+        /* Add momentum scrolling for iOS */
+        -webkit-overflow-scrolling: touch;
+        /* Hide scrollbar for a cleaner look */
+        scrollbar-width: none; /* Firefox */
+    }
+    
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    #mobile-menu nav::-webkit-scrollbar {
+        display: none;
+    }
+    
+    /* Menu item hover states */
+    #mobile-menu a, #mobile-menu button {
+        transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    
+    #mobile-menu a:hover, #mobile-menu button:hover {
+        background-color: #f9fafb;
+    }
+    
+    /* Active menu item */
+    #mobile-menu a[aria-current="page"] {
+        background-color: #f3f4f6;
+        color: #1f2937;
     }
 }

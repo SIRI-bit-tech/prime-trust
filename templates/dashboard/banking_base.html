@@ -4,16 +4,56 @@
 {% block extra_head %}
 {{ block.super }}
 <link rel="stylesheet" href="{% static 'css/mobile_fixes.css' %}">
+<link rel="stylesheet" href="{% static 'css/logo.css' %}">
 {% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gray-50 flex flex-col">
-    <!-- Mobile hamburger menu button -->
-    <button id="mobile-menu-button" class="md:hidden fixed top-4 right-4 z-50 p-2 rounded-md text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500" aria-label="Toggle navigation menu">
-        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-    </button>
+    <!-- Mobile top bar with notification and hamburger menu -->
+    <div class="md:hidden fixed top-0 left-0 right-0 z-40 bg-primary-600 flex justify-between items-center px-4 py-2">
+        <!-- Notification icon on the left -->
+        <button type="button" 
+                class="relative p-1 rounded-full text-primary-100 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-primary-800 focus:ring-white"
+                id="mobile-notification-button"
+                hx-get="{% url 'dashboard:notifications' %}"
+                hx-target="#mobile-notification-dropdown"
+                hx-swap="innerHTML"
+                hx-trigger="click once">
+            <span class="sr-only">View notifications</span>
+            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            {% if notifications %}
+            <span class="absolute top-0 left-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-primary-600"></span>
+            {% endif %}
+        </button>
+        
+        <!-- Logo in center -->
+        <div class="flex-shrink-0">
+            <img class="logo-mobile-header" src="{% static 'img/logo.png' %}" alt="PrimeTrust">
+        </div>
+        
+        <!-- Hamburger menu button on the right -->
+        <button id="mobile-menu-button" class="p-2 rounded-md text-primary-100 hover:text-white focus:outline-none focus:ring-2 focus:ring-primary-500" aria-label="Toggle navigation menu">
+            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            <span class="sr-only">Menu</span>
+        </button>
+    </div>
+    
+    <!-- Notification dropdown -->
+    <div id="mobile-notification-dropdown" class="hidden fixed top-12 left-0 right-0 z-50 px-4 py-2 bg-white shadow-lg rounded-b-lg md:hidden max-h-[70vh] overflow-y-auto custom-scrollbar">
+        <div class="py-2 text-center text-sm text-gray-500">
+            <div class="flex justify-center">
+                <svg class="animate-spin h-5 w-5 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+            <p class="mt-2">Loading notifications...</p>
+        </div>
+    </div>
 
     <!-- Mobile menu (hidden by default) -->
     <div id="mobile-menu" class="hidden fixed inset-0 z-40">

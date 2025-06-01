@@ -3,10 +3,15 @@
 
 {% block title %}Register - PrimeTrust{% endblock %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/registration.css' %}">
+<script src="{% static 'js/registration.js' %}" defer></script>
+{% endblock %}
+
 {% block content %}
 <div class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
     <div class="sm:mx-auto sm:w-full sm:max-w-md">
-        <img class="mx-auto h-12 w-auto" src="{% static 'images/logo.svg' %}" alt="PrimeTrust Logo">
+        <img class="mx-auto h-16 w-auto font-bold" src="{% static 'img/logo.png' %}" alt="PrimeTrust Logo" style="filter: drop-shadow(0 0 2px rgba(0,0,0,0.3));">
         <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Create your account
         </h2>

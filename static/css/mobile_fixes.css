@@ -1,4 +1,12 @@
 /* Mobile menu styles */
+#mobile-menu-button {
+    z-index: 50;
+    /* Ensure the button is clearly visible */
+    background-color: var(--primary-600, #16a34a);
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 #mobile-menu {
     transition: opacity 0.3s ease-in-out;
     z-index: 50;
@@ -46,31 +54,74 @@
         padding-bottom: 1rem;
     }
     
-    /* Hide scrollbar when menu is open */
-    body.menu-open {
+    /* Hide scrollbars but allow scrolling */
+    .menu-open {
         overflow: hidden;
-        position: fixed;
-        width: 100%;
-        height: 100%;
     }
-    
+
+    /* Mobile top bar styles */
+    .has-mobile-topbar {
+        padding-top: 3rem; /* Add padding to account for the fixed top bar */
+    }
+
+    @media (min-width: 768px) {
+        .has-mobile-topbar {
+            padding-top: 0; /* Remove padding on desktop */
+        }
+    }
+
+    /* Use multiple approaches for cross-browser compatibility */
+    .hide-scrollbar {
+        -ms-overflow-style: none; /* IE and Edge */
+        /* Apply Firefox scrollbar hiding with progressive enhancement */
+        @supports (scrollbar-width: none) {
+            scrollbar-width: none; /* Firefox */
+        }
+    }
+
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
     /* Menu navigation styles */
     #mobile-menu nav {
         overflow-y: auto;
-        /* Remove -webkit-overflow-scrolling as it's not widely supported */
-        /* overscroll-behavior is kept for better UX where supported */
-        overscroll-behavior: contain;
-        /* Add momentum scrolling for iOS */
-        -webkit-overflow-scrolling: touch;
-        /* Hide scrollbar for a cleaner look */
-        scrollbar-width: none; /* Firefox */
+        /* Use touch-action for better cross-browser support */
+        touch-action: pan-y;
     }
-    
-    /* Hide scrollbar for Chrome, Safari and Opera */
-    #mobile-menu nav::-webkit-scrollbar {
-        display: none;
+
+    /* Custom scrollbar for Chrome, Safari and Opera */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
     }
-    
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 3px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #555;
+    }
+
+    /* Custom scrollbar styling with progressive enhancement */
+    .custom-scrollbar {
+        /* Base styling that works in all browsers */
+        overflow-y: auto;
+        
+        /* Firefox-specific styling (will be ignored by other browsers) */
+        /* Using @supports to only apply to browsers that support it */
+        @supports (scrollbar-width: thin) {
+            scrollbar-width: thin;
+            scrollbar-color: #888 #f1f1f1;
+        }
+    }
+
     /* Menu item hover states */
     #mobile-menu a, #mobile-menu button {
         transition: background-color 0.2s ease, color 0.2s ease;

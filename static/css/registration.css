@@ -1,0 +1,50 @@
+/* Registration form styles */
+.step-indicator {
+    transition: all 0.3s ease;
+}
+
+.step-progress {
+    transition: width 0.5s ease;
+}
+
+.width-0 {
+    width: 0%;
+}
+
+.registration-step {
+    transition: opacity 0.3s ease;
+}
+
+.hidden {
+    display: none;
+}
+
+.htmx-indicator {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.htmx-request .htmx-indicator {
+    opacity: 1;
+}
+
+.htmx-request.htmx-indicator {
+    opacity: 1;
+}
+
+/* Form validation styling */
+input:invalid, select:invalid {
+    border-color: #ef4444;
+}
+
+input:focus:invalid, select:focus:invalid {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 1px #fecaca;
+    outline-color: #fecaca;
+}
+
+.error-message {
+    color: #ef4444;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}

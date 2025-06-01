@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+import re
 from django.core.exceptions import ValidationError
 from .models import CustomUser, UserProfile
 
@@ -35,6 +36,34 @@ class CustomUserCreationForm(UserCreationForm):
         self.fields['city'].widget.attrs.update({'class': 'form-input', 'placeholder': 'City'})
         self.fields['state'].widget.attrs.update({'class': 'form-input', 'placeholder': 'State'})
         self.fields['address'].widget.attrs.update({'class': 'form-textarea', 'placeholder': 'Address'})
+    
+    def clean_phone_number(self):
+        """Clean and validate the phone number field."""
+        phone_number = self.cleaned_data.get('phone_number')
+        
+        # If it's already in the correct format, return it
+        if phone_number and re.match(r'^(\(\d{3}\) \d{3}-\d{4}|\+?1?\d{9,15})$', phone_number):
+            return phone_number
+            
+        # Try to reformat the number if it's not in the correct format
+        # Remove all non-digit characters
+        digits_only = re.sub(r'\D', '', phone_number) if phone_number else ''
+        
+        # Format as US number if it has 10 digits
+        if len(digits_only) == 10:
+            return f'({digits_only[:3]}) {digits_only[3:6]}-{digits_only[6:]}'
+            
+        # If it has more digits, try to format as international
+        elif len(digits_only) >= 9 and len(digits_only) <= 15:
+            # Add + if it doesn't start with one
+            if not phone_number.startswith('+'):
+                return f'+{digits_only}'
+            return phone_number
+            
+        # If we can't format it properly, raise validation error
+        raise forms.ValidationError(
+            "Phone number must be in US format: (555) 123-4567 or international format with 9-15 digits."
+        )
     
     def save(self, commit=True):
         user = super().save(commit=False)

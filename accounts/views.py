@@ -25,35 +25,131 @@ from .forms import (
 logger = logging.getLogger(__name__)
 
 def register(request):
-    """User registration view with security question"""
+    """User registration view with multi-step process"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
     if request.user.is_authenticated:
         return redirect('dashboard:home')
-        
+    
+    # Initialize context
+    context = {
+        'security_questions': CustomUser.SECURITY_QUESTIONS
+    }
+    
+    # Debug information
+    logger.info(f"Register view called with method: {request.method}")
+    
+    # Get the current registration step
     if request.method == 'POST':
-        form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
+        registration_step = request.POST.get('registration_step', '1')
+        logger.info(f"POST data: {request.POST}")
+        logger.info(f"Session data: {request.session.get('registration_data', {})}")
+        logger.info(f"Current step: {registration_step}")
+    else:
+        registration_step = request.GET.get('step', '1')
+        
+    context['registration_step'] = registration_step
+    
+    # STEP 1: Personal Information
+    if registration_step == '1':
+        if request.method == 'POST':
+            # Process step 1 submission
+            form = CustomUserCreationForm(request.POST)
+            if form.is_valid():
+                # Store form data in session
+                # Store ALL POST data directly
+                request.session['registration_data'] = request.POST.dict()
+                # Make sure to save the session
+                request.session.modified = True
+                logger.info(f"Step 1 valid, stored in session: {request.session['registration_data']}")
+                logger.info(f"Session key: {request.session.session_key}")
+                
+                # Move to step 2
+                if request.htmx:
+                    context['registration_step'] = '2'
+                    context['form'] = form
+                    return render(request, 'accounts/partials/register_form.html', context)
+                else:
+                    return redirect(f"{reverse('accounts:register')}?step=2")
+            else:
+                logger.error(f"Step 1 form errors: {form.errors}")
+                context['form'] = form
+        else:
+            # New form or returning to step 1
+            context['form'] = CustomUserCreationForm()
+    
+    # STEP 2: Security Questions
+    elif registration_step == '2':
+        # Get stored data from step 1
+        stored_data = request.session.get('registration_data', {})
+        logger.info(f"Step 2: Retrieved session data: {stored_data}")
+        
+        if not stored_data and request.method != 'POST':
+            # Only redirect if this is not a POST request (which would have all the data)
+            messages.error(request, 'Please complete step 1 first.')
+            return redirect('accounts:register')
+        
+        # For POST requests in step 2, we'll use the current POST data
+        if request.method == 'POST':
+            # We'll handle everything in the POST processing below
+            form = CustomUserCreationForm(request.POST)
+        else:
+            # For GET requests, use the stored data
+            form = CustomUserCreationForm(stored_data)
             
-            # Set security question and answer
+        context['form'] = form
+        
+        if request.method == 'POST':
+            # Process step 2 submission
             security_question = request.POST.get('security_question')
             security_answer = request.POST.get('security_answer')
             
-            if security_question and security_answer:
-                user.set_security_question(security_question, security_answer)
-                
-                # Log the user in directly
-                login(request, user)
-                messages.success(request, 'Registration successful! You are now logged in.')
-                return redirect('dashboard:home')
+            if not security_question or not security_answer:
+                messages.error(request, 'Please provide both a security question and answer.')
+            elif not form.is_valid():
+                # If the stored data is no longer valid
+                logger.error(f"Stored form data invalid: {form.errors}")
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.error(request, f"{field}: {error}")
             else:
-                messages.error(request, 'Please provide a security question and answer.')
-    else:
-        form = CustomUserCreationForm()
+                try:
+                    logger.info("Form is valid, attempting to create user")
+                    # Create the user directly from the POST data
+                    # which contains all the necessary fields
+                    user = form.save()
+                    logger.info(f"User created with ID: {user.id}")
+                    
+                    # Set security question
+                    user.set_security_question(security_question, security_answer)
+                    logger.info(f"Security question set for user {user.id}")
+                    
+                    # Clean up session
+                    if 'registration_data' in request.session:
+                        del request.session['registration_data']
+                        request.session.modified = True
+                        logger.info("Session data cleared")
+                    
+                    # Log the user in
+                    login(request, user)
+                    logger.info(f"User {user.id} logged in")
+                    messages.success(request, 'Registration successful! You are now logged in.')
+                    
+                    # Redirect to dashboard
+                    if request.htmx:
+                        logger.info("Returning HTMX redirect to dashboard")
+                        response = HttpResponse()
+                        response['HX-Redirect'] = reverse('dashboard:home')
+                        return response
+                    logger.info("Redirecting to dashboard")
+                    return redirect('dashboard:home')
+                    
+                except Exception as e:
+                    logger.exception(f"Error creating user: {str(e)}")
+                    messages.error(request, f"Registration failed: {str(e)}")
     
-    context = {
-        'form': form,
-        'security_questions': CustomUser.SECURITY_QUESTIONS
-    }
+    # Render the appropriate template
     if request.htmx:
         return render(request, 'accounts/partials/register_form.html', context)
     return render(request, 'accounts/register.html', context)
@@ -155,6 +251,13 @@ def verify_security_question(request):
                 del request.session['temp_user_id']
                 
             messages.success(request, f'Welcome back, {user.first_name}!')
+            
+            # Handle HTMX requests with proper redirect
+            if request.htmx:
+                response = HttpResponse()
+                response['HX-Redirect'] = reverse('dashboard:home')
+                return response
+                
             return redirect('dashboard:home')
         else:
             messages.error(request, 'Incorrect answer. Please try again.')

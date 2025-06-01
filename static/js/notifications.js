@@ -1,34 +1,9 @@
-// Toggle mobile notification dropdown
+// Handle notification functionality
 document.addEventListener('DOMContentLoaded', function() {
-    const notificationButton = document.getElementById('mobile-notification-button');
-    const notificationDropdown = document.getElementById('mobile-notification-dropdown');
+    // We're not initializing the dropdown toggle here anymore
+    // That's handled in mobile-menu.js to avoid conflicts
     
-    if (notificationButton && notificationDropdown) {
-        // Toggle dropdown when clicking the notification button
-        notificationButton.addEventListener('click', function(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            
-            // Toggle the dropdown
-            const isHidden = notificationDropdown.classList.toggle('hidden');
-            
-            // Close other dropdowns
-            if (!isHidden) {
-                document.querySelectorAll('[id$="-dropdown"]').forEach(dropdown => {
-                    if (dropdown !== notificationDropdown && !dropdown.classList.contains('hidden')) {
-                        dropdown.classList.add('hidden');
-                    }
-                });
-            }
-        });
-        
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(event) {
-            if (!notificationDropdown.contains(event.target) && !notificationButton.contains(event.target)) {
-                notificationDropdown.classList.add('hidden');
-            }
-        });
-    }
+    // We'll just focus on handling notification content after it's loaded
     
     // Handle HTMX after swap for notification dropdown
     document.body.addEventListener('htmx:afterSwap', function(event) {

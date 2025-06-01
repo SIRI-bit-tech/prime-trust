@@ -1,193 +1,337 @@
 {% load static %}
-<form method="post" hx-post="{% url 'accounts:register' %}" hx-target="this" hx-swap="outerHTML">
-    {% csrf_token %}
-    
-    <div class="space-y-6">
-        {% if form.non_field_errors %}
-        <div class="rounded-md bg-red-50 p-4">
-            <div class="flex">
-                <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                    </svg>
+<div id="registration-container">
+    <!-- Step indicator -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div class="w-full flex items-center">
+                <div class="step-indicator flex items-center justify-center w-8 h-8 rounded-full border-2 border-primary-500 bg-primary-100 text-primary-700 text-sm font-medium" id="step-1-indicator">
+                    <span class="step-number">1</span>
                 </div>
-                <div class="ml-3">
-                    <h3 class="text-sm font-medium text-red-800">{{ form.non_field_errors.0 }}</h3>
+                <div class="h-1 flex-1 mx-2 bg-gray-200" id="step-connector">
+                    <div class="h-1 bg-primary-500 step-progress width-0"></div>
                 </div>
-            </div>
-        </div>
-        {% endif %}
-        
-        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
-            <div>
-                <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                    First Name
-                </label>
-                <div class="mt-1">
-                    {{ form.first_name }}
-                    {% if form.first_name.errors %}
-                    <p class="mt-2 text-sm text-red-600">{{ form.first_name.errors.0 }}</p>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div>
-                <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                    Last Name
-                </label>
-                <div class="mt-1">
-                    {{ form.last_name }}
-                    {% if form.last_name.errors %}
-                    <p class="mt-2 text-sm text-red-600">{{ form.last_name.errors.0 }}</p>
-                    {% endif %}
+                <div class="step-indicator flex items-center justify-center w-8 h-8 rounded-full border-2 border-gray-300 bg-gray-200 text-gray-700 text-sm font-medium" id="step-2-indicator">
+                    <span class="step-number">2</span>
                 </div>
             </div>
         </div>
-
-        <div>
-            <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                Email Address
-            </label>
-            <div class="mt-1">
-                {{ form.email }}
-                {% if form.email.errors %}
-                <p class="mt-2 text-sm text-red-600">{{ form.email.errors.0 }}</p>
-                {% endif %}
-            </div>
-        </div>
-
-        <div>
-            <label for="{{ form.phone_number.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                Phone Number
-            </label>
-            <div class="mt-1">
-                {{ form.phone_number }}
-                {% if form.phone_number.errors %}
-                <p class="mt-2 text-sm text-red-600">{{ form.phone_number.errors.0 }}</p>
-                {% endif %}
-            </div>
-        </div>
-        
-        <div>
-            <label for="{{ form.date_of_birth.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                Date of Birth
-            </label>
-            <div class="mt-1">
-                {{ form.date_of_birth }}
-                {% if form.date_of_birth.errors %}
-                <p class="mt-2 text-sm text-red-600">{{ form.date_of_birth.errors.0 }}</p>
-                {% endif %}
-            </div>
-        </div>
-        
-        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
-            <div>
-                <label for="{{ form.city.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                    City
-                </label>
-                <div class="mt-1">
-                    {{ form.city }}
-                    {% if form.city.errors %}
-                    <p class="mt-2 text-sm text-red-600">{{ form.city.errors.0 }}</p>
-                    {% endif %}
-                </div>
-            </div>
-
-            <div>
-                <label for="{{ form.state.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                    State
-                </label>
-                <div class="mt-1">
-                    {{ form.state }}
-                    {% if form.state.errors %}
-                    <p class="mt-2 text-sm text-red-600">{{ form.state.errors.0 }}</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        
-        <div>
-            <label for="{{ form.address.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                Address
-            </label>
-            <div class="mt-1">
-                {{ form.address }}
-                {% if form.address.errors %}
-                <p class="mt-2 text-sm text-red-600">{{ form.address.errors.0 }}</p>
-                {% endif %}
-            </div>
-        </div>
-        
-        <div>
-            <label for="{{ form.password1.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                Password
-            </label>
-            <div class="mt-1">
-                {{ form.password1 }}
-                {% if form.password1.errors %}
-                <p class="mt-2 text-sm text-red-600">{{ form.password1.errors.0 }}</p>
-                {% endif %}
-            </div>
-        </div>
-        
-        <div>
-            <label for="{{ form.password2.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                Confirm Password
-            </label>
-            <div class="mt-1">
-                {{ form.password2 }}
-                {% if form.password2.errors %}
-                <p class="mt-2 text-sm text-red-600">{{ form.password2.errors.0 }}</p>
-                {% endif %}
-            </div>
-        </div>
-
-        <!-- Security Question -->
-        <div class="pt-4 border-t border-gray-200">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Security Question</h3>
-            <p class="text-sm text-gray-500 mb-4">
-                Please select a security question and provide an answer. This will be used to verify your identity.
-            </p>
-            
-            <div class="mb-4">
-                <label for="security_question" class="block text-sm font-medium text-gray-700">
-                    Security Question
-                </label>
-                <div class="mt-1">
-                    <select id="security_question" name="security_question" required
-                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                        <option value="">Select a security question</option>
-                        {% for value, question in security_questions %}
-                            <option value="{{ value }}">{{ question }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-            
-            <div>
-                <label for="security_answer" class="block text-sm font-medium text-gray-700">
-                    Your Answer
-                </label>
-                <div class="mt-1">
-                    <input type="text" id="security_answer" name="security_answer" required
-                           class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                           placeholder="Enter your answer">
-                </div>
-            </div>
-        </div>
-
-        <div>
-            <button type="submit" 
-                    class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                    hx-indicator="#form-indicator">
-                Register
-            </button>
-            <div id="form-indicator" class="htmx-indicator flex justify-center mt-2">
-                <svg class="animate-spin h-5 w-5 text-primary-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-            </div>
+        <div class="flex justify-between mt-2 text-xs text-gray-500">
+            <div>Personal Information</div>
+            <div>Security Questions</div>
         </div>
     </div>
-</form>
+    
+    <form method="post" class="space-y-6" hx-post="{% url 'accounts:register' %}" hx-swap="outerHTML">
+        {% csrf_token %}
+        <input type="hidden" id="registration_step" name="registration_step" value="{% if registration_step %}{{ registration_step }}{% else %}1{% endif %}">
+        
+        {% if form.errors %}
+            <div class="rounded-md bg-red-50 p-4 mb-6">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-red-800">There were errors with your submission</h3>
+                        <div class="mt-2 text-sm text-red-700">
+                            {% if form.non_field_errors %}
+                                {{ form.non_field_errors }}
+                            {% endif %}
+                            
+                            {% for field in form %}
+                                {% if field.errors %}
+                                    <div class="mt-1"><strong>{{ field.label }}:</strong> {{ field.errors.0 }}</div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Step 1: Personal Information -->
+        <div id="step-1" class="registration-step">
+            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+                <div>
+                    <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        First Name
+                    </label>
+                    <div class="mt-1">
+                        <input type="text" name="first_name" id="{{ form.first_name.id_for_label }}" required
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                            placeholder="John"
+                            value="{{ form.first_name.value|default:'' }}">
+                        {% if form.first_name.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.first_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div>
+                    <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        Last Name
+                    </label>
+                    <div class="mt-1">
+                        <input type="text" name="last_name" id="{{ form.last_name.id_for_label }}" required
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                            placeholder="Doe"
+                            value="{{ form.last_name.value|default:'' }}">
+                        {% if form.last_name.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.last_name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Email Address
+                </label>
+                <div class="mt-1">
+                    <input type="email" name="email" id="{{ form.email.id_for_label }}" required
+                        class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                        placeholder="you@example.com"
+                        value="{{ form.email.value|default:'' }}">
+                    {% if form.email.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.email.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <label for="{{ form.phone_number.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Phone Number (US format)
+                </label>
+                <div class="mt-1">
+                    <input type="tel" name="phone_number" id="{{ form.phone_number.id_for_label }}" required
+                        class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                        placeholder="(555) 123-4567"
+                        pattern="\(\d{3}\)\s\d{3}-\d{4}"
+                        value="{{ form.phone_number.value|default:'' }}"
+                        oninput="formatPhoneNumber(this)">
+                    {% if form.phone_number.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.phone_number.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">Format: (555) 123-4567</p>
+                </div>
+            </div>
+            
+            <div class="mt-6">
+                <label for="{{ form.date_of_birth.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Date of Birth
+                </label>
+                <div class="mt-1">
+                    <input type="date" name="date_of_birth" id="{{ form.date_of_birth.id_for_label }}" required
+                        class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                        value="{{ form.date_of_birth.value|date:'Y-m-d'|default:'' }}">
+                    {% if form.date_of_birth.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.date_of_birth.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+                <div>
+                    <label for="{{ form.state.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        State
+                    </label>
+                    <div class="mt-1">
+                        <select name="state" id="{{ form.state.id_for_label }}" required
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                            onchange="window.populateCities(this.value)">
+                            <option value="">Select a state</option>
+                            <option value="AL" {% if form.state.value == 'AL' %}selected{% endif %}>Alabama</option>
+                            <option value="AK" {% if form.state.value == 'AK' %}selected{% endif %}>Alaska</option>
+                            <option value="AZ" {% if form.state.value == 'AZ' %}selected{% endif %}>Arizona</option>
+                            <option value="AR" {% if form.state.value == 'AR' %}selected{% endif %}>Arkansas</option>
+                            <option value="CA" {% if form.state.value == 'CA' %}selected{% endif %}>California</option>
+                            <option value="CO" {% if form.state.value == 'CO' %}selected{% endif %}>Colorado</option>
+                            <option value="CT" {% if form.state.value == 'CT' %}selected{% endif %}>Connecticut</option>
+                            <option value="DE" {% if form.state.value == 'DE' %}selected{% endif %}>Delaware</option>
+                            <option value="FL" {% if form.state.value == 'FL' %}selected{% endif %}>Florida</option>
+                            <option value="GA" {% if form.state.value == 'GA' %}selected{% endif %}>Georgia</option>
+                            <option value="HI" {% if form.state.value == 'HI' %}selected{% endif %}>Hawaii</option>
+                            <option value="ID" {% if form.state.value == 'ID' %}selected{% endif %}>Idaho</option>
+                            <option value="IL" {% if form.state.value == 'IL' %}selected{% endif %}>Illinois</option>
+                            <option value="IN" {% if form.state.value == 'IN' %}selected{% endif %}>Indiana</option>
+                            <option value="IA" {% if form.state.value == 'IA' %}selected{% endif %}>Iowa</option>
+                            <option value="KS" {% if form.state.value == 'KS' %}selected{% endif %}>Kansas</option>
+                            <option value="KY" {% if form.state.value == 'KY' %}selected{% endif %}>Kentucky</option>
+                            <option value="LA" {% if form.state.value == 'LA' %}selected{% endif %}>Louisiana</option>
+                            <option value="ME" {% if form.state.value == 'ME' %}selected{% endif %}>Maine</option>
+                            <option value="MD" {% if form.state.value == 'MD' %}selected{% endif %}>Maryland</option>
+                            <option value="MA" {% if form.state.value == 'MA' %}selected{% endif %}>Massachusetts</option>
+                            <option value="MI" {% if form.state.value == 'MI' %}selected{% endif %}>Michigan</option>
+                            <option value="MN" {% if form.state.value == 'MN' %}selected{% endif %}>Minnesota</option>
+                            <option value="MS" {% if form.state.value == 'MS' %}selected{% endif %}>Mississippi</option>
+                            <option value="MO" {% if form.state.value == 'MO' %}selected{% endif %}>Missouri</option>
+                            <option value="MT" {% if form.state.value == 'MT' %}selected{% endif %}>Montana</option>
+                            <option value="NE" {% if form.state.value == 'NE' %}selected{% endif %}>Nebraska</option>
+                            <option value="NV" {% if form.state.value == 'NV' %}selected{% endif %}>Nevada</option>
+                            <option value="NH" {% if form.state.value == 'NH' %}selected{% endif %}>New Hampshire</option>
+                            <option value="NJ" {% if form.state.value == 'NJ' %}selected{% endif %}>New Jersey</option>
+                            <option value="NM" {% if form.state.value == 'NM' %}selected{% endif %}>New Mexico</option>
+                            <option value="NY" {% if form.state.value == 'NY' %}selected{% endif %}>New York</option>
+                            <option value="NC" {% if form.state.value == 'NC' %}selected{% endif %}>North Carolina</option>
+                            <option value="ND" {% if form.state.value == 'ND' %}selected{% endif %}>North Dakota</option>
+                            <option value="OH" {% if form.state.value == 'OH' %}selected{% endif %}>Ohio</option>
+                            <option value="OK" {% if form.state.value == 'OK' %}selected{% endif %}>Oklahoma</option>
+                            <option value="OR" {% if form.state.value == 'OR' %}selected{% endif %}>Oregon</option>
+                            <option value="PA" {% if form.state.value == 'PA' %}selected{% endif %}>Pennsylvania</option>
+                            <option value="RI" {% if form.state.value == 'RI' %}selected{% endif %}>Rhode Island</option>
+                            <option value="SC" {% if form.state.value == 'SC' %}selected{% endif %}>South Carolina</option>
+                            <option value="SD" {% if form.state.value == 'SD' %}selected{% endif %}>South Dakota</option>
+                            <option value="TN" {% if form.state.value == 'TN' %}selected{% endif %}>Tennessee</option>
+                            <option value="TX" {% if form.state.value == 'TX' %}selected{% endif %}>Texas</option>
+                            <option value="UT" {% if form.state.value == 'UT' %}selected{% endif %}>Utah</option>
+                            <option value="VT" {% if form.state.value == 'VT' %}selected{% endif %}>Vermont</option>
+                            <option value="VA" {% if form.state.value == 'VA' %}selected{% endif %}>Virginia</option>
+                            <option value="WA" {% if form.state.value == 'WA' %}selected{% endif %}>Washington</option>
+                            <option value="WV" {% if form.state.value == 'WV' %}selected{% endif %}>West Virginia</option>
+                            <option value="WI" {% if form.state.value == 'WI' %}selected{% endif %}>Wisconsin</option>
+                            <option value="WY" {% if form.state.value == 'WY' %}selected{% endif %}>Wyoming</option>
+                        </select>
+                        {% if form.state.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.state.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div>
+                    <label for="{{ form.city.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                        City
+                    </label>
+                    <div class="mt-1">
+                        <select name="city" id="{{ form.city.id_for_label }}" required
+                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                            <option value="">Select a state first</option>
+                            {% if form.city.value %}
+                            <option value="{{ form.city.value }}" selected>{{ form.city.value }}</option>
+                            {% endif %}
+                        </select>
+                        {% if form.city.errors %}
+                        <p class="mt-2 text-sm text-red-600">{{ form.city.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6">
+                <label for="{{ form.address.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Address
+                </label>
+                <div class="mt-1">
+                    <textarea name="address" id="{{ form.address.id_for_label }}" rows="3" required
+                        class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                        placeholder="123 Main St, Apt 4B">{{ form.address.value|default:'' }}</textarea>
+                    {% if form.address.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.address.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="mt-6">
+                <label for="{{ form.password1.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Password
+                </label>
+                <div class="mt-1">
+                    <input type="password" name="password1" id="{{ form.password1.id_for_label }}" required
+                        class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                        placeholder="••••••••">
+                    {% if form.password1.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.password1.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="mt-6">
+                <label for="{{ form.password2.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Confirm Password
+                </label>
+                <div class="mt-1">
+                    <input type="password" name="password2" id="{{ form.password2.id_for_label }}" required
+                        class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                        placeholder="••••••••">
+                    {% if form.password2.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.password2.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <button type="button" id="next-step-button"
+                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                        onclick="goToSecurityQuestions()">
+                    Next: Security Questions
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 2: Security Questions (hidden by default) -->
+        <div id="step-2" class="registration-step hidden">
+            <div class="pt-4">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Security Question</h3>
+                <p class="text-sm text-gray-500 mb-4">
+                    Please select a security question and provide an answer. This will be used to verify your identity if you need to reset your password.
+                </p>
+                
+                <div class="mb-6">
+                    <label for="security_question" class="block text-sm font-medium text-gray-700">
+                        Security Question
+                    </label>
+                    <div class="mt-1">
+                        <select id="security_question" name="security_question" required
+                                class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                            <option value="">Select a security question</option>
+                            {% for value, question in security_questions %}
+                                <option value="{{ value }}">{{ question }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="mb-8">
+                    <label for="security_answer" class="block text-sm font-medium text-gray-700">
+                        Your Answer
+                    </label>
+                    <div class="mt-1">
+                        <input type="text" id="security_answer" name="security_answer" required
+                               class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                               placeholder="Enter your answer">
+                    </div>
+                </div>
+
+                <div class="flex space-x-4">
+                    <button type="button" id="back-button"
+                            class="w-1/2 flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                            onclick="window.goBackToPersonalInfo()">
+                        Back
+                    </button>
+                    <button type="submit" id="complete-registration-button"
+                            class="w-1/2 flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                            hx-indicator="#form-indicator">
+                        Complete Registration
+                    </button>
+                </div>
+                <div id="form-indicator" class="htmx-indicator flex justify-center mt-4">
+                    <svg class="animate-spin h-5 w-5 text-primary-500 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Creating your account...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 1 Button (Next) -->
+        <div id="step-1-buttons" class="mt-8">
+            <button type="button" 
+                    class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                    onclick="window.goToSecurityQuestions()">
+                Next: Security Questions
+            </button>
+        </div>
+    </form>
+</div>

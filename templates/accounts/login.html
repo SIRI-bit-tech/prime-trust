@@ -3,10 +3,15 @@
 
 {% block title %}Login - PrimeTrust{% endblock %}
 
+{% block extra_head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/logo.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
     <div class="sm:mx-auto sm:w-full sm:max-w-md">
-        <img class="mx-auto h-12 w-auto" src="{% static 'images/logo.svg' %}" alt="PrimeTrust Logo">
+        <img class="mx-auto logo-auth font-bold" src="{% static 'img/logo.png' %}" alt="PrimeTrust Logo">
         <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Sign in to your account
         </h2>

@@ -2,12 +2,12 @@
 {% load static %}
 <html lang="en" class="h-full bg-gray-50">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}PrimeTrust - Modern Online Banking{% endblock %}</title>
     
     <!-- HTMX -->
-    <script src="https://unpkg.com/htmx.org@1.9.6" integrity="sha384-FhXw7b6AlE/jyjlZH5iHa/tTe9EpJ1Y55RjcgPbjeWMskSxZt1v9qkxLpWNxx5nA" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.6" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
     
     <!-- Meta tags for SEO -->
@@ -62,15 +62,17 @@
         }
     </script>
     
-    <!-- HTMX -->
-    <script src="https://unpkg.com/htmx.org@1.9.6"></script>
-    <script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
+    <!-- HTMX already loaded above -->
+    <!-- Removed duplicate HTMX loading -->
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     
     <!-- Favicon -->
-    <link rel="icon" type="image/svg+xml" href="{% static 'images/logo.svg' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
     
     {% block extra_head %}{% endblock %}
 </head>

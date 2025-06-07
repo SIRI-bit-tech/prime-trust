@@ -42,6 +42,7 @@ urlpatterns = [
     # HTMX updates
     path('balance-update/', views.balance_update, name='balance_update'),
     path('transactions-update/', views.transactions_update, name='transactions_update'),
+    path('metrics-update/', views.metrics_update, name='metrics_update'),
     
     # More Services
     path('more-services/', more_services, name='more_services'),

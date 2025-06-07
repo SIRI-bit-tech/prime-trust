@@ -34,6 +34,19 @@ def home(request):
     # Get unread notifications
     notifications = Notification.objects.filter(user=user, is_read=False)[:5]
 
+    # Transaction metrics
+    transactions_count = Transaction.objects.filter(
+        Q(from_account__in=accounts) | Q(to_account__in=accounts)
+    ).count()
+    money_received = Transaction.objects.filter(
+        to_account__in=accounts,
+        status='completed'
+    ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+    money_spent = Transaction.objects.filter(
+        from_account__in=accounts,
+        status='completed'
+    ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+
     # Get current time for greeting
     from datetime import datetime
     current_hour = datetime.now().hour
@@ -51,6 +64,9 @@ def home(request):
         'transactions': transactions,
         'virtual_cards': virtual_cards,
         'notifications': notifications,
+        'transactions_count': transactions_count,
+        'money_received': money_received,
+        'money_spent': money_spent,
     }
 
     if request.htmx:
@@ -60,6 +76,8 @@ def home(request):
             return render(request, 'dashboard/partials/recent_transactions.html', context)
         elif request.htmx.trigger == 'refresh-notifications':
             return render(request, 'dashboard/partials/notifications.html', context)
+        elif request.htmx.trigger == 'refresh-metrics':
+            return render(request, 'dashboard/partials/transaction_metrics.html', context)
 
     return render(request, 'dashboard/home.html', context)
 
@@ -881,3 +899,26 @@ def services(request):
         'active_tab': 'services',
     }
     return render(request, 'dashboard/services.html', context)
+
+@login_required
+def metrics_update(request):
+    """Update transaction metrics via HTMX"""
+    user = request.user
+    accounts = Account.objects.filter(user=user)
+    transactions_count = Transaction.objects.filter(
+        Q(from_account__in=accounts) | Q(to_account__in=accounts)
+    ).count()
+    money_received = Transaction.objects.filter(
+        to_account__in=accounts,
+        status='completed'
+    ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+    money_spent = Transaction.objects.filter(
+        from_account__in=accounts,
+        status='completed'
+    ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+    context = {
+        'transactions_count': transactions_count,
+        'money_received': money_received,
+        'money_spent': money_spent,
+    }
+    return render(request, 'dashboard/partials/transaction_metrics.html', context)

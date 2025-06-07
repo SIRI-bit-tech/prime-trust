@@ -9,7 +9,7 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.utils import timezone
 from django.http import HttpResponse, HttpResponseRedirect
-from django_htmx.http import trigger_client_event
+from django_htmx.http import trigger_client_event, HttpResponseClientRedirect
 import logging
 
 from .models import CustomUser, UserProfile
@@ -209,13 +209,16 @@ def user_login(request):
         return redirect('dashboard:home')
     
     if request.method == 'POST':
-        form = LoginForm(request, data=request.POST)
+        form = LoginForm(data=request.POST)
         if form.is_valid():
             try:
                 user = form.get_user()
-                # Store user ID in session for security question verification
-                request.session['temp_user_id'] = user.id
-                return redirect('accounts:verify_security_question')
+                # Authenticate and log in the user
+                login(request, user)
+                # HTMX-aware redirect to dashboard
+                if request.htmx:
+                    return HttpResponseClientRedirect(reverse('dashboard:home'))
+                return redirect('dashboard:home')
             except Exception as e:
                 logger.error(f"Unexpected error in login view: {str(e)}")
                 messages.error(request, "An unexpected error occurred. Please try again.")
@@ -227,92 +230,6 @@ def user_login(request):
     if request.htmx:
         return render(request, 'accounts/partials/login_form.html', context)
     return render(request, 'accounts/login.html', context)
-
-def verify_security_question(request):
-    """Verify user's security question"""
-    if request.user.is_authenticated:
-        return redirect('dashboard:home')
-        
-    user_id = request.session.get('temp_user_id')
-    if not user_id:
-        messages.error(request, 'Session expired. Please log in again.')
-        return redirect('accounts:login')
-        
-    user = get_object_or_404(CustomUser, id=user_id)
-    
-    if request.method == 'POST':
-        answer = request.POST.get('security_answer', '').strip()
-        if user.check_security_answer(answer):
-            # Security answer is correct, log the user in
-            login(request, user)
-            
-            # Clean up session
-            if 'temp_user_id' in request.session:
-                del request.session['temp_user_id']
-                
-            messages.success(request, f'Welcome back, {user.first_name}!')
-            
-            # Handle HTMX requests with proper redirect
-            if request.htmx:
-                response = HttpResponse()
-                response['HX-Redirect'] = reverse('dashboard:home')
-                return response
-                
-            return redirect('dashboard:home')
-        else:
-            messages.error(request, 'Incorrect answer. Please try again.')
-    
-    context = {
-        'security_question': user.get_security_question_display(),
-        'user_email': user.email
-    }
-    
-    if request.htmx:
-        return render(request, 'accounts/partials/security_question_form.html', context)
-    return render(request, 'accounts/verify_security_question.html', context)
-
-def verify_login(request, user_id):
-    """Verify login with code after password authentication"""
-    user = get_object_or_404(CustomUser, id=user_id)
-    
-    # Check if this is the same user stored in the session
-    if 'temp_user_id' not in request.session or request.session['temp_user_id'] != user.id:
-        messages.error(request, 'Authentication error. Please try logging in again.')
-        return redirect('accounts:login')
-    
-    if request.method == 'POST':
-        form = VerificationForm(request.POST)
-        if form.is_valid():
-            code = form.cleaned_data['verification_code']
-            # Verify the code is valid and not expired
-            if (user.verification_code == code and 
-                user.verification_code_created_at and 
-                timezone.now() < user.verification_code_created_at + timezone.timedelta(minutes=10)):
-                # Login successful
-                login(request, user)
-                user.verification_code = None
-                user.verification_code_created_at = None
-                user.save()
-                
-                # Clean up session
-                if 'temp_user_id' in request.session:
-                    del request.session['temp_user_id']
-                
-                messages.success(request, f'Welcome back, {user.first_name}!')
-                return redirect('dashboard:home')
-            else:
-                messages.error(request, 'Invalid or expired verification code.')
-    else:
-        form = VerificationForm()
-    
-    context = {
-        'form': form,
-        'user_email': user.email
-    }
-    
-    if request.htmx:
-        return render(request, 'accounts/partials/login_verification_form.html', context)
-    return render(request, 'accounts/verify_login.html', context)
 
 @login_required
 def user_logout(request):

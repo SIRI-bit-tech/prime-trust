@@ -134,6 +134,10 @@ class LoginForm(forms.Form):
                 raise ValidationError("Invalid email or password.")
         
         return cleaned_data
+    
+    def get_user(self):
+        """Return the authenticated user after clean()"""
+        return self.cleaned_data.get('user')
 
 class ProfileUpdateForm(forms.ModelForm):
     """Form for updating user profile information"""

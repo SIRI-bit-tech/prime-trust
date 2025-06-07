@@ -15,8 +15,8 @@ def notify_transaction_created(sender, instance, created, **kwargs):
             send_notification(
                 user=instance.from_account.user,
                 notification_type='transaction',
-                title=f"Transaction Sent: {instance.amount} {instance.currency}",
-                message=f"You sent {instance.amount} {instance.currency} to {instance.to_account.user.get_full_name() or instance.to_account.user.email}.",
+                title=f"Transaction Sent: {instance.amount}",
+                message=f"You sent {instance.amount} to {instance.to_account.user.get_full_name() or instance.to_account.user.email}.",
                 related_transaction=instance
             )
         
@@ -25,8 +25,8 @@ def notify_transaction_created(sender, instance, created, **kwargs):
             send_notification(
                 user=instance.to_account.user,
                 notification_type='transaction',
-                title=f"Transaction Received: {instance.amount} {instance.currency}",
-                message=f"You received {instance.amount} {instance.currency} from {instance.from_account.user.get_full_name() or instance.from_account.user.email}.",
+                title=f"Transaction Received: {instance.amount}",
+                message=f"You received {instance.amount} from {instance.from_account.user.get_full_name() or instance.from_account.user.email}.",
                 related_transaction=instance
             )
 

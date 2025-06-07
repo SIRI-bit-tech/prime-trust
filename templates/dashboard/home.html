@@ -26,15 +26,17 @@
                             {% endif %}
                         </div>
                     </div>
-            <!-- Account Balance Card -->
+            <!-- Account Cards Section -->
             <div class="px-4 py-6 sm:px-0">
                 <div class="mb-8">
-                    <!-- Add proper HTMX polling attributes -->
-                    <div id="balance-card" 
-                         hx-get="{% url 'dashboard:balance_update' %}"
+                    <!-- Render color-coded account summary cards -->
+                    {% include "dashboard/partials/account_cards.html" %}
+
+                    <div id="metrics-container"
+                         hx-get="{% url 'dashboard:metrics_update' %}"
                          hx-trigger="every 30s"
-                         hx-swap="outerHTML">
-                        {% include "dashboard/partials/balance_card.html" %}
+                         hx-swap="innerHTML">
+                        {% include "dashboard/partials/transaction_metrics.html" %}
                     </div>
                 </div>
                 
@@ -61,23 +63,7 @@
                     </div>
 
                     <!-- Recent Transactions Section -->
-                    <div class="bg-white overflow-hidden shadow rounded-lg">
-                        <div class="px-4 py-5 sm:p-6">
-                            <div class="flex justify-between items-center mb-4">
-                                <h2 class="text-lg font-medium text-gray-900">Recent Transactions</h2>
-                                <a href="{% url 'dashboard:transactions' %}" class="text-sm font-medium text-primary-600 hover:text-primary-500">
-                                    View all
-                                </a>
-                            </div>
-                            <!-- Add proper HTMX polling attributes -->
-                            <div id="recent-transactions"
-                                 hx-get="{% url 'dashboard:transactions_update' %}"
-                                 hx-trigger="every 15s"
-                                 hx-swap="outerHTML">
-                                {% include "dashboard/partials/recent_transactions.html" %}
-                            </div>
-                        </div>
-                    </div>
+                    {% include "dashboard/partials/recent_transactions.html" %}
                 </div>
                 </div>
             </div>

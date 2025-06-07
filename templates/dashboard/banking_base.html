@@ -137,6 +137,27 @@
         </div>
     </div>
     
+    <!-- TradingView Ticker Tape Widget -->
+    <div class="w-full bg-white shadow py-2 px-4 mb-0 overflow-x-auto">
+        <div class="tradingview-widget-container overflow-x-auto whitespace-nowrap">
+            <div class="tradingview-widget-container__widget h-12"></div>
+            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js" async>
+            {
+              "symbols"; [
+                {"proName": "NASDAQ:AAPL", "title": "AAPL"},
+                {"proName": "NASDAQ:GOOGL", "title": "GOOGL"},
+                {"proName": "NASDAQ:MSFT", "title": "MSFT"},
+                {"proName": "NASDAQ:AMZN", "title": "AMZN"},
+                {"proName": "NASDAQ:TSLA", "title": "TSLA"}
+              ],
+              "colorTheme"; "light",
+              "isTransparent"; false,
+              "displayMode"; "adaptive",
+              "locale"; "en"
+            }
+            </script>
+        </div>
+    </div>
     <!-- Main content -->
     <div class="flex-1 flex overflow-hidden">
         <!-- Desktop sidebar -->
@@ -148,7 +169,7 @@
 
         <!-- Main content area -->
         <main class="flex-1 overflow-auto focus:outline-none">
-            <div class="py-6">
+            <div class="pt-2 pb-6">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
                     <!-- Page Header -->
                     <div class="md:flex md:items-center md:justify-between mb-6">

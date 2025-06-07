@@ -2,6 +2,8 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
 from django_htmx.http import HttpResponseClientRedirect
+import requests
+from django.conf import settings
 
 def about(request):
     """View for the About page"""
@@ -43,3 +45,23 @@ def contact(request):
             '</div>'
         )
     return render(request, 'pages/contact.html')
+
+def news(request):
+    """View for the News page fetching real-time headlines from Gnews.io."""
+    api_key = settings.NEWS_API_KEY
+    url = 'https://gnews.io/api/v4/top-headlines'
+    # Include country for valid headlines
+    params = {'token': api_key, 'lang': 'en', 'country': 'us', 'max': 10}
+    error = None
+    try:
+        response = requests.get(url, params=params, timeout=5)
+        data = response.json()
+        if response.status_code == 200:
+            articles = data.get('articles', [])
+        else:
+            articles = []
+            error = data.get('message', 'Error fetching news')
+    except Exception as ex:
+        articles = []
+        error = str(ex)
+    return render(request, 'pages/news.html', {'articles': articles, 'error': error})

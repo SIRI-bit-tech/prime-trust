@@ -67,17 +67,23 @@
     box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
-/* Background images */
-.hero-bg-image {
+/* Hero backgrounds */
+.hero-bg-image-1 {
     background-image: url('../images/hero-bg.jpg');
+    background-size: cover;
+    background-position: center;
 }
-
 .hero-bg-image-2 {
     background-image: url('../images/hero-bg-2.jpg');
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
 }
-
-.how-it-works-bg-image {
+/* How It Works background */
+.how-it-works-bg {
     background-image: url('../images/how-it-works-bg.jpg');
+    background-size: cover;
+    background-position: center;
     opacity: 0.3;
 }
 

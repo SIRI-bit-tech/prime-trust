@@ -185,6 +185,9 @@ DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'PrimeTrust <noreply@primet
 BREVO_API_KEY = os.getenv('BREVO_API_KEY', '')
 BREVO_ENABLED = bool(BREVO_API_KEY)  # Enable Brevo if API key is provided
 
+# News API key for real-time news
+NEWS_API_KEY = os.getenv('NEWS_API_KEY', '')
+
 # Site ID for django.contrib.sites
 SITE_ID = 1
 

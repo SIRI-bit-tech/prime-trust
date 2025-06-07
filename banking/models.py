@@ -26,6 +26,12 @@ class Account(models.Model):
         # Add a check digit (simple checksum for example)
         check_digit = sum(int(d) * (7 if i % 2 == 0 else 3) for i, d in enumerate(routing)) % 10
         return f"{routing}{check_digit}"
+    
+    @staticmethod
+    def generate_account_number(length=12):
+        """Generate a numeric account number of given length"""
+        import random
+        return ''.join(str(random.randint(0, 9)) for _ in range(length))
         
     def generate_card_number(self, card_type='visa'):
         """Generate a 16-digit card number"""
@@ -59,6 +65,9 @@ class Account(models.Model):
         return card
         
     def save(self, *args, **kwargs):
+        # Always generate a numeric-only account number on creation (10 digits)
+        if self._state.adding:
+            self.account_number = self.generate_account_number(length=10)
         # Generate routing number if this is a new account
         if not self.routing_number:
             self.routing_number = self.generate_routing_number()

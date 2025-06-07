@@ -117,6 +117,13 @@ class DepositForm(forms.Form):
         })
     )
 
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        if user:
+            # Only show accounts belonging to the user
+            self.fields['to_account'].queryset = Account.objects.filter(user=user)
+
 
 class InvestmentForm(forms.ModelForm):
     """Form for creating and updating investments"""
@@ -274,14 +281,6 @@ class InsurancePolicyForm(forms.ModelForm):
             'data-payment-method': 'bank_transfer'
         })
     )
-    
-    def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user', None)
-        super(DepositForm, self).__init__(*args, **kwargs)
-        
-        if user:
-            # Only show accounts belonging to the user
-            self.fields['to_account'].queryset = Account.objects.filter(user=user)
     
     def clean(self):
         cleaned_data = super().clean()

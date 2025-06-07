@@ -13,6 +13,7 @@ from banking.models_bills import Biller, BillPayment, Payee, ScheduledPayment
 from banking.models_loans import LoanApplication, LoanAccount, LoanPayment
 from .views_investments_insurance import *
 # from .views_loans import *
+from django.conf import settings
 
 @login_required
 def home(request):
@@ -94,6 +95,7 @@ def accounts(request):
         'active_tab': 'accounts',
         'accounts': accounts,
         'total_balance': total_balance,
+        'swift_code': settings.BANK_SWIFT_CODE,
     }
     
     if request.htmx:

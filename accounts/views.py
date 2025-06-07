@@ -288,7 +288,8 @@ def profile(request):
         'greeting': greeting,
         'active_tab': 'profile',
         'user_form': user_form,
-        'profile_form': profile_form
+        'profile_form': profile_form,
+        'swift_code': settings.BANK_SWIFT_CODE
     }
     
     if request.htmx:

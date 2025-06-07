@@ -40,10 +40,9 @@ def send_money(request):
                 recipient_account = Account.objects.filter(user=recipient).first()
                 
                 if not recipient_account:
-                    # Create a checking account for the recipient if they don't have one
+                    # Create a checking account for the recipient with numeric-only account number
                     recipient_account = Account.objects.create(
                         user=recipient,
-                        account_number=f"CH{uuid.uuid4().hex[:16].upper()}",
                         account_type='checking',
                         balance=0
                     )
@@ -169,7 +168,7 @@ def deposit(request):
     user = request.user
     
     if request.method == 'POST':
-        form = DepositForm(request.POST, user=user)
+        form = DepositForm(data=request.POST, user=user)
         if form.is_valid():
             to_account = form.cleaned_data['to_account']
             amount = form.cleaned_data['amount']

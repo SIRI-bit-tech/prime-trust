@@ -259,3 +259,6 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000  # 1 year
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+
+# Bank SWIFT code for wire transfers (Fictional for PrimeTrust)
+BANK_SWIFT_CODE = 'PTRTUS33XXX'

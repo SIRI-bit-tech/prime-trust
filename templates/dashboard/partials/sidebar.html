@@ -1,10 +1,10 @@
 {% load static %}
 <!-- Desktop Sidebar -->
 <div class="flex flex-col h-full bg-white border-r border-gray-200">
-    <!-- Dashboard Logo -->
-    <div class="flex items-center justify-center h-16 px-4 border-b border-gray-200">
+    <!-- Dashboard Logo - FIXED -->
+    <div class="flex items-center justify-center h-20 px-4 border-b border-gray-200">
         <a href="{% url 'dashboard:home' %}" class="flex items-center">
-            <img class="logo-standard" src="{% static 'img/logo.png' %}" alt="PrimeTrust">
+            <img class="logo-standard h-12 w-auto max-w-full object-contain" src="{% static 'img/Primetrust-logo-large.png' %}" alt="PrimeTrust">
         </a>
     </div>
     

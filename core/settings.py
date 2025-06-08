@@ -168,6 +168,9 @@ if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
     X_FRAME_OPTIONS = 'DENY'
 
+# CSRF trusted origins
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',')
+
 # Email Configuration
 # Note: We're using Brevo API directly for sending emails, not Django's SMTP
 # SMTP settings are commented out as they're not needed with the Brevo API

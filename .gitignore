@@ -107,3 +107,7 @@ yarn-error.log
 *.bak
 *.swp
 *~.nib
+
+# Ignore Render service files
+render.yaml
+render/

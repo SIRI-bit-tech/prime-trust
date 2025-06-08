@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-#!/bin/bash
 set -o errexit
 
 echo "Starting Gunicorn server..."

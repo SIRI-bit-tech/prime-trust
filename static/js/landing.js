@@ -2,7 +2,11 @@
 document.addEventListener('DOMContentLoaded', function() {
   // Parallax: initialize on all elements with class 'rellax'
   if (typeof Rellax !== 'undefined') {
-    new Rellax('.rellax', { center: true });
+    new Rellax('.rellax', { center: true, round: true, breakpoints: [576, 768, 1201] });
+  }
+  // Animate on scroll (Landing) using AOS
+  if (typeof AOS !== 'undefined') {
+    AOS.init({ disable: 'mobile', offset: 120, duration: 600, easing: 'ease-in-out', once: true });
   }
   // Carousel
   const slides = document.querySelectorAll('.carousel-slide');

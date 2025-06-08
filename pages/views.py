@@ -47,21 +47,33 @@ def contact(request):
     return render(request, 'pages/contact.html')
 
 def news(request):
-    """View for the News page fetching real-time headlines from Gnews.io."""
+    """View for the News page fetching real-time headlines from NewsAPI.org with pagination."""
     api_key = settings.NEWS_API_KEY
-    url = 'https://gnews.io/api/v4/top-headlines'
-    # Include country for valid headlines
-    params = {'token': api_key, 'lang': 'en', 'country': 'us', 'max': 10}
+    page = int(request.GET.get('page', 1))
+    page_size = 5
+    url = 'https://newsapi.org/v2/top-headlines'
+    params = {'apiKey': api_key, 'country': 'us', 'pageSize': page_size, 'page': page}
     error = None
+    total_results = 0
     try:
         response = requests.get(url, params=params, timeout=5)
         data = response.json()
         if response.status_code == 200:
             articles = data.get('articles', [])
+            total_results = data.get('totalResults', 0)
         else:
             articles = []
             error = data.get('message', 'Error fetching news')
     except Exception as ex:
         articles = []
         error = str(ex)
-    return render(request, 'pages/news.html', {'articles': articles, 'error': error})
+    # Determine if there are more pages
+    has_more = total_results > page * page_size
+    return render(request, 'pages/news.html', {
+        'articles': articles,
+        'error': error,
+        'page': page,
+        'page_size': page_size,
+        'total_results': total_results,
+        'has_more': has_more,
+    })

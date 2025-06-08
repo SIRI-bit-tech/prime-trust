@@ -79,12 +79,49 @@
     background-position: center;
     opacity: 0;
 }
+
+/* News page hero background */
+.news-hero {
+    background-image: url('../images/news-banner.jpg');
+    background-size: cover;
+    background-position: center;
+}
+
 /* How It Works background */
 .how-it-works-bg {
     background-image: url('../images/how-it-works-bg.jpg');
     background-size: cover;
     background-position: center;
     opacity: 0.3;
+}
+
+/* About page hero background */
+.about-hero {
+    background-color: transparent;
+    background-image: url("../images/about-hero.jpg");
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}
+.about-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 0;
+}
+
+/* About Page Background */
+.about-page {
+  background-color: #f0fdf4; /* light green tint matching site accent */
+}
+
+/* About Page Cards */
+.about-card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  padding: 1.5rem;
 }
 
 /* Carousel styles */
@@ -149,4 +186,49 @@
         height: auto;
         min-height: 70vh;
     }
+}
+
+/* Contact Page Section */
+.contact-section {
+    background-color: #f5f7fa;
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+}
+
+/* Glassmorphism and Neumorphism for Contact Page */
+.glass-card {
+    background: rgba(255, 255, 255, 0.2);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+.neumorphic {
+    background: #e0e0e0;
+    border-radius: 16px;
+    box-shadow: 8px 8px 16px #bebebe, -8px -8px 16px #ffffff;
+}
+
+/* Testimonials Carousel */
+.about-testimonials {
+  padding: 3rem 0;
+  background-color: #f5f7fa;
+}
+.swiper-container {
+  width: 100%;
+}
+.swiper-slide {
+  display: flex;
+  justify-content: center;
+}
+.swiper-pagination {
+  margin-top: 1rem;
+  text-align: center;
+}
+.swiper-pagination-bullet {
+  background: rgba(0, 0, 0, 0.2);
+  opacity: 1;
+}
+.swiper-pagination-bullet-active {
+  background: #3b82f6;
 }

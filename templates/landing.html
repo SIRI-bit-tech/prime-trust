@@ -5,6 +5,7 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'css/landing.css' %}">
+<link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/rellax/1.12.1/rellax.min.js"></script>
 <script src="{% static 'js/landing.js' %}"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-kuH8B1e0eHXDPR4piqkLzK8jK9/gAmOQfroYG4cHCvIM9yvPSbbyGpUGVsiHiB//UKdqdqeZ8Xu8hoUg7+DXNg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -35,8 +36,8 @@
 <div class="pt-16">
   <!-- HERO -->
   <section class="relative h-screen overflow-hidden">
-    <div class="absolute inset-0 rellax hero-bg-image-1"></div>
-    <div class="absolute inset-0 rellax hero-bg-image-2"></div>
+    <div class="absolute inset-0 rellax hero-bg-image-1" data-rellax-speed="-2"></div>
+    <div class="absolute inset-0 rellax hero-bg-image-2" data-rellax-speed="-1"></div>
     <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center h-full">
       <div class="text-left text-white">
         <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight">We offer a wide range of bank accounts for your banking needs.</h1>
@@ -50,10 +51,10 @@
   <section class="py-16 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-        <div class="text-center"><img src="{% static 'img/service1.svg' %}" alt="Online Banking" class="mx-auto h-12"><h3 class="mt-4 font-semibold text-gray-900">Online Banking</h3><p class="mt-2 text-gray-600">Bank at your convenience on any device.</p></div>
-        <div class="text-center"><img src="{% static 'img/service2.svg' %}" alt="Current Accounts" class="mx-auto h-12"><h3 class="mt-4 font-semibold text-gray-900">Current Accounts</h3><p class="mt-2 text-gray-600">Open an account with full requirements.</p></div>
-        <div class="text-center"><img src="{% static 'img/service3.svg' %}" alt="Money Transfers" class="mx-auto h-12"><h3 class="mt-4 font-semibold text-gray-900">Money Transfers</h3><p class="mt-2 text-gray-600">Smooth and stress-free transfers.</p></div>
-        <div class="text-center"><img src="{% static 'img/service4.svg' %}" alt="Mobile Banking" class="mx-auto h-12"><h3 class="mt-4 font-semibold text-gray-900">Mobile Banking</h3><p class="mt-2 text-gray-600">Manage transactions on the go.</p></div>
+        <div class="text-center"><img src="{% static 'img/service1.png' %}" alt="Online Banking" class="mx-auto h-12"><h3 class="mt-4 font-semibold text-gray-900">Online Banking</h3><p class="mt-2 text-gray-600">Bank at your convenience on any device.</p></div>
+        <div class="text-center"><img src="{% static 'img/service2.png' %}" alt="Current Accounts" class="mx-auto h-12"><h3 class="mt-4 font-semibold text-gray-900">Current Accounts</h3><p class="mt-2 text-gray-600">Open an account with full requirements.</p></div>
+        <div class="text-center"><img src="{% static 'img/service3.png' %}" alt="Money Transfers" class="mx-auto h-12"><h3 class="mt-4 font-semibold text-gray-900">Money Transfers</h3><p class="mt-2 text-gray-600">Smooth and stress-free transfers.</p></div>
+        <div class="text-center"><img src="{% static 'img/service4.png' %}" alt="Mobile Banking" class="mx-auto h-12"><h3 class="mt-4 font-semibold text-gray-900">Mobile Banking</h3><p class="mt-2 text-gray-600">Manage transactions on the go.</p></div>
       </div>
     </div>
   </section>
@@ -83,11 +84,21 @@
         <h2 class="text-3xl font-extrabold text-gray-900 mb-4">You can find all the thing you need to payout</h2>
         <p class="mt-2 text-gray-600 mb-6">Find a card that suits your needs. We have different credit cards for different needs. Explore a category to learn more.</p>
         <div class="flex space-x-4">
-          <a href="#" class="px-6 py-3 bg-gradient-to-r from-pink-500 to-pink-700 text-white rounded-md flex items-center space-x-2 hover:opacity-90 hover:shadow-lg active:scale-95 transition">
-            <i class="fab fa-apple text-xl"></i><span>App Store</span>
+          <!-- App Store Button -->
+          <a href="#" class="px-8 py-4 bg-gradient-to-r from-pink-500 to-orange-400 text-white rounded-lg flex items-center space-x-4 hover:opacity-90 hover:shadow-lg active:scale-95 transition">
+            <img src="{% static 'images/apple-logo.png' %}" alt="App Store" class="w-6 h-6">
+            <div class="flex flex-col text-left leading-tight">
+              <span class="text-xs">Download on</span>
+              <span class="text-lg font-semibold">App Store</span>
+            </div>
           </a>
-          <a href="#" class="px-6 py-3 bg-gradient-to-r from-primary-500 to-primary-700 text-white rounded-md flex items-center space-x-2 hover:opacity-90 hover:shadow-lg active:scale-95 transition">
-            <i class="fab fa-google-play text-xl"></i><span>Google Play</span>
+          <!-- Google Play Button -->
+          <a href="#" class="px-8 py-4 bg-gradient-to-r from-teal-400 to-green-300 text-white rounded-lg flex items-center space-x-4 hover:opacity-90 hover:shadow-lg active:scale-95 transition">
+            <img src="{% static 'images/google-play.png' %}" alt="Google Play" class="w-6 h-6">
+            <div class="flex flex-col text-left leading-tight">
+              <span class="text-xs">Download on</span>
+              <span class="text-lg font-semibold">Google Play</span>
+            </div>
           </a>
         </div>
       </div>
@@ -125,4 +136,7 @@
     </div>
   </div>
 </footer>
+{% block extra_js %}
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+{% endblock %}
 {% endblock %}

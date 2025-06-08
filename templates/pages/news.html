@@ -3,48 +3,99 @@
 
 {% block title %}News - PrimeTrust{% endblock %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css" />
+{% endblock %}
+
 {% block content %}
-  <!-- Header -->
-  <header class="bg-white shadow">
-    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-bold text-gray-900">News</h1>
-        <a href="{% url 'home' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 transition">Back to Home</a>
-      </div>
+  <!-- Hero Banner -->
+  <section class="relative h-64 grid grid-cols-1 md:grid-cols-2 bg-cover bg-center news-hero">
+    <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+    <div class="relative max-w-7xl mx-auto py-24 px-4">
+      <h1 class="text-4xl font-bold text-white">Our Business Growth</h1>
+      <nav class="mt-2 text-sm text-gray-300">
+        <a href="{% url 'home' %}" class="hover:text-white">Home</a> / <span>News</span>
+      </nav>
+      <!-- Section Subtitle -->
+      <p class="mt-4 text-lg text-gray-200">Business News – Market reports and financial news from {{ articles.0.source.name|default:'Source' }}</p>
     </div>
-  </header>
-
-  {% if error %}
-  <div class="max-w-7xl mx-auto py-4 sm:px-6 lg:px-8">
-    <div class="bg-red-50 border-l-4 border-red-400 p-4">
-      <p class="text-red-700">{{ error }}</p>
+    <div class="relative hidden md:block">
+      <img src="{% static 'images/portfolio18.jpg' %}" alt="News illustration" class="absolute inset-y-0 right-0 h-full object-cover">
     </div>
-  </div>
-  {% endif %}
+  </section>
 
-  <!-- News List -->
-  <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 grid grid-cols-1 gap-8">
+  <!-- News Feed -->
+  <div id="articles-container" class="max-w-7xl mx-auto py-8 px-4 grid gap-8">
     {% for article in articles %}
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg flex flex-col md:flex-row">
-      {% if article.image %}
+    <div class="flex flex-col md:flex-row bg-white shadow overflow-hidden rellax" data-rellax-speed="-1" data-aos="fade-up">
+      <!-- Card header with RSS and share -->
+      <div class="absolute top-4 right-4 flex space-x-3">
+        <a href="/rss/news/" title="RSS Feed" class="text-gray-500 hover:text-primary-600"><i class="fas fa-rss" aria-hidden="true"></i></a>
+        <button title="Share Article" onclick="navigator.share({title: '{{ article.title }}', url: '{{ article.url }}'})" class="text-gray-500 hover:text-primary-600"><i class="fas fa-share-alt" aria-hidden="true"></i></button>
+      </div>
+      <div class="md:w-2/3 p-6">
+        <div class="flex items-center text-sm text-gray-500 mb-2">
+          <svg class="h-5 w-5 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4h12v2H4V4zM4 9h12v2H4V9zM4 14h12v2H4v-2z"/></svg>
+          <span>{{ article.publishedAt|date:'M d, Y H:i' }}</span>
+        </div>
+        <h2 class="text-xl font-semibold mb-2"><a href="{{ article.url }}" target="_blank" rel="noopener noreferrer" class="hover:text-primary-600">{{ article.title }}</a></h2>
+        <p class="text-gray-600 mb-4">{{ article.description }}</p>
+        <div>
+          <a href="{{ article.url }}" target="_blank" class="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium">Read more&rarr;</a>
+        </div>
+      </div>
+      {% if article.urlToImage or article.image %}
       <div class="md:w-1/3">
-        <img src="{{ article.image }}" alt="{{ article.title }}" class="w-full h-full object-cover">
+        <img src="{{ article.image|default:article.urlToImage }}" alt="{{ article.title }}" class="w-full h-full object-cover">
       </div>
       {% endif %}
-      <div class="p-6 flex-1 flex flex-col justify-between">
-        <div>
-          <h2 class="text-xl font-semibold text-gray-900"><a href="{{ article.url }}" target="_blank" rel="noopener noreferrer">{{ article.title }}</a></h2>
-          <p class="mt-2 text-gray-600">{{ article.description }}</p>
-        </div>
-        <div class="mt-4">
-          <a href="{{ article.url }}" target="_blank" class="text-primary-600 hover:text-primary-700 font-medium">Read more &rarr;</a>
-        </div>
-      </div>
     </div>
     {% empty %}
     <p class="text-center text-gray-600">No news articles available.</p>
     {% endfor %}
-  </main>
+  </div>
+
+  <!-- Load More -->
+  {% if has_more %}
+  <div class="text-center py-6">
+    <a href="?page={{ page|add:'1' }}" class="px-6 py-3 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition">Load More</a>
+  </div>
+  {% endif %}
+
+  <!-- Financial Help CTA -->
+  <section class="py-16 bg-primary-600 text-white">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+      <div class="hidden md:block">
+        <img src="{% static 'images/blog9.jpg' %}" alt="Financial Help" class="w-full h-auto rounded-lg shadow-lg">
+      </div>
+      <div>
+        <h3 class="text-3xl font-bold">Need Any Financial Help!</h3>
+        <p class="mt-2"><strong>Hotline:</strong> +48 7600 8202</p>
+      </div>
+      <div>
+        <p class="mt-2"><strong>Send Us Email:</strong> finance@accessprimefin.com</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Custom Four-Card Showcase -->
+  <section class="py-16 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        {% for i in "1234" %}
+        <div class="relative overflow-hidden rounded-lg shadow-lg transform transition-transform hover:scale-105 hover:shadow-2xl" data-aos="fade-up" data-aos-delay="{{ forloop.counter0|add:'100' }}">
+          <img src="{% static 'images/blog' %}{{ forloop.counter|add:'4' }}.jpg" alt="Showcase {{ forloop.counter|add:'4' }}" class="w-full h-56 object-cover">
+          <div class="absolute inset-0 bg-black bg-opacity-40 flex flex-col justify-center items-start p-6">
+            <span class="text-sm uppercase text-white tracking-wide">Business Strategy</span>
+            <h3 class="mt-2 text-xl font-bold text-white">Investment Planning</h3>
+            <p class="mt-2 text-white text-sm">Bohen an unknown printer took a galley of type and scrambled it to make a type specimen book.</p>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
   <!-- NEWSLETTER SIGNUP -->
   <section class="bg-gray-50 py-12">
     <div class="max-w-md mx-auto text-center">
@@ -56,5 +107,37 @@
       <p class="mt-4 text-sm text-gray-500">Sign up for our latest news & articles. We won’t give you spam mails.</p>
     </div>
   </section>
-</div>
+
+  <!-- Footer -->
+  <footer class="bg-white py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div>
+        <img src="{% static 'img/Primetrust-logo-med.png' %}" alt="PrimeTrust Logo" class="h-8 mb-4">
+        <p class="text-gray-600">Our relationships are built on trust that we build every day through every interaction.</p>
+      </div>
+      <div>
+        <h4 class="font-semibold mb-4 text-gray-900">What We Do</h4>
+        <ul class="space-y-2">
+          <li><a href="{% url 'pages:about' %}" class="text-gray-500 hover:text-primary-600">About us</a></li>
+          <li><a href="{% url 'pages:news' %}" class="text-gray-500 hover:text-primary-600">News</a></li>
+          <li><a href="{% url 'pages:features' %}" class="text-gray-500 hover:text-primary-600">Investment</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-semibold mb-4 text-gray-900">Get Updates!</h4>
+        <form action="#" class="flex items-center space-x-2">
+          <input type="email" name="email" placeholder="Enter your Email" class="px-4 py-2 border rounded-md w-full" />
+          <button type="submit" class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition">Subscribe</button>
+        </form>
+        <p class="mt-4 text-sm text-gray-500">We won’t give you spam mails.</p>
+      </div>
+    </div>
+    <div class="mt-8 text-center text-gray-400 text-sm">&copy; Access Prime Finance {% now "Y" %}. All Rights Reserved</div>
+  </footer>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/rellax/1.12.1/rellax.min.js"></script>
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script src="{% static 'js/news.js' %}"></script>
 {% endblock %}

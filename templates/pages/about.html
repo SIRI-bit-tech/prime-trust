@@ -3,73 +3,162 @@
 
 {% block title %}About PrimeTrust - Modern Online Banking{% endblock %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css" />
+<link rel="stylesheet" href="{% static 'css/landing.css' %}" />
+<link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+{% endblock %}
+
 {% block content %}
-<div class="min-h-full">
-    <!-- Header -->
-    <header class="bg-white shadow">
-        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center">
-                <h1 class="text-3xl font-bold text-gray-900">About PrimeTrust</h1>
-                <a href="{% url 'landing' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
-                    Back to Home
-                </a>
+<!-- Hero Banner -->
+<section class="relative h-64 about-hero flex items-center">
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <h1 class="text-4xl font-bold text-white">About PrimeTrust</h1>
+    </div>
+</section>
+<div class="about-page min-h-full">
+  <!-- Intro Section -->
+  <div class="intro-section p-8 bg-white glass-card neumorphic mb-8" data-aos="fade-up">
+    <div class="flex flex-col lg:flex-row items-center gap-8">
+      <img src="{% static 'images/company-building.jpg' %}" alt="Company Building" class="w-full lg:w-1/2 rounded-lg shadow-lg">
+      <div class="lg:w-1/2">
+        <h2 class="text-3xl font-semibold mb-4">Who We Are</h2>
+        <p class="text-gray-700 mb-2">Founded in 2023, PrimeTrust has rapidly grown into a premier digital bank, catering to individuals and businesses with innovative financial solutions.</p>
+        <p class="text-gray-700">Our mission is to blend cutting-edge technology, robust security, and exceptional customer service to simplify banking for the modern user.</p>
+      </div>
+    </div>
+  </div>
+  <main>
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 space-y-12">
+      <!-- Our History -->
+      <div class="about-card" data-aos="fade-up">
+        <h2 class="text-2xl font-semibold mb-4">Our History</h2>
+        <p class="text-gray-700">Since 2023, PrimeTrust has grown from a fintech startup to an industry-leading digital bank. Below are key milestones:</p>
+        <div class="mt-6 space-y-6">
+          <div class="flex items-start">
+            <img src="{% static 'images/history-2023.png' %}" alt="2023" class="w-16 h-16 rounded-full shadow-md">
+            <div class="ml-4">
+              <h4 class="font-medium text-gray-900">2023: Founding</h4>
+              <p class="text-gray-700">Founded by industry veterans to simplify banking for the digital era.</p>
             </div>
-        </div>
-    </header>
-    
-    <!-- Main content -->
-    <main>
-        <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-            <div class="px-4 py-6 sm:px-0">
-                <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-                    <div class="px-4 py-5 sm:px-6">
-                        <h2 class="text-lg leading-6 font-medium text-gray-900">Our Mission</h2>
-                        <p class="mt-1 max-w-2xl text-sm text-gray-500">Revolutionizing banking for the digital age.</p>
-                    </div>
-                    <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
-                        <p class="text-base text-gray-700 mb-4">
-                            At PrimeTrust, we believe banking should be simple, secure, and accessible to everyone. Founded in 2023, our mission is to provide a modern banking experience that meets the needs of today's digital-first consumers.
-                        </p>
-                        <p class="text-base text-gray-700 mb-4">
-                            We're committed to transparency, security, and exceptional customer service. Our platform is built with the latest technology to ensure your financial data is protected while providing you with a seamless banking experience.
-                        </p>
-                        <p class="text-base text-gray-700 mb-4">
-                            Our team consists of experienced professionals from both the financial and technology sectors, bringing together the best of both worlds to create a banking solution that's truly innovative.
-                        </p>
-                    </div>
-                </div>
-                
-                <div class="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
-                    <div class="px-4 py-5 sm:px-6">
-                        <h2 class="text-lg leading-6 font-medium text-gray-900">Our Values</h2>
-                        <p class="mt-1 max-w-2xl text-sm text-gray-500">What drives us every day.</p>
-                    </div>
-                    <div class="border-t border-gray-200">
-                        <dl>
-                            <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                                <dt class="text-sm font-medium text-gray-500">Innovation</dt>
-                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">We constantly seek new ways to improve our services and stay ahead of the curve.</dd>
-                            </div>
-                            <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                                <dt class="text-sm font-medium text-gray-500">Security</dt>
-                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">Your financial security is our top priority. We employ state-of-the-art security measures to protect your data.</dd>
-                            </div>
-                            <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                                <dt class="text-sm font-medium text-gray-500">Transparency</dt>
-                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">We believe in clear communication and no hidden fees. What you see is what you get.</dd>
-                            </div>
-                            <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
-                                <dt class="text-sm font-medium text-gray-500">Accessibility</dt>
-                                <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">Banking should be for everyone. We design our services to be inclusive and user-friendly.</dd>
-                            </div>
-                        </dl>
-                    </div>
-                </div>
+          </div>
+          <div class="flex items-start">
+            <img src="{% static 'images/history-2024.png' %}" alt="2024" class="w-16 h-16 rounded-full shadow-md">
+            <div class="ml-4">
+              <h4 class="font-medium text-gray-900">2024: Platform Launch</h4>
+              <p class="text-gray-700">Launched our flagship online banking platform serving over 10,000 users.</p>
             </div>
+          </div>
         </div>
-    </main>
-    
-    <!-- Footer -->
+      </div>
+       <!-- Mission & Values -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="about-card" data-aos="fade-up">
+          <img src="{% static 'images/icon-mission.png' %}" alt="Mission" class="w-12 h-12 mb-3">
+          <h3 class="text-xl font-semibold mb-3">Our Mission</h3>
+          <p class="text-gray-700">Empower users with secure, intuitive banking powered by innovative technology and exceptional support.</p>
+        </div>
+        <div class="about-card" data-aos="fade-up">
+          <img src="{% static 'images/icon-values.png' %}" alt="Values" class="w-12 h-12 mb-3">
+          <h3 class="text-xl font-semibold mb-3">Our Values</h3>
+          <ul class="list-disc list-inside text-gray-700 space-y-2">
+            <li>Innovation: Continuous improvement and creative problem-solving.</li>
+            <li>Security: Protecting your assets with world-class measures.</li>
+            <li>Transparency: Clear communication with no hidden fees.</li>
+            <li>Accessibility: Inclusive design for all users.</li>
+          </ul>
+        </div>
+      </div>
+      <!-- Meet the Team -->
+      <div data-aos="fade-up">
+        <h2 class="text-2xl font-semibold mb-6">Meet the Team</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <!-- Example profile cards -->
+          <div class="about-card text-center">
+            <img src="{% static 'images/team-noah.png' %}" alt="Alex" class="w-24 h-24 mx-auto rounded-full mb-4">
+            <h4 class="font-semibold text-gray-900">Noah Whitman</h4>
+            <p class="text-gray-600 text-sm">CEO & Co-Founder</p>
+          </div>
+          <!-- Repeat for others -->
+        </div>
+      </div>
+      <!-- Our Services -->
+      <div class="about-card" data-aos="fade-up">
+        <h2 class="text-2xl font-semibold mb-4">Our Services</h2>
+        <p class="text-gray-700 mb-4">We offer a comprehensive suite of banking services designed to meet every financial need:</p>
+        <ul class="list-disc list-inside text-gray-700 space-y-2">
+          <li>Personal Checking & Savings Accounts with competitive interest rates</li>
+          <li>Business Banking Solutions tailored for startups and enterprises</li>
+          <li>Real-time Payments & Transfers with top-notch security</li>
+          <li>Mobile & Online Banking Platforms for seamless 24/7 access</li>
+          <li>Dedicated Customer Support available via chat, email, and phone</li>
+        </ul>
+      </div>
+      <!-- Customer Testimonials Carousel -->
+      <section class="about-testimonials" data-aos="fade-up">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 class="text-2xl font-semibold mb-6 text-center">Customer Testimonials</h2>
+          <div class="swiper-container">
+            <div class="swiper-wrapper">
+              <div class="swiper-slide">
+                <div class="about-card text-center p-8">
+                  <img src="{% static 'images/testi1.png' %}" alt="Sarah T. Brown" class="w-20 h-20 mx-auto rounded-full mb-4">
+                  <p class="italic text-gray-800 mb-2">“PrimeTrust has transformed the way we handle our finances. Their intuitive platform and responsive support make banking effortless.”</p>
+                  <p class="font-medium text-gray-600">— Sarah Lee, CFO at FinCorp</p>
+                </div>
+              </div>
+              <div class="swiper-slide">
+                <div class="about-card text-center p-8">
+                  <img src="{% static 'images/testi2.png' %}" alt="Eric Wintch" class="w-20 h-20 mx-auto rounded-full mb-4">
+                  <p class="italic text-gray-800 mb-2">“The security and transparency offered by PrimeTrust set them apart from other banks.”</p>
+                  <p class="font-medium text-gray-600">— Eric Wintch, CTO at Innovatech</p>
+                </div>
+              </div>
+              <div class="swiper-slide">
+                <div class="about-card text-center p-8">
+                  <img src="{% static 'images/testi3.png' %}" alt="Emily S. Donald" class="w-20 h-20 mx-auto rounded-full mb-4">
+                  <p class="italic text-gray-800 mb-2">“Their customer service is top-notch, and the mobile app is incredibly user-friendly.”</p>
+                  <p class="font-medium text-gray-600">— Emily S. Donald, Entrepreneur</p>
+                </div>
+              </div>
+            </div>
+            <div class="swiper-pagination"></div>
+          </div>
+        </div>
+      </section>
+      <!-- Awards, Security, and Partners -->
+      <section class="max-w-7xl mx-auto py-12 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="about-card p-6" data-aos="fade-up">
+            <h3 class="text-xl font-semibold mb-4">Awards & Recognition</h3>
+            <ul class="list-disc list-inside text-gray-700 space-y-2">
+              <li>Best Fintech Startup 2023 by Finance Daily</li>
+              <li>Top Digital Bank 2024 by Global Banking Awards</li>
+              <li>Innovation in Banking 2025 by TechFinance</li>
+            </ul>
+          </div>
+          <div class="about-card p-6" data-aos="fade-up">
+            <h3 class="text-xl font-semibold mb-4">Security & Compliance</h3>
+            <p class="text-gray-700 mb-2">Our platform meets the highest industry standards:</p>
+            <ul class="list-disc list-inside text-gray-700 space-y-2">
+              <li>PCI DSS Level 1 Certified</li>
+              <li>GDPR & SOC 2 Type II Compliance</li>
+              <li>256-bit AES Encryption</li>
+            </ul>
+          </div>
+          <div class="about-card p-6" data-aos="fade-up">
+            <h3 class="text-xl font-semibold mb-4">Our Partners</h3>
+            <div class="flex flex-wrap items-center justify-center gap-4">
+              <img src="{% static 'images/partner1.png' %}" alt="Partner 1" class="h-12 grayscale hover:grayscale-0 transition duration-300">
+              <img src="{% static 'images/partner2.png' %}" alt="Partner 2" class="h-12 grayscale hover:grayscale-0 transition duration-300">
+              <img src="{% static 'images/partner3.png' %}" alt="Partner 3" class="h-12 grayscale hover:grayscale-0 transition duration-300">
+            </div>
+          </div>
+        </div>
+      </section>
+     </div>
+   </main>
+   <!-- Footer -->
     <footer class="bg-white">
         <div class="max-w-7xl mx-auto py-12 px-4 overflow-hidden sm:px-6 lg:px-8">
             <nav class="-mx-5 -my-2 flex flex-wrap justify-center" aria-label="Footer">
@@ -95,4 +184,20 @@
         </div>
     </footer>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+<script>
+  AOS.init({ disable:'mobile', duration:600, easing:'ease-out', once:true });
+  var swiper = new Swiper('.swiper-container', {
+    loop: true,
+    autoplay: { delay: 5000 },
+    slidesPerView: 1,
+    spaceBetween: 20,
+    pagination: { el: '.swiper-pagination', clickable: true },
+    breakpoints: { 640: { slidesPerView: 2 }, 1024: { slidesPerView: 3 } }
+  });
+</script>
 {% endblock %}

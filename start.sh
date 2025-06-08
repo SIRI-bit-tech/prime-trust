@@ -7,7 +7,12 @@ python manage.py migrate --no-input
 
 # Create superuser if not exists (requires DJANGO_SUPERUSER_* env vars)
 echo "Creating superuser..."
-python manage.py createsuperuser --no-input || true
+python manage.py createsuperuser \
+    --no-input \
+    --username "$DJANGO_SUPERUSER_USERNAME" \
+    --email "$DJANGO_SUPERUSER_EMAIL" \
+    --first_name "$DJANGO_SUPERUSER_FIRST_NAME" \
+    --last_name "$DJANGO_SUPERUSER_LAST_NAME" || true
 
 echo "Starting Gunicorn server..."
 exec gunicorn core.wsgi:application \

@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 set -o errexit
 
+# Run database migrations
+echo "Running migrations..."
+python manage.py migrate --no-input
+
+# Create superuser if not exists (requires DJANGO_SUPERUSER_* env vars)
+echo "Creating superuser..."
+python manage.py createsuperuser --no-input || true
+
 echo "Starting Gunicorn server..."
 exec gunicorn core.wsgi:application \
     --bind 0.0.0.0:${PORT:-8000} \

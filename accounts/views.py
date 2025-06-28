@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.contrib import messages
@@ -10,7 +10,7 @@ from django.utils.html import strip_tags
 from django.utils import timezone
 from django.http import HttpResponse, HttpResponseRedirect
 from django_htmx.http import trigger_client_event, HttpResponseClientRedirect
-import logging
+from datetime import datetime
 
 from .models import CustomUser, UserProfile
 from .forms import (
@@ -21,100 +21,182 @@ from .forms import (
     UserProfileUpdateForm,
     PasswordChangeForm
 )
-
-logger = logging.getLogger(__name__)
+from .utils import generate_verification_code, send_verification_email, verify_code
 
 def register(request):
     """Single-step user registration"""
     if request.user.is_authenticated:
         return redirect('dashboard:home')
+    
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST, request.FILES)
+        
         if form.is_valid():
-            user = form.save()
-            login(request, user)
-            messages.success(request, 'Registration successful! You are now logged in.')
-            return redirect('dashboard:home')
+            try:
+                # Create user but don't save yet
+                user = form.save(commit=False)
+                user.is_active = False
+                user.save()
+                
+                # Generate and send verification code
+                code = generate_verification_code()
+                
+                if send_verification_email(user.email, code):
+                    # Store email in session for verification
+                    request.session['registration_email'] = user.email
+                    messages.success(request, 'Account created successfully! Please check your email for verification.')
+                    
+                    redirect_url = reverse('accounts:verify_email')
+                    
+                    # Handle HTMX request
+                    if request.htmx:
+                        response = HttpResponseClientRedirect(redirect_url)
+                        return response
+                    
+                    return redirect('accounts:verify_email')
+                else:
+                    messages.error(request, 'Error sending verification email. Please try again.')
+                    user.delete()  # Delete the user if email sending fails
+            except Exception as e:
+                messages.error(request, 'An error occurred during registration. Please try again.')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
     else:
         form = CustomUserCreationForm()
+    
     return render(request, 'accounts/register.html', {'form': form})
 
-def verify_email(request, user_id):
-    """Email verification view"""
-    user = get_object_or_404(CustomUser, id=user_id)
+def verify_email(request):
+    """Handle email verification after registration"""
+    email = request.session.get('registration_email')
+    if not email:
+        messages.error(request, 'No registration in progress. Please register first.')
+        return redirect('accounts:register')
     
-    # If already verified, redirect to login
-    if user.email_verified:
-        messages.success(request, 'Email already verified. Please log in.')
+    if request.method == 'POST':
+        form = VerificationForm(request.POST)
+        if form.is_valid():
+            try:
+                code = form.cleaned_data['verification_code']
+                if verify_code(email, code):
+                    # Activate user and log them in
+                    user = CustomUser.objects.get(email=email)
+                    user.is_active = True
+                    user.save()
+                    
+                    # Clear session data
+                    del request.session['registration_email']
+                    
+                    # Log the user in
+                    login(request, user)
+                    messages.success(request, 'Email verified successfully! Welcome to PrimeTrust.')
+                    
+                    # Handle HTMX request
+                    if request.htmx:
+                        response = HttpResponseClientRedirect(reverse('dashboard:home'))
+                        return response
+                    
+                    return redirect('dashboard:home')
+                else:
+                    messages.error(request, 'Invalid or expired verification code.')
+            except Exception as e:
+                messages.error(request, 'An error occurred during verification. Please try again.')
+    else:
+        form = VerificationForm()
+        messages.info(request, 'Please check your email for the verification code.')
+    
+    context = {
+        'form': form,
+        'user_email': email,
+    }
+    
+    # Handle HTMX request
+    if request.htmx:
+        return render(request, 'accounts/partials/verification_form.html', context)
+    
+    return render(request, 'accounts/verify_email.html', context)
+
+def login_view(request):
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            # Generate and send verification code
+            code = generate_verification_code()
+            if send_verification_email(user.email, code, is_login=True):
+                request.session['login_email'] = user.email
+                return redirect('accounts:verify_login')
+            else:
+                messages.error(request, 'Error sending verification code. Please try again.')
+    else:
+        form = LoginForm()
+    
+    return render(request, 'accounts/login.html', {'form': form})
+
+def verify_login(request):
+    email = request.session.get('login_email')
+    if not email:
         return redirect('accounts:login')
     
     if request.method == 'POST':
         form = VerificationForm(request.POST)
         if form.is_valid():
             code = form.cleaned_data['verification_code']
-            if user.verify_email(code):
-                messages.success(request, 'Email verified successfully! You can now log in.')
-                return redirect('accounts:login')
+            if verify_code(email, code):
+                # Log the user in
+                user = CustomUser.objects.get(email=email)
+                login(request, user)
+                messages.success(request, 'Login successful!')
+                return redirect('dashboard:home')
             else:
                 messages.error(request, 'Invalid or expired verification code.')
     else:
         form = VerificationForm()
     
-    context = {
-        'form': form,
-        'user_email': user.email
-    }
-    
-    if request.htmx:
-        return render(request, 'accounts/partials/verification_form.html', context)
-    return render(request, 'accounts/verify_email.html', context)
+    return render(request, 'accounts/verify_login.html', {'form': form})
 
-def resend_verification(request, user_id):
+def resend_verification(request):
     """Resend verification code"""
-    user = get_object_or_404(CustomUser, id=user_id)
+    email = request.session.get('registration_email')
+    if not email:
+        if request.htmx:
+            return HttpResponse(
+                '<div class="text-sm text-center text-red-600">No registration in progress. Please try again.</div>'
+            )
+        messages.error(request, 'No registration in progress.')
+        return redirect('accounts:register')
     
-    if user.email_verified:
-        messages.info(request, 'Email already verified.')
-        return redirect('accounts:login')
+    try:
+        user = CustomUser.objects.get(email=email)
+        code = generate_verification_code()
+        if send_verification_email(email, code):
+            if request.htmx:
+                return HttpResponse(
+                    '<div class="text-sm text-center text-green-600">'
+                    'Verification code sent! Please check your email.'
+                    '</div>'
+                )
+            messages.success(request, 'Verification code resent successfully.')
+        else:
+            if request.htmx:
+                return HttpResponse(
+                    '<div class="text-sm text-center text-red-600">'
+                    'Error sending verification code. Please try again.'
+                    '</div>'
+                )
+            messages.error(request, 'Error sending verification code. Please try again.')
+    except CustomUser.DoesNotExist:
+        if request.htmx:
+            return HttpResponse(
+                '<div class="text-sm text-center text-red-600">User not found. Please register again.</div>'
+            )
+        messages.error(request, 'User not found.')
+        return redirect('accounts:register')
     
-    # Generate new code and send email
-    code = user.generate_verification_code()
-    send_verification_email(user, code)
-    
-    messages.success(request, f'Verification code sent to {user.email}')
-    
-    response = HttpResponseRedirect(reverse('accounts:verify_email', args=[user_id]))
-    if request.htmx:
-        trigger_client_event(response, 'showMessage', {'message': 'Verification code sent!'})
-    return response
-
-def user_login(request):
-    """User login view with security question verification"""
-    if request.user.is_authenticated:
-        return redirect('dashboard:home')
-    
-    if request.method == 'POST':
-        form = LoginForm(data=request.POST)
-        if form.is_valid():
-            try:
-                user = form.get_user()
-                # Authenticate and log in the user
-                login(request, user)
-                # HTMX-aware redirect to dashboard
-                if request.htmx:
-                    return HttpResponseClientRedirect(reverse('dashboard:home'))
-                return redirect('dashboard:home')
-            except Exception as e:
-                logger.error(f"Unexpected error in login view: {str(e)}")
-                messages.error(request, "An unexpected error occurred. Please try again.")
-                return redirect('accounts:login')
-    else:
-        form = LoginForm()
-    
-    context = {'form': form}
-    if request.htmx:
-        return render(request, 'accounts/partials/login_form.html', context)
-    return render(request, 'accounts/login.html', context)
+    if not request.htmx:
+        return redirect('accounts:verify_email')
 
 @login_required
 def user_logout(request):
@@ -161,7 +243,6 @@ def profile(request):
         profile_form = UserProfileUpdateForm(instance=user_profile)
     
     # Get current time for greeting
-    from datetime import datetime
     current_hour = datetime.now().hour
     greeting = "Good Evening"
     if current_hour < 12:
@@ -183,29 +264,20 @@ def profile(request):
 
 @login_required
 def change_password(request):
-    """View for changing user password"""
-    user = request.user
-    
+    """Change password view"""
     if request.method == 'POST':
-        form = PasswordChangeForm(user, request.POST)
+        form = PasswordChangeForm(request.POST)
         if form.is_valid():
-            form.save()
-            # Re-authenticate the user with the new password
-            login(request, user)
-            messages.success(request, 'Your password was successfully updated!')
-            
-            if request.htmx:
-                response = HttpResponse()
-                trigger_client_event(response, 'showMessage', {'message': 'Password updated successfully!'})
-                return response
-            return redirect('accounts:profile')
+            user = request.user
+            user.set_password(form.cleaned_data['new_password1'])
+            user.save()
+            messages.success(request, 'Password changed successfully!')
+            return redirect('accounts:login')
     else:
-        form = PasswordChangeForm(user)
+        form = PasswordChangeForm()
     
     # Get current time for greeting
-    from datetime import datetime
     current_hour = datetime.now().hour
-    greeting = "Good Evening"
     if current_hour < 12:
         greeting = "Good Morning"
     elif current_hour < 18:
@@ -222,23 +294,10 @@ def change_password(request):
     return render(request, 'accounts/change_password.html', context)
 
 # Helper functions
-def send_verification_email(user, code):
-    """Send verification email with code"""
-    subject = 'Verify your PrimeTrust account'
-    html_message = render_to_string('emails/verification_email.html', {
-        'user': user,
-        'code': code
-    })
-    plain_message = strip_tags(html_message)
-    to_email = user.email
-    
-    # Use Brevo API for sending emails
-    from .utils import send_email_with_brevo
-    send_email_with_brevo(to_email, subject, html_message, plain_message)
 
 def send_login_code_email(user, code):
-    """Send login verification code"""
-    subject = 'Your PrimeTrust login code'
+    """Send login verification code email"""
+    subject = 'Login Verification Code'
     html_message = render_to_string('emails/login_code_email.html', {
         'user': user,
         'code': code
@@ -246,6 +305,12 @@ def send_login_code_email(user, code):
     plain_message = strip_tags(html_message)
     to_email = user.email
     
-    # Use Brevo API for sending emails
-    from .utils import send_email_with_brevo
-    send_email_with_brevo(to_email, subject, html_message, plain_message)
+    # Send email using Django's built-in email functionality
+    return send_mail(
+        subject=subject,
+        message=plain_message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        recipient_list=[to_email],
+        html_message=html_message,
+        fail_silently=False,
+    )

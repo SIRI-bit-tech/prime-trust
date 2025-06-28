@@ -173,21 +173,17 @@ origins = os.getenv('CSRF_TRUSTED_ORIGINS', '')
 CSRF_TRUSTED_ORIGINS = [o for o in origins.split(',') if o.startswith('http')]
 
 # Email Configuration
-# Note: We're using Brevo API directly for sending emails, not Django's SMTP
-# SMTP settings are commented out as they're not needed with the Brevo API
-# EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
-# EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp-relay.brevo.com')
-# EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
-# EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
-# EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
-# EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
 
-# We still need DEFAULT_FROM_EMAIL for the sender information
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'PrimeTrust <noreply@primetrust.com>')
-
-# Brevo API Configuration - This is what we're actually using for emails
-BREVO_API_KEY = os.getenv('BREVO_API_KEY', '')
-BREVO_ENABLED = bool(BREVO_API_KEY)  # Enable Brevo if API key is provided
+# Verification settings
+EMAIL_VERIFICATION_TIMEOUT = 3600  # 1 hour in seconds
+LOGIN_VERIFICATION_TIMEOUT = 300   # 5 minutes in seconds
 
 # News API key for real-time news
 NEWS_API_KEY = os.getenv('NEWS_API_KEY', '')

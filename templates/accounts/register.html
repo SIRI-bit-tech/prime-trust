@@ -19,7 +19,7 @@
         </div>
 
         <div class="bg-white px-8 py-6 shadow-md rounded-lg">
-            <form method="post" enctype="multipart/form-data" class="space-y-4">
+            <form method="post" enctype="multipart/form-data" class="space-y-4" id="registrationForm" novalidate>
                 {% csrf_token %}
                 
                 <div class="flex gap-2">
@@ -43,6 +43,7 @@
                 </div>
 
                 <div class="text-xs text-gray-600 mb-2">Date of birth</div>
+                <input type="hidden" name="date_of_birth" id="id_date_of_birth">
                 <div class="flex gap-2">
                     <select name="birth_month" class="flex-1 rounded-md border border-gray-300 px-3 py-2">
                         <option value="">Month</option>
@@ -90,7 +91,12 @@
                 </div>
 
                 <div>
-                    {{ form.phone_number }}
+                    <input type="tel" name="phone_number" id="id_phone_number" 
+                           class="w-full rounded-md border border-gray-300 px-3 py-2"
+                           placeholder="(555) 123-4567"
+                           oninput="formatPhoneNumber(this)"
+                           required>
+                    <div class="text-xs text-gray-500 mt-1">Format: (555) 123-4567</div>
                 </div>
 
                 <div>
@@ -127,4 +133,18 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/registration.js' %}"></script>
+<script src="{% static 'js/cities.js' %}"></script>
+<script src="{% static 'js/phone_format.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const phoneInput = document.getElementById('id_phone_number');
+    phoneInput.addEventListener('input', function() {
+        formatPhoneNumber(this);
+    });
+});
+</script>
 {% endblock %}

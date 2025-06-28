@@ -1,78 +1,97 @@
 """
 Utility functions for the accounts app
 """
-import os
-import sib_api_v3_sdk
-from sib_api_v3_sdk.rest import ApiException
+import random
+import string
+import logging
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 from django.conf import settings
+from django.core.cache import cache
 
-def send_email_with_brevo(to_email, subject, html_content, text_content=None):
+logger = logging.getLogger(__name__)
+
+def generate_verification_code():
+    """Generate a 6-digit verification code."""
+    return ''.join(random.choices(string.digits, k=6))
+
+def send_verification_email(email, code, is_login=False):
     """
-    Send an email using Brevo API
+    Send verification email with the provided code.
     
     Args:
-        to_email (str): Recipient email address
-        subject (str): Email subject
-        html_content (str): HTML content of the email
-        text_content (str, optional): Plain text content of the email. Defaults to None.
-    
-    Returns:
-        bool: True if email was sent successfully, False otherwise
+        email (str): The recipient's email address
+        code (str): The verification code
+        is_login (bool): Whether this is for login verification (True) or registration (False)
     """
-    import logging
-    logger = logging.getLogger(__name__)
+    logger.info(f"Attempting to send verification email to {email}")
     
-    # Debug information
-    logger.info(f"Attempting to send email to {to_email} with subject: {subject}")
-    logger.info(f"Using Brevo API Key: {settings.BREVO_API_KEY[:5]}...{settings.BREVO_API_KEY[-5:] if settings.BREVO_API_KEY else ''}")
-    
-    # Configure API key authorization
-    configuration = sib_api_v3_sdk.Configuration()
-    configuration.api_key['api-key'] = settings.BREVO_API_KEY
-    
-    # Create an instance of the API class
-    api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
-    
-    # Hardcode the sender information to use Brevo email directly
-    sender_name = 'PrimeTrust'
-    sender_email = '8e12f3001@smtp-brevo.com'  # Your Brevo SMTP user
-        
-    # Log the sender information
-    logger.info(f"Using sender: {sender_name} <{sender_email}>")
-    
-    # Set up the sender
-    sender = {"name": sender_name, "email": sender_email}
-    
-    # Set up the recipient
-    to = [{"email": to_email}]
-    
-    # If text_content is not provided, use html_content with tags removed
-    if text_content is None:
-        from django.utils.html import strip_tags
-        text_content = strip_tags(html_content)
-    
+    # Determine the subject and template based on the verification type
+    if is_login:
+        subject = 'Login Verification Code'
+        template = 'emails/login_code_email.html'
+        timeout = settings.LOGIN_VERIFICATION_TIMEOUT
+    else:
+        subject = 'Verify Your Email Address'
+        template = 'emails/verification_email.html'
+        timeout = settings.EMAIL_VERIFICATION_TIMEOUT
+
+    logger.info(f"Using template: {template}")
+
     try:
-        # Create a SendSmtpEmail object
-        send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
-            to=to,
-            html_content=html_content,
-            sender=sender,
+        # Render the HTML email template
+        html_message = render_to_string(template, {
+            'verification_code': code
+        })
+        plain_message = strip_tags(html_message)
+        
+        logger.info(f"Email content generated for {email}")
+
+        # Send the email
+        send_mail(
             subject=subject,
-            text_content=text_content
+            message=plain_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+            html_message=html_message,
+            fail_silently=False,
         )
         
-        # Log the email details
-        logger.info(f"Email details: To: {to}, From: {sender}, Subject: {subject}")
+        logger.info(f"Email sent successfully to {email}")
         
-        # Send the email
-        api_response = api_instance.send_transac_email(send_smtp_email)
-        logger.info(f"Email sent successfully. Response: {api_response}")
+        # Store the verification code in cache
+        cache_key = f"verification_code_{email}"
+        cache.set(cache_key, code, timeout)
+        logger.info(f"Verification code stored in cache for {email}")
+        
         return True
-    except ApiException as e:
-        logger.error(f"Brevo API Exception: {e}")
-        logger.error(f"Status code: {e.status}, Reason: {e.reason}")
-        logger.error(f"Response body: {e.body}")
-        return False
     except Exception as e:
-        logger.error(f"Unexpected error sending email: {str(e)}")
+        logger.error(f"Error sending verification email to {email}: {str(e)}")
         return False
+
+def verify_code(email, code):
+    """
+    Verify the provided code against the stored code.
+    
+    Args:
+        email (str): The email address
+        code (str): The verification code to verify
+        
+    Returns:
+        bool: True if verification successful, False otherwise
+    """
+    logger.info(f"Verifying code for {email}")
+    cache_key = f"verification_code_{email}"
+    stored_code = cache.get(cache_key)
+    
+    logger.info(f"Stored code for {email}: {stored_code}, Provided code: {code}")
+    
+    if stored_code and stored_code == code:
+        # Delete the code after successful verification
+        cache.delete(cache_key)
+        logger.info(f"Verification code validated successfully for {email}")
+        return True
+    
+    logger.warning(f"Invalid verification code attempt for {email}. Stored: {stored_code}, Provided: {code}")
+    return False

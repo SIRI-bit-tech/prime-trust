@@ -125,7 +125,6 @@
                     <input type="tel" name="phone_number" id="{{ form.phone_number.id_for_label }}" required
                         class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                         placeholder="(555) 123-4567"
-                        pattern="\(\d{3}\)\s\d{3}-\d{4}"
                         value="{{ form.phone_number.value|default:'' }}"
                         oninput="formatPhoneNumber(this)">
                     {% if form.phone_number.errors %}

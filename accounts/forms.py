@@ -25,10 +25,6 @@ class CustomUserCreationForm(UserCreationForm):
     """
     A form for creating new users with email, phone number, password, and name.
     """
-    username = forms.CharField(max_length=150, required=True, widget=forms.TextInput(attrs={
-        'class': 'form-input',
-        'placeholder': 'Username'
-    }))
     first_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={
         'class': 'form-input',
         'placeholder': 'First name'
@@ -48,12 +44,12 @@ class CustomUserCreationForm(UserCreationForm):
     password1 = forms.CharField(label='Password', widget=forms.PasswordInput(attrs={
         'class': 'form-input',
         'placeholder': 'New password',
-        'id': 'password1'
+        'id': 'id_password1'
     }))
     password2 = forms.CharField(label='Confirm Password', widget=forms.PasswordInput(attrs={
         'class': 'form-input',
         'placeholder': 'Confirm password',
-        'id': 'password2'
+        'id': 'id_password2'
     }))
     date_of_birth = forms.DateField(required=True, widget=forms.HiddenInput())
     state = forms.ChoiceField(
@@ -61,14 +57,14 @@ class CustomUserCreationForm(UserCreationForm):
         required=True,
         widget=forms.Select(attrs={
             'class': 'form-input',
-            'id': 'state-select'
+            'id': 'id_state'
         })
     )
     city = forms.CharField(
         required=True,
         widget=forms.Select(attrs={
             'class': 'form-input',
-            'id': 'city-select',
+            'id': 'id_city',
             'disabled': 'disabled'
         })
     )
@@ -91,7 +87,7 @@ class CustomUserCreationForm(UserCreationForm):
     
     class Meta:
         model = CustomUser
-        fields = ('username', 'first_name', 'last_name', 'email', 'phone_number',
+        fields = ('first_name', 'last_name', 'email', 'phone_number',
                  'date_of_birth', 'state', 'city', 'address', 'password1', 'password2',
                  'security_question', 'security_answer')
 
@@ -102,6 +98,18 @@ class CustomUserCreationForm(UserCreationForm):
 
         if password1 and password2 and password1 != password2:
             self.add_error('password2', 'The passwords do not match.')
+
+        # Generate username from email
+        email = cleaned_data.get('email')
+        if email:
+            username = email.split('@')[0]
+            # Ensure username is unique
+            base_username = username
+            counter = 1
+            while CustomUser.objects.filter(username=username).exists():
+                username = f"{base_username}{counter}"
+                counter += 1
+            cleaned_data['username'] = username
 
         return cleaned_data
     
@@ -135,7 +143,7 @@ class CustomUserCreationForm(UserCreationForm):
     
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.username = self.cleaned_data['username']
+        user.username = self.cleaned_data['username']  # Set the generated username
         
         if commit:
             user.save()

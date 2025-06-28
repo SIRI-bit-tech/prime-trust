@@ -62,6 +62,7 @@ class UserProfile(models.Model):
     state = models.CharField(max_length=100, blank=True)
     date_of_birth = models.DateField(blank=True, null=True)
     profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
+    company = models.CharField(max_length=100, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

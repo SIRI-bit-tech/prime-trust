@@ -21,7 +21,7 @@
         </div>
     </div>
     
-    <form method="post" class="space-y-6" hx-post="{% url 'accounts:register' %}" hx-swap="outerHTML">
+    <form method="post" enctype="multipart/form-data" class="space-y-6" hx-post="{% url 'accounts:register' %}" hx-swap="outerHTML">
         {% csrf_token %}
         <input type="hidden" id="registration_step" name="registration_step" value="{% if registration_step %}{{ registration_step }}{% else %}1{% endif %}">
         
@@ -81,6 +81,23 @@
                         {% if form.last_name.errors %}
                         <p class="mt-2 text-sm text-red-600">{{ form.last_name.errors.0 }}</p>
                         {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
+                <div>
+                    <label for="{{ form.username.id_for_label }}" class="block text-sm font-medium text-gray-700">Username</label>
+                    <div class="mt-1">
+                        {{ form.username }}
+                        {% if form.username.errors %}<p class="mt-2 text-sm text-red-600">{{ form.username.errors.0 }}</p>{% endif %}
+                    </div>
+                </div>
+                <div>
+                    <label for="{{ form.company.id_for_label }}" class="block text-sm font-medium text-gray-700">Company</label>
+                    <div class="mt-1">
+                        {{ form.company }}
+                        {% if form.company.errors %}<p class="mt-2 text-sm text-red-600">{{ form.company.errors.0 }}</p>{% endif %}
                     </div>
                 </div>
             </div>
@@ -257,6 +274,14 @@
                     {% if form.password2.errors %}
                     <p class="mt-2 text-sm text-red-600">{{ form.password2.errors.0 }}</p>
                     {% endif %}
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <label for="{{ form.profile_picture.id_for_label }}" class="block text-sm font-medium text-gray-700">Profile Picture</label>
+                <div class="mt-1">
+                    {{ form.profile_picture }}
+                    {% if form.profile_picture.errors %}<p class="mt-2 text-sm text-red-600">{{ form.profile_picture.errors.0 }}</p>{% endif %}
                 </div>
             </div>
 

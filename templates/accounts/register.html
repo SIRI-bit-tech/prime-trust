@@ -1,31 +1,129 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Register - PrimeTrust{% endblock %}
+{% block title %}Sign Up - PrimeTrust{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'css/registration.css' %}">
+<script src="{% static 'js/cities.js' %}" defer></script>
 <script src="{% static 'js/registration.js' %}" defer></script>
 {% endblock %}
 
 {% block content %}
-<div class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-    <div class="sm:mx-auto sm:w-full sm:max-w-md">
-        <img class="mx-auto h-16 w-auto font-bold" src="{% static 'img/Primetrust-logo-med.png' %}" alt="PrimeTrust Logo" style="filter: drop-shadow(0 0 2px rgba(0,0,0,0.3));">
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
-        </h2>
-        <p class="mt-2 text-center text-sm text-gray-600">
-            Or
-            <a href="{% url 'accounts:login' %}" class="font-medium text-primary-600 hover:text-primary-500">
-                sign in to your existing account
-            </a>
-        </p>
-    </div>
+<div class="flex min-h-screen flex-col items-center justify-center bg-gray-100 py-12">
+    <div class="w-full max-w-md">
+        <div class="mb-8 text-center">
+            <img class="mx-auto h-16" src="{% static 'img/Primetrust-logo-med.png' %}" alt="PrimeTrust">
+            <h2 class="mt-6 text-2xl font-bold text-gray-900">Create a new account</h2>
+            <p class="mt-2 text-sm text-gray-600">It's quick and easy.</p>
+        </div>
 
-    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-            {% include "accounts/partials/register_form.html" %}
+        <div class="bg-white px-8 py-6 shadow-md rounded-lg">
+            <form method="post" enctype="multipart/form-data" class="space-y-4">
+                {% csrf_token %}
+                
+                <div class="flex gap-2">
+                    {{ form.first_name }}
+                    {{ form.last_name }}
+                </div>
+
+                <div>
+                    {{ form.email }}
+                </div>
+
+                <div class="space-y-2">
+                    <div>
+                        {{ form.password1 }}
+                        <div id="password1-error" class="text-red-500 text-xs mt-1 hidden">Password must be at least 8 characters</div>
+                    </div>
+                    <div>
+                        {{ form.password2 }}
+                        <div id="password2-error" class="text-red-500 text-xs mt-1 hidden">Passwords do not match</div>
+                    </div>
+                </div>
+
+                <div class="text-xs text-gray-600 mb-2">Date of birth</div>
+                <div class="flex gap-2">
+                    <select name="birth_month" class="flex-1 rounded-md border border-gray-300 px-3 py-2">
+                        <option value="">Month</option>
+                        <option value="1">Jan</option>
+                        <option value="2">Feb</option>
+                        <option value="3">Mar</option>
+                        <option value="4">Apr</option>
+                        <option value="5">May</option>
+                        <option value="6">Jun</option>
+                        <option value="7">Jul</option>
+                        <option value="8">Aug</option>
+                        <option value="9">Sep</option>
+                        <option value="10">Oct</option>
+                        <option value="11">Nov</option>
+                        <option value="12">Dec</option>
+                    </select>
+                    <select name="birth_day" class="flex-1 rounded-md border border-gray-300 px-3 py-2">
+                        <option value="">Day</option>
+                        {% for i in "x"|rjust:"31" %}
+                            <option value="{{ forloop.counter }}">{{ forloop.counter }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="birth_year" class="flex-1 rounded-md border border-gray-300 px-3 py-2">
+                        <option value="">Year</option>
+                        {% for year in "x"|rjust:"100" %}
+                            <option value="{{ forloop.counter|add:1923 }}">{{ forloop.counter|add:1923 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="text-xs text-gray-600 mb-2">Gender</div>
+                <div class="flex gap-2">
+                    <label class="flex-1 rounded-md border border-gray-300 px-3 py-2">
+                        <input type="radio" name="gender" value="F" class="mr-2">
+                        Female
+                    </label>
+                    <label class="flex-1 rounded-md border border-gray-300 px-3 py-2">
+                        <input type="radio" name="gender" value="M" class="mr-2">
+                        Male
+                    </label>
+                    <label class="flex-1 rounded-md border border-gray-300 px-3 py-2">
+                        <input type="radio" name="gender" value="C" class="mr-2">
+                        Custom
+                    </label>
+                </div>
+
+                <div>
+                    {{ form.phone_number }}
+                </div>
+
+                <div>
+                    {{ form.address }}
+                </div>
+
+                <div class="flex gap-2">
+                    {{ form.state }}
+                    {{ form.city }}
+                </div>
+
+                <div>
+                    {{ form.security_question }}
+                </div>
+
+                <div>
+                    {{ form.security_answer }}
+                </div>
+
+                <div class="text-xs text-gray-500 mt-4">
+                    By clicking Sign Up, you agree to our Terms, Privacy Policy and Cookies Policy.
+                </div>
+
+                <button type="submit" class="w-full bg-green-500 text-white text-lg font-bold py-2 px-4 rounded-md hover:bg-green-600 mt-4">
+                    Sign Up
+                </button>
+
+                <div class="text-center mt-4">
+                    <a href="{% url 'accounts:login' %}" class="text-blue-600 hover:underline text-sm">
+                        Already have an account?
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
 </div>

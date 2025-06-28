@@ -1,6 +1,20 @@
 // Registration form multi-step functionality
 document.addEventListener('DOMContentLoaded', function() {
     
+    // Initialize all DOM elements
+    const form = document.querySelector('form');
+    const monthSelect = document.querySelector('select[name="birth_month"]');
+    const daySelect = document.querySelector('select[name="birth_day"]');
+    const yearSelect = document.querySelector('select[name="birth_year"]');
+    const dateInput = document.querySelector('input[name="date_of_birth"]');
+    const stateDropdown = document.getElementById('state-select');
+    const cityDropdown = document.getElementById('city-select');
+    const genderInputs = document.querySelectorAll('input[name="gender"]');
+    const password1Input = document.getElementById('password1');
+    const password2Input = document.getElementById('password2');
+    const password1Error = document.getElementById('password1-error');
+    const password2Error = document.getElementById('password2-error');
+
     // Initialize the form with step 1 visible
     showStep(1);
 
@@ -35,6 +49,127 @@ document.addEventListener('DOMContentLoaded', function() {
     if (registrationStep && registrationStep.value === '2') {
         showStep(2);
     }
+
+    // Handle password validation
+    function validatePasswords() {
+        const password1 = password1Input.value;
+        const password2 = password2Input.value;
+
+        // Check password length
+        if (password1.length < 8) {
+            password1Error.classList.remove('hidden');
+            password1Input.classList.add('border-red-500');
+            return false;
+        } else {
+            password1Error.classList.add('hidden');
+            password1Input.classList.remove('border-red-500');
+        }
+
+        // Check if passwords match
+        if (password2 && password1 !== password2) {
+            password2Error.classList.remove('hidden');
+            password2Input.classList.add('border-red-500');
+            return false;
+        } else {
+            password2Error.classList.add('hidden');
+            password2Input.classList.remove('border-red-500');
+        }
+
+        return true;
+    }
+
+    // Add password validation listeners
+    password1Input.addEventListener('input', validatePasswords);
+    password2Input.addEventListener('input', validatePasswords);
+
+    // Handle date of birth fields
+    function updateDateOfBirth() {
+        const month = monthSelect.value.padStart(2, '0');
+        const day = daySelect.value.padStart(2, '0');
+        const year = yearSelect.value;
+
+        if (month && day && year) {
+            dateInput.value = `${year}-${month}-${day}`;
+        }
+    }
+
+    // Handle state and city selection
+    function populateCitySelect(selectedState) {
+        // Clear existing options
+        cityDropdown.innerHTML = '<option value="">Select City</option>';
+        cityDropdown.disabled = true;
+
+        if (selectedState && US_CITIES[selectedState]) {
+            // Add cities for selected state
+            US_CITIES[selectedState].forEach(city => {
+                const option = document.createElement('option');
+                option.value = city;
+                option.textContent = city;
+                cityDropdown.appendChild(option);
+            });
+            cityDropdown.disabled = false;
+        }
+    }
+
+    // Add event listeners for date of birth
+    monthSelect.addEventListener('change', updateDateOfBirth);
+    daySelect.addEventListener('change', updateDateOfBirth);
+    yearSelect.addEventListener('change', updateDateOfBirth);
+
+    // Initialize city select based on current state value
+    if (stateDropdown.value) {
+        populateCitySelect(stateDropdown.value);
+    }
+
+    // Update cities when state changes
+    stateDropdown.addEventListener('change', function() {
+        populateCitySelect(this.value);
+    });
+
+    // Handle form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Validate passwords
+        if (!validatePasswords()) {
+            return;
+        }
+
+        // Validate date of birth
+        if (!dateInput.value) {
+            alert('Please select your date of birth');
+            return;
+        }
+
+        // Validate gender
+        const gender = document.querySelector('input[name="gender"]:checked');
+        if (!gender) {
+            alert('Please select your gender');
+            return;
+        }
+
+        // Validate state and city
+        if (!stateDropdown.value) {
+            alert('Please select your state');
+            return;
+        }
+        if (!cityDropdown.value) {
+            alert('Please select your city');
+            return;
+        }
+
+        // If all validations pass, submit the form
+        this.submit();
+    });
+
+    // Handle custom gender selection
+    genderInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            if (this.value === 'C') {
+                // You can add custom gender handling here if needed
+            }
+        });
+    });
 });
 
 // Make functions globally accessible

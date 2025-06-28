@@ -119,6 +119,7 @@ def verify_email(request):
     return render(request, 'accounts/verify_email.html', context)
 
 def login_view(request):
+    """Handle user login and 2FA code generation"""
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
@@ -127,13 +128,22 @@ def login_view(request):
             code = generate_verification_code()
             if send_verification_email(user.email, code, is_login=True):
                 request.session['login_email'] = user.email
+                
+                # Handle HTMX request
+                if request.htmx:
+                    return HttpResponseClientRedirect(reverse('accounts:verify_login'))
                 return redirect('accounts:verify_login')
             else:
                 messages.error(request, 'Error sending verification code. Please try again.')
     else:
         form = LoginForm()
     
-    return render(request, 'accounts/login.html', {'form': form})
+    context = {'form': form}
+    
+    # Handle HTMX request
+    if request.htmx:
+        return render(request, 'accounts/partials/login_form.html', context)
+    return render(request, 'accounts/login.html', context)
 
 def verify_login(request):
     email = request.session.get('login_email')
@@ -149,13 +159,22 @@ def verify_login(request):
                 user = CustomUser.objects.get(email=email)
                 login(request, user)
                 messages.success(request, 'Login successful!')
+                
+                # Handle HTMX request
+                if request.htmx:
+                    response = HttpResponse()
+                    response['HX-Redirect'] = reverse('dashboard:home')
+                    return response
                 return redirect('dashboard:home')
             else:
                 messages.error(request, 'Invalid or expired verification code.')
     else:
         form = VerificationForm()
     
-    return render(request, 'accounts/verify_login.html', {'form': form})
+    context = {'form': form}
+    if request.htmx:
+        return render(request, 'accounts/partials/login_verification_form.html', context)
+    return render(request, 'accounts/verify_login.html', context)
 
 def resend_verification(request):
     """Resend verification code"""

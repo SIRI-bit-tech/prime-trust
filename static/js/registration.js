@@ -198,16 +198,16 @@ document.addEventListener('DOMContentLoaded', function() {
         // Clear existing options
         citySelect.innerHTML = '<option value="">Select City</option>';
         citySelect.disabled = true;
-
+    
         if (!stateValue) return;
-
+    
         // Get cities for the selected state
         const cities = window.US_CITIES[stateValue];
         if (cities && cities.length > 0) {
-            cities.forEach(city => {
-                const option = document.createElement('option');
-                option.value = city;
-                option.textContent = city;
+    cities.forEach(city => {
+        const option = document.createElement('option');
+        option.value = city;
+        option.textContent = city;
                 citySelect.appendChild(option);
             });
             citySelect.disabled = false;

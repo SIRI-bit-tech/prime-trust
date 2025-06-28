@@ -1,5 +1,5 @@
 {% load static %}
-<form method="post" hx-post="{% url 'accounts:login' %}" hx-target="this" hx-swap="none">
+<form method="post" hx-post="{% url 'accounts:login' %}" hx-target="this" hx-swap="outerHTML">
     {% csrf_token %}
     
     <div class="space-y-6">

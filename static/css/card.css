@@ -95,7 +95,7 @@
     bottom: 24px;
     right: 24px;
     width: 80px;
-    height: 26px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -107,6 +107,14 @@
     object-fit: contain;
     filter: brightness(0) invert(1);
     opacity: 1;
+}
+
+/* Remove invert filter for Mastercard logo */
+.card-network img[src*="mastercard"] {
+    filter: none;
+    width: 60px; /* Increased size */
+    height: 90px; /* Increased size */
+    margin-right: -10px; /* Adjust position to compensate for larger size */
 }
 
 .card-security {

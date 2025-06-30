@@ -124,12 +124,9 @@ def transactions_update(request):
     """Update recent transactions via HTMX"""
     user = request.user
 
-    # Get user's accounts
-    accounts = Account.objects.filter(user=user)
-
-    # Get recent transactions
-    transactions = Transaction.objects.filter(
-        Q(from_account__in=accounts) | Q(to_account__in=accounts)
+    # Get user's accounts and transactions in a single query
+    transactions = Transaction.objects.select_related('from_account', 'to_account').filter(
+        Q(from_account__user=user) | Q(to_account__user=user)
     ).order_by('-created_at')[:5]
 
     context = {
@@ -235,11 +232,14 @@ def card_details(request, card_id):
 
 @login_required
 def notifications(request):
-    """View all notifications"""
-    user = request.user
-    notifications = Notification.objects.filter(user=user).order_by('-created_at')
+    """View notifications"""
+    # Use select_related to reduce queries
+    notifications = Notification.objects.select_related('user').filter(
+        user=request.user
+    ).order_by('-created_at')
 
     context = {
+        'active_tab': 'notifications',
         'notifications': notifications,
     }
 

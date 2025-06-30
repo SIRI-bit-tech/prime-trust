@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Transaction Notification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo img {
+            height: 40px;
+        }
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        .title {
+            color: #1877f2;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .message {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .signature {
+            margin-top: 20px;
+            color: #666;
+        }
+        .anti-scam {
+            background-color: #1877f2;
+            color: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 30px 0;
+        }
+        .anti-scam h2 {
+            color: #FFD700;
+            font-size: 20px;
+            margin: 0 0 20px 0;
+            text-align: left;
+            font-weight: bold;
+        }
+        .anti-scam-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .anti-scam-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding: 0;
+        }
+        .anti-scam-item:last-child {
+            margin-bottom: 0;
+        }
+        .anti-scam-number {
+            min-width: 24px;
+            height: 24px;
+            background-color: #FFD700;
+            color: #4A148C;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 12px;
+            font-size: 14px;
+        }
+        .anti-scam-text {
+            font-size: 14px;
+            line-height: 1.4;
+            flex: 1;
+            text-align: left;
+            padding-top: 2px;
+        }
+        .anti-scam-link {
+            color: #FFD700;
+            text-decoration: underline;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #666;
+            font-size: 12px;
+        }
+        .social-icons {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 20px 0;
+        }
+        .social-icon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #1877f2;
+            display: block;
+        }
+        .reply-forward {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding: 10px 0;
+            border-top: 1px solid #eee;
+        }
+        .reply-forward a {
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <img src="{{ logo_url }}" alt="PrimeTrust Logo">
+        </div>
+        
+        <div class="card">
+            <h1 class="title">Transaction Notification</h1>
+            
+            <div class="message">
+                <p>Hi {{ recipient_name }},</p>
+                
+                <p>{{ transaction_message }}</p>
+            </div>
+            
+            <div class="signature">
+                <p>Love,</p>
+                <p>The PrimeTrust Team.</p>
+            </div>
+        </div>
+        
+        <div class="anti-scam">
+            <h2>Anti-Scam Reminders 🚨</h2>
+            <ul class="anti-scam-list">
+                <li class="anti-scam-item">
+                    <div class="anti-scam-number">1</div>
+                    <div class="anti-scam-text">
+                        Don't click or share your account details through links sent by social media accounts pretending to be PrimeTrust.
+                    </div>
+                </li>
+                <li class="anti-scam-item">
+                    <div class="anti-scam-number">2</div>
+                    <div class="anti-scam-text">
+                        Our support account on X is @primetrusthelp_us. Don't reply to tweets or DMs from fake support accounts.
+                    </div>
+                </li>
+                <li class="anti-scam-item">
+                    <div class="anti-scam-number">3</div>
+                    <div class="anti-scam-text">
+                        Never share your PrimeTrust PIN, password, Pay ID, OTPs, CVV, or card PIN.
+                    </div>
+                </li>
+                <li class="anti-scam-item">
+                    <div class="anti-scam-number">4</div>
+                    <div class="anti-scam-text">
+                        If you feel that your account has been accessed by someone else, restrict it on <a href="https://selfhelp.primetrust.com" class="anti-scam-link">selfhelp.primetrust.com</a> immediately.
+                    </div>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="footer">
+            <div class="social-icons">
+                <span class="social-icon"></span>
+                <span class="social-icon"></span>
+                <span class="social-icon"></span>
+                <span class="social-icon"></span>
+            </div>
+            
+            <p>© 2025 PrimeTrust Ltd (Company No. 11472232). All rights reserved.</p>
+            
+            <p style="margin: 15px 0;">If you would like to find out more about which PrimeTrust entity you receive services from, please reach out to us via the in-app chat in the PrimeTrust app.</p>
+            
+            <p>Swiss banking services offered by PrimeTrust Financial (FINMA License No. 00123) with registered address at<br>Bahnhofstrasse 10, 6300 Zug, Switzerland. PrimeTrust Financial is licensed by FINMA.</p>
+            
+            <p style="margin-top: 15px;">"PrimeTrust" is a trademark of PrimeTrust Ltd with the registered address at<br>Grafenauweg 6, 6300 Zug, Switzerland</p>
+            
+            
+        </div>
+    </div>
+</body>
+</html> 

@@ -12,6 +12,7 @@ from accounts.models import CustomUser
 from .models import Account, Transaction, Notification
 from .forms import SendMoneyForm, DepositForm
 from django_htmx.http import trigger_client_event
+from .utils import send_transaction_notification
 
 @login_required
 def payment_fields(request):
@@ -92,6 +93,10 @@ def send_money(request):
                         message=f"You received ${amount} from {user.get_full_name()}",
                         related_transaction=new_transaction
                     )
+                    
+                    # Send email notifications
+                    send_transaction_notification(user, new_transaction, is_sender=True)
+                    send_transaction_notification(recipient, new_transaction, is_sender=False)
                 
                 if request.htmx:
                     response = HttpResponse()

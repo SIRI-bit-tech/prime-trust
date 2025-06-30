@@ -29,23 +29,23 @@ def send_money(request):
     if request.method == 'POST':
         form = SendMoneyForm(request.POST, user=user)
         if form.is_valid():
-            recipient_email = form.cleaned_data['recipient_email']
+            recipient_account_number = form.cleaned_data['recipient_account_number']
             from_account = form.cleaned_data['from_account']
             amount = form.cleaned_data['amount']
             description = form.cleaned_data['description']
             
             try:
-                # Find recipient user and account
-                recipient = CustomUser.objects.get(email=recipient_email)
-                recipient_account = Account.objects.filter(user=recipient).first()
+                # Find recipient account
+                recipient_account = Account.objects.get(account_number=recipient_account_number)
+                recipient = recipient_account.user
                 
-                if not recipient_account:
-                    # Create a checking account for the recipient with numeric-only account number
-                    recipient_account = Account.objects.create(
-                        user=recipient,
-                        account_type='checking',
-                        balance=0
-                    )
+                # Prevent sending money to own account
+                if recipient_account.user == user:
+                    if request.htmx:
+                        response = HttpResponse("<div class='text-red-600'>Cannot send money to your own account</div>")
+                        return response
+                    messages.error(request, 'Cannot send money to your own account')
+                    return redirect('dashboard:home')
                 
                 # Create the transaction
                 with transaction.atomic():
@@ -81,7 +81,7 @@ def send_money(request):
                         user=user,
                         notification_type='transaction',
                         title='Money Sent',
-                        message=f"You sent ${amount} to {recipient.get_full_name()}",
+                        message=f"You sent ${amount} to account ending in {recipient_account_number[-4:]}",
                         related_transaction=new_transaction
                     )
                     
@@ -96,18 +96,18 @@ def send_money(request):
                 if request.htmx:
                     response = HttpResponse()
                     trigger_client_event(response, 'transactionComplete', {
-                        'message': f"Successfully sent ${amount} to {recipient.get_full_name()}"
+                        'message': f"Successfully sent ${amount} to account ending in {recipient_account_number[-4:]}"
                     })
                     return response
                 
-                messages.success(request, f"Successfully sent ${amount} to {recipient.get_full_name()}")
+                messages.success(request, f"Successfully sent ${amount} to account ending in {recipient_account_number[-4:]}")
                 return redirect('dashboard:transactions')
                 
-            except CustomUser.DoesNotExist:
+            except Account.DoesNotExist:
                 if request.htmx:
-                    response = HttpResponse("<div class='text-red-600'>Recipient not found</div>")
+                    response = HttpResponse("<div class='text-red-600'>Account number not found</div>")
                     return response
-                messages.error(request, 'Recipient not found')
+                messages.error(request, 'Account number not found')
                 return redirect('dashboard:home')
     else:
         form = SendMoneyForm(user=user)
@@ -133,18 +133,19 @@ def send_money(request):
 
 @login_required
 def check_recipient(request):
-    """Check if recipient exists (HTMX endpoint)"""
-    recipient_email = request.GET.get('recipient_email', '')
+    """Check if recipient account exists (HTMX endpoint)"""
+    account_number = request.GET.get('recipient_account_number', '')
     
-    if recipient_email:
+    if account_number:
         try:
-            recipient = CustomUser.objects.get(email=recipient_email)
+            account = Account.objects.get(account_number=account_number)
+            # Don't show account holder name for privacy/security
             return HttpResponse(
-                f"<div class='text-green-600'>Recipient found: {recipient.get_full_name()}</div>"
+                f"<div class='text-green-600'>Account found</div>"
             )
-        except CustomUser.DoesNotExist:
+        except Account.DoesNotExist:
             return HttpResponse(
-                "<div class='text-red-600'>Recipient not found</div>"
+                "<div class='text-red-600'>Account not found</div>"
             )
     
     return HttpResponse("")

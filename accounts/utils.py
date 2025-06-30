@@ -41,45 +41,22 @@ def send_verification_email(email, code, is_login=False):
     plain_message = strip_tags(html_message)
 
     try:
-        # Get a new SMTP connection
-        connection = get_connection(
-            backend='django.core.mail.backends.smtp.EmailBackend',
-            fail_silently=False
+        # Send the email using the configured backend
+        send_mail(
+            subject=subject,
+            message=plain_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+            html_message=html_message,
+            fail_silently=False,
         )
         
-        # Try to open the connection
-        try:
-            connection.open()
-        except (SMTPException, socket.error):
-            # Fall back to console backend
-            connection = get_connection(
-                backend='django.core.mail.backends.console.EmailBackend',
-                fail_silently=False
-            )
-
-        try:
-            # Send the email
-            send_mail(
-                subject=subject,
-                message=plain_message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[email],
-                html_message=html_message,
-                fail_silently=False,
-                connection=connection
-            )
+        # Store the verification code in cache
+        cache_key = f"verification_code_{email}"
+        cache.set(cache_key, code, timeout)
+        
+        return True
             
-            # Store the verification code in cache
-            cache_key = f"verification_code_{email}"
-            cache.set(cache_key, code, timeout)
-            
-            return True
-            
-        except (SMTPException, socket.error, Exception):
-            return False
-        finally:
-            connection.close()
-                
     except Exception:
         return False
 

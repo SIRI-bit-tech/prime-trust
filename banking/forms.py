@@ -14,12 +14,12 @@ TEXTAREA_CLASSES = 'block w-full px-4 py-3 rounded-md border-gray-300 shadow-sm 
 
 class SendMoneyForm(forms.Form):
     """Form for sending money to another user"""
-    recipient_email = forms.EmailField(
-        label="Recipient Email",
+    recipient_account_number = forms.CharField(
+        label="Recipient Account Number",
         required=True,
-        widget=forms.EmailInput(attrs={
+        widget=forms.TextInput(attrs={
             'class': INPUT_CLASSES,
-            'placeholder': 'Enter recipient email',
+            'placeholder': 'Enter recipient account number',
             'hx-get': '/banking/check-recipient/',
             'hx-target': '#recipient-check',
             'hx-trigger': 'keyup changed delay:500ms',

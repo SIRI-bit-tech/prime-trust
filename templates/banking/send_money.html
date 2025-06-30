@@ -14,7 +14,7 @@
                 <div class="bg-white shadow overflow-hidden sm:rounded-lg">
                     <div class="px-4 py-5 sm:px-6">
                         <h3 class="text-lg leading-6 font-medium text-gray-900">Send Money</h3>
-                        <p class="mt-1 max-w-2xl text-sm text-gray-500">Send money to another PrimeTrust user.</p>
+                        <p class="mt-1 max-w-2xl text-sm text-gray-500">Send money to another PrimeTrust account.</p>
                     </div>
                     <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
                         <form id="send-money-form" 
@@ -27,16 +27,17 @@
                             
                             <div class="space-y-6 max-w-lg mx-auto">
                                 <div>
-                                    <label for="{{ form.recipient_email.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                                        {{ form.recipient_email.label }}
+                                    <label for="{{ form.recipient_account_number.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                                        {{ form.recipient_account_number.label }}
                                     </label>
                                     <div class="mt-1">
-                                        {{ form.recipient_email }}
+                                        {{ form.recipient_account_number }}
                                         <div id="recipient-check" class="mt-1 text-sm"></div>
-                                        {% if form.recipient_email.errors %}
-                                        <p class="mt-2 text-sm text-red-600">{{ form.recipient_email.errors.0 }}</p>
+                                        {% if form.recipient_account_number.errors %}
+                                        <p class="mt-2 text-sm text-red-600">{{ form.recipient_account_number.errors.0 }}</p>
                                         {% endif %}
                                     </div>
+                                    <p class="mt-1 text-xs text-gray-500">Enter the 10-digit account number of the recipient</p>
                                 </div>
                                 
                                 <div>

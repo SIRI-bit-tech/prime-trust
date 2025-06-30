@@ -1,50 +1,49 @@
 {% load static %}
+<link rel="stylesheet" href="{% static 'css/card.css' %}">
+
 {% if virtual_cards %}
 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 px-4 py-5 sm:p-6">
     {% for card in virtual_cards %}
     <div class="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm hover:border-gray-400 focus-within:ring-2 focus-within:ring-primary-500 focus-within:ring-offset-2">
-        <div class="relative w-full h-48 mx-auto rounded-xl overflow-hidden shadow-lg bg-gradient-to-br from-primary-600 to-primary-800 text-white">
-            <!-- Card chip and logo -->
-            <div class="absolute top-4 left-4 flex items-center space-x-2">
-                <div class="w-10 h-7 rounded-md bg-yellow-300 bg-opacity-90 flex items-center justify-center">
-                    <div class="w-8 h-5 rounded border-2 border-yellow-600"></div>
-                </div>
-                <div class="text-sm font-bold tracking-wider">PrimeTrust</div>
+        <div class="virtual-card">
+            <!-- EMV Chip -->
+            <div class="card-chip"></div>
+            
+            <!-- Bank Logo -->
+            <img src="{% static 'img/Primetrust-logo-large.png' %}" alt="PrimeTrust" class="card-logo">
+            
+            <!-- Card Number -->
+            <div class="card-number">
+                <span class="text-lg tracking-widest">
+                    •••• •••• •••• {{ card.card_number|slice:"-4:" }}
+                </span>
             </div>
             
-            <!-- Card number -->
-            <div class="absolute top-20 left-4 right-4">
-                <div class="flex justify-between">
-                    <span class="text-base tracking-widest">
-                        •••• •••• •••• {{ card.card_number|slice:"-4:" }}
-                    </span>
+            <!-- Card Details -->
+            <div class="card-details">
+                <div class="card-holder">
+                    <div class="card-holder-label">Card Holder</div>
+                    <div>{{ card.user.get_full_name }}</div>
                 </div>
-            </div>
-            
-            <!-- Card holder and expiry -->
-            <div class="absolute bottom-4 left-4 right-4">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <div class="text-xs opacity-75">Card Holder</div>
-                        <div class="text-sm font-medium">{{ card.user.get_full_name }}</div>
-                    </div>
-                    <div>
-                        <div class="text-xs opacity-75">Expires</div>
-                        <div class="text-sm font-medium">{{ card.expiry_date|date:"m/y" }}</div>
-                    </div>
-                    <div>
-                        {% if card.card_type == 'visa' %}
-                        <div class="text-xl font-bold italic">VISA</div>
-                        {% else %}
-                        <div class="text-xl font-bold">MC</div>
-                        {% endif %}
-                    </div>
+                <div class="card-expiry">
+                    <div class="card-expiry-label">Expires</div>
+                    <div>{{ card.expiry_date|date:"m/y" }}</div>
                 </div>
             </div>
             
-            <!-- Decorative elements -->
-            <div class="absolute top-0 right-0 w-32 h-32 -mt-8 -mr-8 rounded-full bg-primary-500 opacity-50"></div>
-            <div class="absolute bottom-0 left-0 w-24 h-24 -mb-8 -ml-8 rounded-full bg-primary-700 opacity-50"></div>
+            <!-- Card Network Logo -->
+            <div class="card-network">
+                {% if card.card_type == 'visa' %}
+                <img src="{% static 'img/card-networks/visa.svg' %}" alt="Visa">
+                {% elif card.card_type == 'mastercard' %}
+                <img src="{% static 'img/card-networks/mastercard.svg' %}" alt="Mastercard">
+                {% elif card.card_type == 'verve' %}
+                <img src="{% static 'img/card-networks/verve.svg' %}" alt="Verve">
+                {% endif %}
+            </div>
+            
+            <!-- Security Pattern -->
+            <div class="card-security"></div>
         </div>
         
         <div class="mt-4 flex justify-between items-center">

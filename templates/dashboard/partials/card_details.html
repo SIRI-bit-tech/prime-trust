@@ -1,4 +1,6 @@
 {% load static %}
+<link rel="stylesheet" href="{% static 'css/card.css' %}">
+
 <div class="sm:flex sm:items-start">
     <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-primary-100 sm:mx-0 sm:h-10 sm:w-10">
         <svg class="h-6 w-6 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -19,48 +21,45 @@
 
 <div class="mt-5">
     <!-- Card display -->
-    <div class="relative w-full h-56 mx-auto rounded-xl overflow-hidden shadow-lg bg-gradient-to-br from-primary-600 to-primary-800 text-white">
-        <!-- Card chip and logo -->
-        <div class="absolute top-6 left-6 flex items-center space-x-2">
-            <div class="w-12 h-9 rounded-md bg-yellow-300 bg-opacity-90 flex items-center justify-center">
-                <div class="w-10 h-7 rounded border-2 border-yellow-600"></div>
-            </div>
-            <div class="text-xl font-bold tracking-wider">PrimeTrust</div>
+    <div class="virtual-card">
+        <!-- EMV Chip -->
+        <div class="card-chip"></div>
+        
+        <!-- Bank Logo -->
+        <img src="{% static 'img/Primetrust-logo-large.png' %}" alt="PrimeTrust" class="card-logo">
+        
+        <!-- Card Number -->
+        <div class="card-number">
+            <span class="text-lg tracking-widest">
+                {{ card.card_number|slice:":4" }} {{ card.card_number|slice:"4:8" }} {{ card.card_number|slice:"8:12" }} {{ card.card_number|slice:"12:16" }}
+            </span>
         </div>
         
-        <!-- Card number -->
-        <div class="absolute top-24 left-6 right-6">
-            <div class="flex justify-between">
-                <span class="text-lg tracking-widest">
-                    {{ card.card_number|slice:":4" }} {{ card.card_number|slice:"4:8" }} {{ card.card_number|slice:"8:12" }} {{ card.card_number|slice:"12:16" }}
-                </span>
+        <!-- Card Details -->
+        <div class="card-details">
+            <div class="card-holder">
+                <div class="card-holder-label">Card Holder</div>
+                <div>{{ card.user.get_full_name }}</div>
             </div>
-        </div>
-        
-        <!-- Card holder and expiry -->
-        <div class="absolute bottom-6 left-6 right-6">
-            <div class="flex justify-between items-center">
-                <div>
-                    <div class="text-xs opacity-75">Card Holder</div>
-                    <div class="font-medium">{{ card.user.get_full_name }}</div>
-                </div>
-                <div>
-                    <div class="text-xs opacity-75">Expires</div>
-                    <div class="font-medium">{{ card.expiry_date|date:"m/y" }}</div>
-                </div>
-                <div>
-                    {% if card.card_type == 'visa' %}
-                    <div class="text-2xl font-bold italic">VISA</div>
-                    {% else %}
-                    <div class="text-2xl font-bold">MC</div>
-                    {% endif %}
-                </div>
+            <div class="card-expiry">
+                <div class="card-expiry-label">Expires</div>
+                <div>{{ card.expiry_date|date:"m/y" }}</div>
             </div>
         </div>
         
-        <!-- Decorative elements -->
-        <div class="absolute top-0 right-0 w-40 h-40 -mt-10 -mr-10 rounded-full bg-primary-500 opacity-50"></div>
-        <div class="absolute bottom-0 left-0 w-32 h-32 -mb-10 -ml-10 rounded-full bg-primary-700 opacity-50"></div>
+        <!-- Card Network Logo -->
+        <div class="card-network">
+            {% if card.card_type == 'visa' %}
+            <img src="{% static 'img/card-networks/visa.svg' %}" alt="Visa">
+            {% elif card.card_type == 'mastercard' %}
+            <img src="{% static 'img/card-networks/mastercard.svg' %}" alt="Mastercard">
+            {% elif card.card_type == 'verve' %}
+            <img src="{% static 'img/card-networks/verve.svg' %}" alt="Verve">
+            {% endif %}
+        </div>
+        
+        <!-- Security Pattern -->
+        <div class="card-security"></div>
     </div>
 
     <!-- Card details -->

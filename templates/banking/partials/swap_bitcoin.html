@@ -1,0 +1,109 @@
+<!-- Bitcoin Swap Modal -->
+<div class="bg-white rounded-lg p-6">
+    <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-medium text-gray-900">Swap Bitcoin</h3>
+        <button type="button" class="text-gray-400 hover:text-gray-500" onclick="closeModal()">
+            <span class="sr-only">Close</span>
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+    </div>
+    
+    <form hx-post="{% url 'banking:swap_bitcoin' %}" hx-target="#modal-content">
+        <div class="space-y-4">
+            <!-- From Amount -->
+            <div>
+                <label for="from_amount" class="block text-sm font-medium text-gray-700">You Pay</label>
+                <div class="mt-1 relative rounded-md shadow-sm">
+                    <input type="number" 
+                           name="from_amount" 
+                           id="from_amount"
+                           required
+                           step="0.00000001"
+                           min="0.00000001"
+                           max="{{ request.user.bitcoin_wallet.balance }}"
+                           class="focus:ring-primary-500 focus:border-primary-500 block w-full pr-12 sm:text-sm border-gray-300 rounded-md"
+                           placeholder="0.00000000">
+                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <span class="text-gray-500 sm:text-sm">BTC</span>
+                    </div>
+                </div>
+                <p class="mt-1 text-sm text-gray-500" id="from-amount-usd"></p>
+            </div>
+
+            <!-- Swap Icon -->
+            <div class="flex justify-center">
+                <svg class="h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                </svg>
+            </div>
+
+            <!-- To Amount -->
+            <div>
+                <label for="to_amount" class="block text-sm font-medium text-gray-700">You Receive</label>
+                <div class="mt-1 relative rounded-md shadow-sm">
+                    <input type="number" 
+                           name="to_amount" 
+                           id="to_amount"
+                           readonly
+                           class="bg-gray-50 focus:ring-primary-500 focus:border-primary-500 block w-full pr-12 sm:text-sm border-gray-300 rounded-md"
+                           placeholder="0.00">
+                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <span class="text-gray-500 sm:text-sm">USD</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exchange Rate Info -->
+            <div class="bg-gray-50 rounded-md p-4">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">Exchange Rate</span>
+                    <span class="text-gray-900">1 BTC ≈ ${{ btc_price_usd|default:"0.00"|floatformat:2 }} USD</span>
+                </div>
+                <div class="flex justify-between text-sm mt-2">
+                    <span class="text-gray-500">Network Fee</span>
+                    <span class="text-gray-900">0.0001 BTC</span>
+                </div>
+            </div>
+
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-yellow-700">
+                            The final amount may vary slightly due to market fluctuations.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-5 sm:mt-6">
+            <button type="submit"
+                    class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                Swap Bitcoin
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+function closeModal() {
+    const modal = document.getElementById('modal-content');
+    modal.innerHTML = '';
+}
+
+// Update USD value as user types BTC amount
+document.getElementById('from_amount').addEventListener('input', function(e) {
+    const btcAmount = parseFloat(e.target.value) || 0;
+    const btcPrice = parseFloat('{{ btc_price_usd|default:"0" }}');
+    const usdAmount = (btcAmount * btcPrice).toFixed(2);
+    document.getElementById('from-amount-usd').textContent = `≈ $${usdAmount} USD`;
+    document.getElementById('to_amount').value = (usdAmount - (0.0001 * btcPrice)).toFixed(2);
+});
+</script>

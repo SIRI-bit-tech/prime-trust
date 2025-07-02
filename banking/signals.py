@@ -1,8 +1,11 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
-from .models import Transaction, Account
+from .models import Transaction, Account, BitcoinWallet
 from .utils import send_notification
+from accounts.models import CustomUser
+import secrets
+import hashlib
 
 User = get_user_model()
 
@@ -41,3 +44,21 @@ def notify_account_updated(sender, instance, created, **kwargs):
             message=f"Your new {instance.get_account_type_display()} account has been created successfully with account number {instance.account_number}."
         )
     # Add more conditions for specific account updates if needed
+
+@receiver(post_save, sender=CustomUser)
+def create_user_accounts(sender, instance, created, **kwargs):
+    """Create accounts for new users"""
+    if created:
+        # Create checking account
+        Account.objects.create(
+            user=instance,
+            account_type='checking'
+        )
+        
+        # Create Bitcoin wallet with a unique address
+        wallet_seed = secrets.token_bytes(32)
+        wallet_address = hashlib.sha256(wallet_seed).hexdigest()
+        BitcoinWallet.objects.create(
+            user=instance,
+            address=wallet_address
+        )

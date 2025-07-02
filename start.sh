@@ -22,3 +22,12 @@ exec gunicorn core.wsgi:application \
     --log-level=info \
     --access-logfile=- \
     --error-logfile=-
+
+# Start Django development server
+python manage.py runserver &
+
+# Update BTC price every minute
+while true; do
+    python manage.py update_btc_price
+    sleep 60
+done

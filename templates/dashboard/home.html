@@ -4,68 +4,72 @@
 {% block title %}Dashboard - PrimeTrust{% endblock %}
 
 {% block banking_content %}
-<!-- User Greeting and Main Content -->
-            <main class="flex-1 relative py-6 focus:outline-none">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
-                    <!-- User Greeting -->
-                    <div class="mb-6 flex justify-between items-center">
-                        <div>
-                            <h1 class="text-2xl font-semibold text-gray-900">
-                                {{ greeting }},
-                                {{ request.user.first_name }}
-                            </h1>
-                            <p class="mt-1 text-sm text-gray-500">Here's an overview of your accounts</p>
-                        </div>
-                        <div class="flex items-center">
-                            {% if request.user.profile.profile_picture %}
-                            <img class="h-12 w-12 rounded-full" src="{{ request.user.profile.profile_picture.url }}" alt="">
-                            {% else %}
-                            <div class="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-semibold">
-                                {{ request.user.first_name|first }}{{ request.user.last_name|first }}
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-            <!-- Account Cards Section -->
-            <div class="px-4 py-6 sm:px-0">
-                <div class="mb-8">
-                    <!-- Render color-coded account summary cards -->
-                    {% include "dashboard/partials/account_cards.html" %}
+<!-- Main Content -->
+<main class="flex-1 relative py-6 focus:outline-none">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+        <!-- Balance Card -->
+        {% include "dashboard/partials/balance_card.html" %}
 
-                    <div id="metrics-container"
-                         hx-get="{% url 'dashboard:metrics_update' %}"
-                         hx-trigger="every 30s"
-                         hx-swap="innerHTML">
-                        {% include "dashboard/partials/transaction_metrics.html" %}
-                    </div>
-                </div>
-                
-                <!-- Quick Actions Section -->
-                {% include "dashboard/partials/quick_actions.html" %}
-
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-                    <!-- Virtual Card Section -->
-                    <div class="bg-white overflow-hidden shadow rounded-lg">
-                        <div class="px-4 py-5 sm:p-6">
-                            <h2 class="text-lg font-medium text-gray-900 mb-4">Virtual Card</h2>
-                            {% if virtual_cards %}
-                                {% include "dashboard/partials/virtual_card.html" with card=virtual_cards.0 %}
-                            {% else %}
-                                <div class="text-center py-8">
-                                    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                                    </svg>
-                                    <h3 class="mt-2 text-sm font-medium text-gray-900">No virtual cards</h3>
-                                    <p class="mt-1 text-sm text-gray-500">You don't have any virtual cards yet.</p>
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <!-- Recent Transactions Section -->
-                    {% include "dashboard/partials/recent_transactions.html" %}
-                </div>
+        <!-- Account Cards Section -->
+        <div class="px-4 py-6 sm:px-0">
+            <div class="mb-8">
+                <div id="metrics-container"
+                     hx-get="{% url 'dashboard:metrics_update' %}"
+                     hx-trigger="every 30s"
+                     hx-swap="innerHTML">
+                    {% include "dashboard/partials/transaction_metrics.html" %}
                 </div>
             </div>
-        </main>
+            
+            <!-- Quick Actions Section -->
+            {% include "dashboard/partials/quick_actions.html" %}
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+                <!-- Virtual Card Section -->
+                <div class="bg-white overflow-hidden shadow rounded-lg">
+                    <div class="px-4 py-5 sm:p-6">
+                        <h2 class="text-lg font-medium text-gray-900 mb-4">Virtual Card</h2>
+                        {% if virtual_cards %}
+                            {% include "dashboard/partials/virtual_card.html" with card=virtual_cards.0 %}
+                        {% else %}
+                            <div class="text-center py-8">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                </svg>
+                                <h3 class="mt-2 text-sm font-medium text-gray-900">No virtual cards</h3>
+                                <p class="mt-1 text-sm text-gray-500">You don't have any virtual cards yet.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Recent Transactions Section -->
+                {% include "dashboard/partials/recent_transactions.html" %}
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+function closeModal() {
+    const overlay = document.getElementById('modal-overlay');
+    const modalContent = document.getElementById('modal-content');
+    overlay.classList.add('hidden');
+    modalContent.innerHTML = '';
+}
+
+// Close modal when clicking outside
+document.getElementById('modal-overlay').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+
+// Show modal when HTMX loads content
+document.body.addEventListener('htmx:afterSwap', function(evt) {
+    if (evt.detail.target.id === 'modal-content') {
+        document.getElementById('modal-overlay').classList.remove('hidden');
+    }
+});
+</script>
 {% endblock %}

@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from . import views, views_bitcoin
 
 app_name = 'banking'
 
@@ -9,4 +9,7 @@ urlpatterns = [
     path('transaction/<int:transaction_id>/', views.get_transaction_details, name='transaction_details'),
     path('deposit/', views.deposit, name='deposit'),
     path('payment-fields/', views.payment_fields, name='payment_fields'),
+    path('receive-bitcoin/', views_bitcoin.receive_bitcoin, name='receive_bitcoin'),
+    path('send-bitcoin/', views_bitcoin.send_bitcoin, name='send_bitcoin'),
+    path('swap-bitcoin/', views_bitcoin.swap_bitcoin, name='swap_bitcoin'),
 ]

@@ -7,12 +7,13 @@ from django.views.decorators.http import require_http_methods
 from datetime import timedelta
 from django.utils import timezone
 from decimal import Decimal
+from django.core.cache import cache
 from accounts.models import CustomUser
-from banking.models import Account, Transaction, VirtualCard, Notification
+from banking.models import Account, Transaction, VirtualCard, Notification, BitcoinWallet
 from banking.models_bills import Biller, BillPayment, Payee, ScheduledPayment
 from banking.models_loans import LoanApplication, LoanAccount, LoanPayment
+from banking.views_bitcoin import update_btc_price
 from .views_investments_insurance import *
-# from .views_loans import *
 from django.conf import settings
 
 @login_required
@@ -22,7 +23,21 @@ def home(request):
 
     # Get user's accounts
     accounts = Account.objects.filter(user=user)
-    total_balance = accounts.aggregate(Sum('balance'))['balance__sum'] or 0
+    total_balance = accounts.aggregate(Sum('balance'))['balance__sum'] or Decimal('0.00')
+
+    # Get Bitcoin wallet and update price
+    try:
+        bitcoin_wallet = BitcoinWallet.objects.get(user=user)
+        btc_price = update_btc_price() or Decimal('0.00')
+        cache.set('btc_price_usd', btc_price, timeout=300)  # Cache for 5 minutes
+        bitcoin_balance_usd = bitcoin_wallet.balance * btc_price
+    except BitcoinWallet.DoesNotExist:
+        bitcoin_wallet = None
+        bitcoin_balance_usd = Decimal('0.00')
+        btc_price = Decimal('0.00')
+
+    # Add Bitcoin balance to total balance
+    total_balance = total_balance + bitcoin_balance_usd
 
     # Get recent transactions
     transactions = Transaction.objects.filter(
@@ -62,6 +77,8 @@ def home(request):
         'active_tab': 'home',
         'accounts': accounts,
         'total_balance': total_balance,
+        'bitcoin_wallet': bitcoin_wallet,
+        'btc_price_usd': btc_price,
         'transactions': transactions,
         'virtual_cards': virtual_cards,
         'notifications': notifications,
@@ -83,6 +100,48 @@ def home(request):
     return render(request, 'dashboard/home.html', context)
 
 @login_required
+def balance_update(request):
+    """Update balance via HTMX"""
+    user = request.user
+
+    # Get user's accounts
+    accounts = Account.objects.filter(user=user)
+    total_balance = accounts.aggregate(Sum('balance'))['balance__sum'] or Decimal('0.00')
+
+    # Get Bitcoin wallet and update price
+    try:
+        bitcoin_wallet = BitcoinWallet.objects.get(user=user)
+        btc_price = update_btc_price() or Decimal('0.00')
+        cache.set('btc_price_usd', btc_price, timeout=300)  # Cache for 5 minutes
+        bitcoin_balance_usd = bitcoin_wallet.balance * btc_price
+    except BitcoinWallet.DoesNotExist:
+        bitcoin_wallet = None
+        bitcoin_balance_usd = Decimal('0.00')
+        btc_price = Decimal('0.00')
+
+    # Add Bitcoin balance to total balance
+    total_balance = total_balance + bitcoin_balance_usd
+
+    # Get current time for greeting
+    from datetime import datetime
+    current_hour = datetime.now().hour
+    greeting = "Good Evening"
+    if current_hour < 12:
+        greeting = "Good Morning"
+    elif current_hour < 18:
+        greeting = "Good Afternoon"
+
+    context = {
+        'greeting': greeting,
+        'accounts': accounts,
+        'total_balance': total_balance,
+        'bitcoin_wallet': bitcoin_wallet,
+        'btc_price_usd': btc_price,
+    }
+
+    return render(request, 'dashboard/partials/balance_card.html', context)
+
+@login_required
 def accounts(request):
     """View all accounts with details"""
     user = request.user
@@ -102,22 +161,6 @@ def accounts(request):
         return render(request, 'dashboard/partials/accounts_content.html', context)
     
     return render(request, 'dashboard/accounts.html', context)
-
-@login_required
-def balance_update(request):
-    """Update balance via HTMX"""
-    user = request.user
-
-    # Get user's accounts
-    accounts = Account.objects.filter(user=user)
-    total_balance = accounts.aggregate(Sum('balance'))['balance__sum'] or 0
-
-    context = {
-        'accounts': accounts,
-        'total_balance': total_balance,
-    }
-
-    return render(request, 'dashboard/partials/balance_card.html', context)
 
 @login_required
 def transactions_update(request):
@@ -529,12 +572,7 @@ def calculate_monthly_payment(principal, annual_rate, term_months):
                      ((1 + monthly_rate) ** term_months - 1)
     
     return round(monthly_payment, 2)
-    if annual_rate == 0:
-        return principal / term_months
-    monthly_rate = annual_rate / 12
-    return principal * (monthly_rate * (1 + monthly_rate) ** term_months) / ((1 + monthly_rate) ** term_months - 1)
 
-@login_required
 @login_required
 def loan_detail(request, loan_id):
     """View details of a specific loan"""
@@ -743,135 +781,6 @@ def make_loan_payment(request, loan_id):
         return JsonResponse(
             {'error': f'Error processing request: {str(e)}'}, 
             status=500
-        )
-
-@login_required
-def loan_detail(request, loan_id):
-    """View details of a specific loan"""
-    loan = get_object_or_404(
-        LoanAccount.objects.select_related('application'),
-        id=loan_id,
-        application__user=request.user
-    )
-    
-    # Get payment history
-    payments = LoanPayment.objects.filter(
-        loan_account=loan
-    ).order_by('-payment_date')
-    
-    # Calculate loan progress
-    progress = ((loan.original_amount - loan.current_balance) / loan.original_amount) * 100
-    
-    context = {
-        'loan': loan,
-        'payments': payments,
-        'progress': progress,
-    }
-    
-    if request.headers.get('HX-Request') == 'true':
-        return render(request, 'dashboard/partials/loan_detail_modal.html', context)
-        
-    return render(request, 'dashboard/loan_detail.html', context)
-
-@login_required
-def make_loan_payment(request, loan_id):
-    """Handle loan payment"""
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
-    
-    loan = get_object_or_404(
-        LoanAccount,
-        id=loan_id,
-        application__user=request.user,
-        status='active'
-    )
-    
-    try:
-        amount = Decimal(request.POST.get('amount', 0))
-        from_account_id = request.POST.get('from_account')
-        
-        # Validate amount
-        if amount <= 0:
-            return JsonResponse(
-                {'error': 'Payment amount must be greater than zero'}, 
-                status=400
-            )
-            
-        # Get source account
-        from_account = get_object_or_404(
-            Account,
-            id=from_account_id,
-            user=request.user
-        )
-        
-        # Check if account has sufficient balance
-        if from_account.balance < amount:
-            return JsonResponse(
-                {'error': 'Insufficient funds'}, 
-                status=400
-            )
-        
-        # Process payment
-        with transaction.atomic():
-            # Deduct from account
-            from_account.balance -= amount
-            from_account.save()
-            
-            # Apply to loan
-            interest_amount = min(amount, loan.current_balance * (loan.interest_rate / 12))
-            principal_amount = amount - interest_amount
-            
-            loan.current_balance -= principal_amount
-            loan.amount_paid = (loan.amount_paid or 0) + amount
-            loan.next_payment_date = loan.next_payment_date + timedelta(days=30)
-            
-            # Mark as paid if balance is zero
-            if loan.current_balance <= 0:
-                loan.status = 'paid'
-                loan.paid_date = timezone.now().date()
-            
-            loan.save()
-            
-            # Record transaction
-            transaction = Transaction.objects.create(
-                from_account=from_account,
-                to_account=loan.account,
-                amount=amount,
-                transaction_type='loan_payment',
-                description=f"Loan Payment - {loan.application.get_loan_type_display()}",
-                status='completed'
-            )
-            
-            # Record loan payment
-            loan_payment = LoanPayment.objects.create(
-                loan_account=loan,
-                amount=amount,
-                principal_amount=principal_amount,
-                interest_amount=interest_amount,
-                payment_date=timezone.now().date(),
-                transaction=transaction
-            )
-            
-            # Create notification
-            Notification.objects.create(
-                user=request.user,
-                title="Loan Payment Processed",
-                message=f"Your payment of ${amount:,.2f} has been applied to your {loan.application.get_loan_type_display()} loan.",
-                notification_type='transaction',
-                related_id=transaction.id
-            )
-            
-            return JsonResponse({
-                'success': True,
-                'message': 'Payment processed successfully',
-                'new_balance': float(loan.current_balance),
-                'next_payment': loan.next_payment_date.strftime('%Y-%m-%d')
-            })
-            
-    except Exception as e:
-        return JsonResponse(
-            {'error': f'Error processing payment: {str(e)}'}, 
-            status=400
         )
 
 @login_required

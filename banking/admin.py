@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib import admin
-from .models import Account, VirtualCard, Transaction, Notification
+from .models import Account, VirtualCard, Transaction, Notification, BitcoinWallet
 from .models_loans import LoanApplication, LoanAccount, LoanPayment
 from .models_bills import Biller, BillPayment, Payee, ScheduledPayment
 from .admin_loans_bills import *
@@ -150,3 +150,14 @@ class NotificationAdmin(admin.ModelAdmin):
 
 # Register loan and bill models
 # Note: Models are registered using @admin.register decorator in admin_loans_bills.py
+
+@admin.register(BitcoinWallet)
+class BitcoinWalletAdmin(admin.ModelAdmin):
+    list_display = ('user', 'address', 'balance', 'balance_usd', 'created_at')
+    search_fields = ('user__email', 'address')
+    readonly_fields = ('qr_code', 'balance_usd')
+    list_filter = ('created_at',)
+    
+    def balance_usd(self, obj):
+        return f"${obj.balance_usd:,.2f}"
+    balance_usd.short_description = 'Balance (USD)'

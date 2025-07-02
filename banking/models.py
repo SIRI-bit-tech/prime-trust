@@ -3,6 +3,11 @@ from django.utils import timezone
 from django.core.validators import MinValueValidator
 from decimal import Decimal
 from accounts.models import CustomUser
+from django.conf import settings
+import qrcode
+from io import BytesIO
+from django.core.files import File
+from PIL import Image
 
 class Account(models.Model):
     ACCOUNT_TYPES = (
@@ -170,3 +175,41 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.title}"
+
+class BitcoinWallet(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    address = models.CharField(max_length=100, unique=True)
+    balance = models.DecimalField(max_digits=18, decimal_places=8, default=Decimal('0.00000000'))
+    qr_code = models.ImageField(upload_to='bitcoin_qr_codes/', blank=True)
+    btc_price_usd = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if not self.qr_code and self.address:
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_L,
+                box_size=10,
+                border=4,
+            )
+            qr.add_data(self.address)
+            qr.make(fit=True)
+
+            qr_image = qr.make_image(fill_color="black", back_color="white")
+            qr_offset = Image.new('RGB', (qr_image.pixel_size, qr_image.pixel_size), 'white')
+            qr_offset.paste(qr_image)
+            
+            stream = BytesIO()
+            qr_offset.save(stream, 'PNG')
+            filename = f'bitcoin_qr_{self.address}.png'
+            self.qr_code.save(filename, File(stream), save=False)
+            
+        super().save(*args, **kwargs)
+
+    @property
+    def balance_usd(self):
+        return self.balance * self.btc_price_usd if self.balance and self.btc_price_usd else Decimal('0.00')
+
+    def __str__(self):
+        return f"Bitcoin Wallet - {self.user.email}"

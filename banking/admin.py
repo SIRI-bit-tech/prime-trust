@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib import admin
+from django.utils.html import format_html
 from .models import Account, VirtualCard, Transaction, Notification, BitcoinWallet
 from .models_loans import LoanApplication, LoanAccount, LoanPayment
 from .models_bills import Biller, BillPayment, Payee, ScheduledPayment
@@ -153,11 +154,25 @@ class NotificationAdmin(admin.ModelAdmin):
 
 @admin.register(BitcoinWallet)
 class BitcoinWalletAdmin(admin.ModelAdmin):
-    list_display = ('user', 'address', 'balance', 'balance_usd', 'created_at')
+    list_display = ('user', 'address', 'balance', 'is_active', 'qr_code_preview')
     search_fields = ('user__email', 'address')
-    readonly_fields = ('qr_code', 'balance_usd')
-    list_filter = ('created_at',)
+    list_filter = ('is_active', 'created_at')
+    readonly_fields = ('balance', 'btc_price_usd', 'created_at', 'updated_at', 'qr_code_preview')
+    fields = ('user', 'address', 'qr_code', 'qr_code_preview', 'is_active', 'balance', 'btc_price_usd', 'created_at', 'updated_at')
     
-    def balance_usd(self, obj):
-        return f"${obj.balance_usd:,.2f}"
-    balance_usd.short_description = 'Balance (USD)'
+    def qr_code_preview(self, obj):
+        if obj.qr_code:
+            return format_html('<img src="{}" width="50" height="50" />', obj.qr_code.url)
+        return "No QR code"
+    qr_code_preview.short_description = 'QR Code'
+    
+    def save_model(self, request, obj, form, change):
+        if not change:  # Only for new wallets
+            obj.is_active = True
+        super().save_model(request, obj, form, change)
+
+# All these models are already registered elsewhere in the project
+# admin.site.register(Account)
+# admin.site.register(Transaction)
+# admin.site.register(Notification)
+# admin.site.register(VirtualCard)

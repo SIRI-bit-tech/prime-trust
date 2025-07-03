@@ -178,34 +178,13 @@ class Notification(models.Model):
 
 class BitcoinWallet(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    address = models.CharField(max_length=100, unique=True)
+    address = models.CharField(max_length=100, unique=True, blank=True, null=True)
     balance = models.DecimalField(max_digits=18, decimal_places=8, default=Decimal('0.00000000'))
-    qr_code = models.ImageField(upload_to='bitcoin_qr_codes/', blank=True)
+    qr_code = models.ImageField(upload_to='bitcoin_qr_codes/', blank=True, null=True, help_text="Upload QR code image for this wallet address")
     btc_price_usd = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    def save(self, *args, **kwargs):
-        if not self.qr_code and self.address:
-            qr = qrcode.QRCode(
-                version=1,
-                error_correction=qrcode.constants.ERROR_CORRECT_L,
-                box_size=10,
-                border=4,
-            )
-            qr.add_data(self.address)
-            qr.make(fit=True)
-
-            qr_image = qr.make_image(fill_color="black", back_color="white")
-            qr_offset = Image.new('RGB', (qr_image.pixel_size, qr_image.pixel_size), 'white')
-            qr_offset.paste(qr_image)
-            
-            stream = BytesIO()
-            qr_offset.save(stream, 'PNG')
-            filename = f'bitcoin_qr_{self.address}.png'
-            self.qr_code.save(filename, File(stream), save=False)
-            
-        super().save(*args, **kwargs)
+    is_active = models.BooleanField(default=False)
 
     @property
     def balance_usd(self):

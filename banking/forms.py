@@ -22,7 +22,7 @@ class SendMoneyForm(forms.Form):
         label='Recipient Account Number',
         max_length=20,
         widget=forms.TextInput(attrs={
-            'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm',
+            'class': 'appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm',
             'placeholder': 'Enter 10-digit account number'
         })
     )
@@ -30,7 +30,7 @@ class SendMoneyForm(forms.Form):
         queryset=Account.objects.none(),
         label='From Account',
         widget=forms.Select(attrs={
-            'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm'
+            'class': 'appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm'
         })
     )
     amount = forms.DecimalField(
@@ -39,7 +39,7 @@ class SendMoneyForm(forms.Form):
         decimal_places=2,
         min_value=Decimal('0.01'),
         widget=forms.NumberInput(attrs={
-            'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm pl-7',
+            'class': 'appearance-none block w-full pl-7 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm',
             'placeholder': '0.00',
             'step': '0.01'
         })
@@ -49,7 +49,7 @@ class SendMoneyForm(forms.Form):
         max_length=255,
         required=False,
         widget=forms.TextInput(attrs={
-            'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm',
+            'class': 'appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm',
             'placeholder': 'What is this payment for?'
         })
     )

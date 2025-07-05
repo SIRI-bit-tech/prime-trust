@@ -61,6 +61,7 @@ def send_money(request):
                     # Create transaction record with real-time processing
                     transaction_ref = f"TRF{uuid.uuid4().hex[:8].upper()}"
                     new_transaction = Transaction.objects.create(
+                        user=user,
                         from_account=from_account,
                         to_account=recipient_account,
                         amount=amount,
@@ -99,11 +100,20 @@ def send_money(request):
                     send_transaction_notification(recipient, new_transaction, is_sender=False)
                 
                 if request.htmx:
-                    response = HttpResponse()
-                    trigger_client_event(response, 'transactionComplete', {
-                        'message': f"Successfully sent ${amount} to account ending in {recipient_account_number[-4:]}"
-                    })
-                    return response
+                    # Create receipt context
+                    receipt_context = {
+                        'amount': amount,
+                        'transaction_date': new_transaction.created_at.strftime('%B %d, %Y at %I:%M %p'),
+                        'from_account_number': from_account.account_number,
+                        'from_account_type': from_account.get_account_type_display(),
+                        'to_account_number': recipient_account_number,
+                        'recipient_name': recipient.get_full_name(),
+                        'description': description,
+                        'reference': transaction_ref,
+                    }
+                    
+                    # Return receipt modal
+                    return render(request, 'banking/partials/money_transfer_receipt.html', receipt_context)
                 
                 messages.success(request, f"Successfully sent ${amount} to account ending in {recipient_account_number[-4:]}")
                 return redirect('dashboard:transactions')

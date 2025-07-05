@@ -21,17 +21,17 @@
     <form id="send-money-form" 
           method="post" 
           hx-post="{% url 'banking:send_money' %}" 
-          hx-target="#form-result" 
+          hx-target="#receipt-container" 
           hx-swap="innerHTML"
           hx-indicator="#form-indicator">
         {% csrf_token %}
         
         <div class="space-y-6">
             <div>
-                <label for="{{ form.recipient_account_number.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                <label for="{{ form.recipient_account_number.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
                     {{ form.recipient_account_number.label }}
                 </label>
-                <div class="mt-1">
+                <div class="relative">
                     {{ form.recipient_account_number }}
                     <div id="recipient-check" class="mt-1 text-sm"></div>
                     {% if form.recipient_account_number.errors %}
@@ -42,10 +42,10 @@
             </div>
             
             <div>
-                <label for="{{ form.from_account.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                <label for="{{ form.from_account.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
                     {{ form.from_account.label }}
                 </label>
-                <div class="mt-1">
+                <div class="relative">
                     {{ form.from_account }}
                     {% if form.from_account.errors %}
                     <p class="mt-2 text-sm text-red-600">{{ form.from_account.errors.0 }}</p>
@@ -54,10 +54,10 @@
             </div>
             
             <div>
-                <label for="{{ form.amount.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                <label for="{{ form.amount.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
                     {{ form.amount.label }}
                 </label>
-                <div class="mt-1 relative rounded-md shadow-sm">
+                <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <span class="text-gray-500 sm:text-sm">$</span>
                     </div>
@@ -66,13 +66,25 @@
                     <p class="mt-2 text-sm text-red-600">{{ form.amount.errors.0 }}</p>
                     {% endif %}
                 </div>
+                
+                <!-- Quick Amount Buttons -->
+                <div class="flex space-x-2 mt-3">
+                    <button type="button" class="px-3 py-1 text-xs border border-gray-300 rounded hover:bg-primary-50 hover:border-primary-300 focus:ring-2 focus:ring-primary-500" 
+                            onclick="setMoneyAmount('10')">$10</button>
+                    <button type="button" class="px-3 py-1 text-xs border border-gray-300 rounded hover:bg-primary-50 hover:border-primary-300 focus:ring-2 focus:ring-primary-500" 
+                            onclick="setMoneyAmount('50')">$50</button>
+                    <button type="button" class="px-3 py-1 text-xs border border-gray-300 rounded hover:bg-primary-50 hover:border-primary-300 focus:ring-2 focus:ring-primary-500" 
+                            onclick="setMoneyAmount('100')">$100</button>
+                    <button type="button" class="px-3 py-1 text-xs border border-gray-300 rounded hover:bg-primary-50 hover:border-primary-300 focus:ring-2 focus:ring-primary-500" 
+                            onclick="setMoneyAmount('500')">$500</button>
+                </div>
             </div>
             
             <div>
-                <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
                     {{ form.description.label }}
                 </label>
-                <div class="mt-1">
+                <div class="relative">
                     {{ form.description }}
                     {% if form.description.errors %}
                     <p class="mt-2 text-sm text-red-600">{{ form.description.errors.0 }}</p>
@@ -104,35 +116,20 @@
     </button>
 </div>
 
+<!-- Receipt Container -->
+<div id="receipt-container"></div>
+
 <script>
-    // Listen for transaction complete event
-    document.addEventListener('transactionComplete', function(event) {
-        // Show success message
-        document.getElementById('form-result').innerHTML = `
-            <div class="rounded-md bg-green-50 p-4">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                        </svg>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-green-800">${event.detail.message}</p>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        // Reset form
-        document.getElementById('send-money-form').reset();
-        
-        // Close modal after 2 seconds
-        setTimeout(function() {
-            document.getElementById('send-money-modal-container').classList.add('hidden');
-            
-            // Refresh transactions and balance
-            htmx.trigger('#transactions-list', 'refresh-transactions');
-            htmx.trigger('#balance-card', 'refresh-balance');
-        }, 2000);
+    // Function to set quick amount
+    function setMoneyAmount(amount) {
+        document.getElementById('{{ form.amount.id_for_label }}').value = amount;
+    }
+    
+    // Handle successful form submission (receipt will be shown)
+    document.addEventListener('htmx:afterSwap', function(event) {
+        if (event.target.id === 'receipt-container' && event.detail.xhr.status === 200) {
+            // Receipt was successfully loaded, reset form
+            document.getElementById('send-money-form').reset();
+        }
     });
 </script>

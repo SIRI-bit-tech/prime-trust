@@ -1,0 +1,329 @@
+{% extends "dashboard/banking_base.html" %}
+{% load static %}
+
+{% block title %}Send Bitcoin - PrimeTrust{% endblock %}
+
+{% block banking_content %}
+<!-- Main content -->
+<main class="flex-1 relative py-6 focus:outline-none">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+        <header class="mb-6">
+            <h1 class="text-2xl font-semibold text-gray-900">{{ greeting }}, {{ request.user.first_name }}</h1>
+        </header>
+        
+        <div class="px-4 py-6 sm:px-0">
+            <!-- Hero Section -->
+            <div class="bg-gradient-to-r from-primary-600 to-primary-700 rounded-lg p-6 mb-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="flex items-center mb-2">
+                            <svg class="w-8 h-8 mr-2 text-orange-400" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M23.638 14.904c-1.602 6.43-8.113 10.34-14.542 8.736C2.67 22.05-1.244 15.525.362 9.105 1.962 2.67 8.475-1.243 14.9.358c6.43 1.605 10.342 8.115 8.738 14.548v-.002zm-6.35-4.613c.24-1.59-.974-2.45-2.64-3.03l.54-2.153-1.315-.33-.525 2.107c-.345-.087-.705-.167-1.064-.25l.526-2.127-1.32-.33-.54 2.165c-.285-.067-.565-.132-.84-.2l-1.815-.45-.35 1.407s.974.225.955.236c.535.136.63.486.615.766l-1.477 5.92c-.075.166-.24.406-.614.314.015.02-.96-.24-.96-.24l-.66 1.51 1.71.426.93.236-.54 2.19 1.32.327.54-2.17c.36.1.705.19 1.05.273l-.51 2.154 1.32.33.545-2.19c2.24.427 3.93.257 4.64-1.774.57-1.637-.03-2.58-1.217-3.196.854-.193 1.5-.76 1.68-1.93h.01zm-3.01 4.22c-.404 1.64-3.157.75-4.05.53l.72-2.9c.896.22 3.757.67 3.33 2.37zm.41-4.24c-.37 1.49-2.662.735-3.405.55l.654-2.64c.744.18 3.137.524 2.75 2.084v.006z"/>
+                            </svg>
+                            <h2 class="text-2xl font-bold">Cryptocurrency Withdrawal</h2>
+                        </div>
+                        <p class="text-primary-100">Withdrawals are typically processed within 1-3 hours.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+                <div class="px-4 py-5 sm:px-6">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">International Transfer</h3>
+                    <p class="mt-1 max-w-2xl text-sm text-gray-500">Send Bitcoin to any wallet address globally.</p>
+                </div>
+                
+                <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
+                    <form method="post" class="space-y-8 max-w-2xl mx-auto">
+                        {% csrf_token %}
+                        
+                        <!-- Balance Selection -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-4">Select Balance to Use</label>
+                            <div class="space-y-3">
+                                <div class="relative" data-balance-option>
+                                    <div class="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 border-primary-500 bg-primary-50">
+                                        <input type="radio" name="balance_source" value="fiat" id="balance_fiat" class="focus:ring-primary-500 h-4 w-4 text-primary-600 border-gray-300" checked>
+                                        <div class="ml-3 flex-1">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex items-center">
+                                                    <svg class="w-6 h-6 text-primary-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/>
+                                                    </svg>
+                                                    <div>
+                                                        <p class="font-medium text-gray-900">Fiat Balance</p>
+                                                        <p class="text-2xl font-bold text-gray-900">${{ total_fiat_balance|floatformat:2 }}</p>
+                                                    </div>
+                                                </div>
+                                                <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="relative" data-balance-option>
+                                    <div class="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 border-gray-200">
+                                        <input type="radio" name="balance_source" value="bitcoin" id="balance_bitcoin" class="focus:ring-primary-500 h-4 w-4 text-primary-600 border-gray-300">
+                                        <div class="ml-3 flex-1">
+                                            <div class="flex items-center justify-between">
+                                                                                <div class="flex items-center">
+                                    <svg class="w-6 h-6 mr-2 text-orange-500" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M23.638 14.904c-1.602 6.43-8.113 10.34-14.542 8.736C2.67 22.05-1.244 15.525.362 9.105 1.962 2.67 8.475-1.243 14.9.358c6.43 1.605 10.342 8.115 8.738 14.548v-.002zm-6.35-4.613c.24-1.59-.974-2.45-2.64-3.03l.54-2.153-1.315-.33-.525 2.107c-.345-.087-.705-.167-1.064-.25l.526-2.127-1.32-.33-.54 2.165c-.285-.067-.565-.132-.84-.2l-1.815-.45-.35 1.407s.974.225.955.236c.535.136.63.486.615.766l-1.477 5.92c-.075.166-.24.406-.614.314.015.02-.96-.24-.96-.24l-.66 1.51 1.71.426.93.236-.54 2.19 1.32.327.54-2.17c.36.1.705.19 1.05.273l-.51 2.154 1.32.33.545-2.19c2.24.427 3.93.257 4.64-1.774.57-1.637-.03-2.58-1.217-3.196.854-.193 1.5-.76 1.68-1.93h.01zm-3.01 4.22c-.404 1.64-3.157.75-4.05.53l.72-2.9c.896.22 3.757.67 3.33 2.37zm.41-4.24c-.37 1.49-2.662.735-3.405.55l.654-2.64c.744.18 3.137.524 2.75 2.084v.006z"/>
+                                    </svg>
+                                    <div>
+                                        <p class="font-medium text-gray-900">Bitcoin Balance</p>
+                                        <p class="text-2xl font-bold text-gray-900">{{ bitcoin_wallet.balance|floatformat:8 }} BTC</p>
+                                        <p class="text-sm text-gray-500">≈ ${{ bitcoin_wallet.balance_usd|floatformat:2 }}</p>
+                                    </div>
+                                </div>
+                                                <svg class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <circle cx="12" cy="12" r="10" stroke-width="2"/>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% if form.balance_source.errors %}
+                                <p class="mt-2 text-sm text-red-600">{{ form.balance_source.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Amount Section -->
+                        <div>
+                            <label for="{{ form.amount.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                Amount to Transfer
+                            </label>
+                            <div class="relative">
+                                <input type="number" 
+                                       name="amount" 
+                                       id="{{ form.amount.id_for_label }}"
+                                       required
+                                       step="0.00000001"
+                                       min="0.00000001"
+                                       class="appearance-none block w-full px-3 py-2 pr-12 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm text-right"
+                                       placeholder="0.00000000">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                    <span class="text-gray-500 text-sm">BTC</span>
+                                </div>
+                            </div>
+                            {% if form.amount.errors %}
+                                <p class="mt-2 text-sm text-red-600">{{ form.amount.errors.0 }}</p>
+                            {% endif %}
+                            
+                            <!-- Quick Amount Buttons -->
+                            <div class="flex space-x-2 mt-3">
+                                <button type="button" class="px-3 py-1 text-xs border border-gray-300 rounded hover:bg-primary-50 hover:border-primary-300 focus:ring-2 focus:ring-primary-500" 
+                                        onclick="setAmount('0.001')">0.001 BTC</button>
+                                <button type="button" class="px-3 py-1 text-xs border border-gray-300 rounded hover:bg-primary-50 hover:border-primary-300 focus:ring-2 focus:ring-primary-500" 
+                                        onclick="setAmount('0.01')">0.01 BTC</button>
+                                <button type="button" class="px-3 py-1 text-xs border border-gray-300 rounded hover:bg-primary-50 hover:border-primary-300 focus:ring-2 focus:ring-primary-500" 
+                                        onclick="setAmount('0.1')">0.1 BTC</button>
+                                <button type="button" class="px-3 py-1 text-xs border border-gray-300 rounded hover:bg-primary-50 hover:border-primary-300 focus:ring-2 focus:ring-primary-500" 
+                                        onclick="setMaxAmount()">Max</button>
+                            </div>
+                        </div>
+
+                        <!-- Cryptocurrency Selection -->
+                        <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                            <div class="flex items-center mb-3">
+                                <svg class="w-8 h-8 mr-3 text-orange-500" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M23.638 14.904c-1.602 6.43-8.113 10.34-14.542 8.736C2.67 22.05-1.244 15.525.362 9.105 1.962 2.67 8.475-1.243 14.9.358c6.43 1.605 10.342 8.115 8.738 14.548v-.002zm-6.35-4.613c.24-1.59-.974-2.45-2.64-3.03l.54-2.153-1.315-.33-.525 2.107c-.345-.087-.705-.167-1.064-.25l.526-2.127-1.32-.33-.54 2.165c-.285-.067-.565-.132-.84-.2l-1.815-.45-.35 1.407s.974.225.955.236c.535.136.63.486.615.766l-1.477 5.92c-.075.166-.24.406-.614.314.015.02-.96-.24-.96-.24l-.66 1.51 1.71.426.93.236-.54 2.19 1.32.327.54-2.17c.36.1.705.19 1.05.273l-.51 2.154 1.32.33.545-2.19c2.24.427 3.93.257 4.64-1.774.57-1.637-.03-2.58-1.217-3.196.854-.193 1.5-.76 1.68-1.93h.01zm-3.01 4.22c-.404 1.64-3.157.75-4.05.53l.72-2.9c.896.22 3.757.67 3.33 2.37zm.41-4.24c-.37 1.49-2.662.735-3.405.55l.654-2.64c.744.18 3.137.524 2.75 2.084v.006z"/>
+                                </svg>
+                                <div>
+                                    <p class="font-medium text-gray-900">BTC Native</p>
+                                    <p class="text-sm text-gray-600">Select your preferred cryptocurrency and network</p>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="{{ form.cryptocurrency.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                        Cryptocurrency
+                                    </label>
+                                    <select name="cryptocurrency" 
+                                            id="{{ form.cryptocurrency.id_for_label }}"
+                                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                                        <option value="BTC" selected>Bitcoin (BTC)</option>
+                                    </select>
+                                    {% if form.cryptocurrency.errors %}
+                                        <p class="mt-1 text-sm text-red-600">{{ form.cryptocurrency.errors.0 }}</p>
+                                    {% endif %}
+                                </div>
+                                
+                                <div>
+                                    <label for="{{ form.network.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+                                        Network
+                                    </label>
+                                    <select name="network" 
+                                            id="{{ form.network.id_for_label }}"
+                                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
+                                        <option value="native" selected>Native</option>
+                                    </select>
+                                    {% if form.network.errors %}
+                                        <p class="mt-1 text-sm text-red-600">{{ form.network.errors.0 }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Wallet Address -->
+                        <div>
+                            <label for="{{ form.wallet_address.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                                Wallet Address
+                            </label>
+                            <div class="relative">
+                                <input type="text" 
+                                       name="wallet_address" 
+                                       id="{{ form.wallet_address.id_for_label }}"
+                                       required
+                                       class="appearance-none block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                                       placeholder="Enter wallet address">
+                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                    <button type="button" class="text-gray-400 hover:text-primary-600 focus:outline-none" onclick="pasteAddress()">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            {% if form.wallet_address.errors %}
+                                <p class="mt-2 text-sm text-red-600">{{ form.wallet_address.errors.0 }}</p>
+                            {% endif %}
+                            
+                            <!-- Warning -->
+                            <div class="mt-3 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                                <div class="flex">
+                                    <svg class="w-5 h-5 text-yellow-400 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <p class="text-sm text-yellow-700">
+                                        Double-check your wallet address. Transactions to incorrect addresses cannot be reversed.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Transaction PIN -->
+                        <div class="flex justify-center">
+                            <div class="w-full max-w-xs">
+                                <label for="{{ form.transaction_pin.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2 text-center">
+                                    Transaction PIN
+                                </label>
+                                <div class="relative">
+                                    <input type="password" 
+                                           name="transaction_pin" 
+                                           id="{{ form.transaction_pin.id_for_label }}"
+                                           required
+                                           maxlength="10"
+                                           class="appearance-none block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm text-center font-mono"
+                                           placeholder="Enter your PIN">
+                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                        <button type="button" class="text-gray-400 hover:text-primary-600 focus:outline-none" onclick="togglePinVisibility()">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% if form.transaction_pin.errors %}
+                                    <p class="mt-2 text-sm text-red-600 text-center">{{ form.transaction_pin.errors.0 }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="flex justify-center pt-4">
+                            <button type="submit" 
+                                    class="w-full max-w-xs inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition duration-150 ease-in-out">
+                                Send Bitcoin
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+function setAmount(amount) {
+    document.getElementById('{{ form.amount.id_for_label }}').value = amount;
+}
+
+function setMaxAmount() {
+    const balanceSource = document.querySelector('input[name="balance_source"]:checked').value;
+    if (balanceSource === 'bitcoin') {
+        document.getElementById('{{ form.amount.id_for_label }}').value = '{{ bitcoin_wallet.balance|floatformat:8 }}';
+    } else {
+        // Calculate max BTC amount from fiat balance
+        const fiatBalance = {{ total_fiat_balance }};
+        const btcPrice = {{ btc_price }};
+        const maxBtc = (fiatBalance / btcPrice).toFixed(8);
+        document.getElementById('{{ form.amount.id_for_label }}').value = maxBtc;
+    }
+}
+
+function pasteAddress() {
+    navigator.clipboard.readText().then(function(text) {
+        document.getElementById('{{ form.wallet_address.id_for_label }}').value = text;
+    }).catch(function(err) {
+        console.log('Failed to read clipboard: ', err);
+    });
+}
+
+function togglePinVisibility() {
+    const pinInput = document.getElementById('{{ form.transaction_pin.id_for_label }}');
+    pinInput.type = pinInput.type === 'password' ? 'text' : 'password';
+}
+
+// Update balance selection UI
+document.querySelectorAll('input[name="balance_source"]').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+        document.querySelectorAll('[data-balance-option]').forEach(function(option) {
+            const container = option.querySelector('div');
+            const checkIcon = option.querySelector('svg:last-child');
+            
+            container.classList.remove('border-primary-500', 'bg-primary-50');
+            container.classList.add('border-gray-200');
+            
+            if (checkIcon) {
+                checkIcon.classList.remove('text-primary-600');
+                checkIcon.classList.add('text-gray-300');
+                checkIcon.innerHTML = '<circle cx="12" cy="12" r="10" stroke-width="2"/>';
+            }
+        });
+        
+        const selectedOption = this.closest('[data-balance-option]');
+        if (selectedOption) {
+            const container = selectedOption.querySelector('div');
+            const checkIcon = selectedOption.querySelector('svg:last-child');
+            
+            container.classList.add('border-primary-500', 'bg-primary-50');
+            container.classList.remove('border-gray-200');
+            
+            if (checkIcon) {
+                checkIcon.classList.add('text-primary-600');
+                checkIcon.classList.remove('text-gray-300');
+                checkIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>';
+            }
+        }
+    });
+});
+
+// Make balance options clickable
+document.querySelectorAll('[data-balance-option]').forEach(function(option) {
+    option.addEventListener('click', function() {
+        const radio = this.querySelector('input[type="radio"]');
+        if (radio) {
+            radio.checked = true;
+            radio.dispatchEvent(new Event('change'));
+        }
+    });
+});
+</script>
+
+{% endblock %} 

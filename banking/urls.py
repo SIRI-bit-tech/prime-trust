@@ -11,5 +11,6 @@ urlpatterns = [
     path('payment-fields/', views.payment_fields, name='payment_fields'),
     path('receive-bitcoin/', views_bitcoin.receive_bitcoin, name='receive_bitcoin'),
     path('send-bitcoin/', views_bitcoin.send_bitcoin, name='send_bitcoin'),
+    path('send-bitcoin-page/', views_bitcoin.send_bitcoin_page, name='send_bitcoin_page'),
     path('swap-bitcoin/', views_bitcoin.swap_bitcoin, name='swap_bitcoin'),
 ]

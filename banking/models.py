@@ -112,6 +112,7 @@ class Transaction(models.Model):
         ('deposit', 'Deposit'),
         ('withdrawal', 'Withdrawal'),
         ('payment', 'Payment'),
+        ('bitcoin_send', 'Bitcoin Send'),
     )
 
     STATUS_CHOICES = (
@@ -142,11 +143,41 @@ class Transaction(models.Model):
     reference = models.CharField(max_length=50, unique=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    # Bitcoin-specific fields
+    bitcoin_amount = models.DecimalField(
+        max_digits=18, 
+        decimal_places=8, 
+        null=True, 
+        blank=True,
+        help_text="Amount in Bitcoin for crypto transactions"
+    )
+    bitcoin_address = models.CharField(
+        max_length=100, 
+        null=True, 
+        blank=True,
+        help_text="Bitcoin wallet address for crypto transactions"
+    )
+    bitcoin_tx_hash = models.CharField(
+        max_length=64, 
+        null=True, 
+        blank=True,
+        help_text="Bitcoin transaction hash"
+    )
+    balance_source = models.CharField(
+        max_length=20, 
+        null=True, 
+        blank=True,
+        choices=[('fiat', 'Fiat Balance'), ('bitcoin', 'Bitcoin Balance')],
+        help_text="Source of funds for Bitcoin transactions"
+    )
 
     class Meta:
         ordering = ['-created_at']
 
     def __str__(self):
+        if self.transaction_type == 'bitcoin_send':
+            return f"Bitcoin Send - {self.bitcoin_amount} BTC ({self.status})"
         return f"{self.get_transaction_type_display()} - {self.amount} ({self.status})"
 
 class Notification(models.Model):

@@ -3,9 +3,13 @@ from django.core.validators import MinValueValidator
 from django.utils import timezone
 from decimal import Decimal
 from datetime import date, timedelta
+from django.contrib.auth import get_user_model
 
 from .models import Account, Transaction
 from .models_investments_insurance import InvestmentAccount, Investment, InsurancePolicy
+from accounts.models import UserProfile
+
+User = get_user_model()
 
 # Common form field styling
 INPUT_CLASSES = 'block w-full px-4 py-3 rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm'
@@ -15,58 +19,47 @@ TEXTAREA_CLASSES = 'block w-full px-4 py-3 rounded-md border-gray-300 shadow-sm 
 class SendMoneyForm(forms.Form):
     """Form for sending money to another user"""
     recipient_account_number = forms.CharField(
-        label="Recipient Account Number",
-        required=True,
+        label='Recipient Account Number',
+        max_length=20,
         widget=forms.TextInput(attrs={
-            'class': INPUT_CLASSES,
-            'placeholder': 'Enter recipient account number',
-            'hx-get': '/banking/check-recipient/',
-            'hx-target': '#recipient-check',
-            'hx-trigger': 'keyup changed delay:500ms',
-            'hx-swap': 'innerHTML'
+            'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm',
+            'placeholder': 'Enter 10-digit account number'
         })
     )
-    
     from_account = forms.ModelChoiceField(
-        label="From Account",
         queryset=Account.objects.none(),
-        empty_label=None,
+        label='From Account',
         widget=forms.Select(attrs={
-            'class': SELECT_CLASSES
+            'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm'
         })
     )
-    
     amount = forms.DecimalField(
-        label="Amount",
-        max_digits=10,
+        label='Amount',
+        max_digits=15,
         decimal_places=2,
         min_value=Decimal('0.01'),
         widget=forms.NumberInput(attrs={
-            'class': INPUT_CLASSES,
-            'placeholder': 'Enter amount',
+            'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm pl-7',
+            'placeholder': '0.00',
             'step': '0.01'
         })
     )
-    
     description = forms.CharField(
-        label="Description",
+        label='Description (Optional)',
+        max_length=255,
         required=False,
-        max_length=200,
-        widget=forms.Textarea(attrs={
-            'class': TEXTAREA_CLASSES,
-            'placeholder': 'Enter a description (optional)',
-            'rows': 3
+        widget=forms.TextInput(attrs={
+            'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm',
+            'placeholder': 'What is this payment for?'
         })
     )
     
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
-        super(SendMoneyForm, self).__init__(*args, **kwargs)
-        
+        super().__init__(*args, **kwargs)
         if user:
-            # Only show accounts belonging to the user
             self.fields['from_account'].queryset = Account.objects.filter(user=user)
-    
+
     def clean_amount(self):
         amount = self.cleaned_data.get('amount')
         from_account = self.cleaned_data.get('from_account')
@@ -308,3 +301,150 @@ class InsurancePolicyForm(forms.ModelForm):
                 self.add_error('bank_routing_number', 'Bank routing number is required')
                 
         return cleaned_data
+
+class SendBitcoinForm(forms.Form):
+    BALANCE_CHOICES = [
+        ('fiat', 'Fiat Balance'),
+        ('bitcoin', 'Bitcoin Balance'),
+    ]
+    
+    CRYPTOCURRENCY_CHOICES = [
+        ('BTC', 'Bitcoin (BTC)'),
+    ]
+    
+    NETWORK_CHOICES = [
+        ('native', 'Native'),
+    ]
+    
+    balance_source = forms.ChoiceField(
+        choices=BALANCE_CHOICES,
+        label='Select Balance to Use',
+        initial='bitcoin',
+        widget=forms.RadioSelect(attrs={
+            'class': 'focus:ring-primary-500 h-4 w-4 text-primary-600 border-gray-300'
+        })
+    )
+    
+    amount = forms.DecimalField(
+        label='Amount to Transfer',
+        max_digits=18,
+        decimal_places=8,
+        min_value=Decimal('0.00000001'),
+        widget=forms.NumberInput(attrs={
+            'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm text-right',
+            'placeholder': '0.00000000',
+            'step': '0.00000001'
+        })
+    )
+    
+    cryptocurrency = forms.ChoiceField(
+        choices=CRYPTOCURRENCY_CHOICES,
+        label='Cryptocurrency',
+        initial='BTC',
+        widget=forms.Select(attrs={
+            'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm'
+        })
+    )
+    
+    network = forms.ChoiceField(
+        choices=NETWORK_CHOICES,
+        label='Network',
+        initial='native',
+        widget=forms.Select(attrs={
+            'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm'
+        })
+    )
+    
+    wallet_address = forms.CharField(
+        label='Wallet Address',
+        max_length=100,
+        widget=forms.TextInput(attrs={
+            'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm',
+            'placeholder': 'Enter wallet address'
+        })
+    )
+    
+    transaction_pin = forms.CharField(
+        label='Transaction PIN',
+        max_length=4,
+        min_length=4,
+        widget=forms.PasswordInput(attrs={
+            'class': 'block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm text-center',
+            'placeholder': 'Enter your 4-10 digit PIN',
+            'maxlength': '10'
+        })
+    )
+    
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        
+        if self.user:
+            # Get user's account balance and Bitcoin wallet balance
+            user_accounts = Account.objects.filter(user=self.user)
+            total_fiat_balance = sum(account.balance for account in user_accounts)
+            
+            try:
+                bitcoin_wallet = self.user.bitcoinwallet
+                bitcoin_balance = bitcoin_wallet.balance
+            except:
+                bitcoin_balance = Decimal('0.00000000')
+            
+            # Update balance choice labels with actual balances
+            self.fields['balance_source'].choices = [
+                ('fiat', f'Fiat Balance - ${total_fiat_balance:.2f}'),
+                ('bitcoin', f'Bitcoin Balance - {bitcoin_balance:.8f} BTC'),
+            ]
+    
+    def clean_transaction_pin(self):
+        pin = self.cleaned_data.get('transaction_pin')
+        if not pin:
+            raise forms.ValidationError('Transaction PIN is required')
+        
+        if self.user and not self.user.profile.check_transaction_pin(pin):
+            raise forms.ValidationError('Invalid transaction PIN')
+        
+        return pin
+    
+    def clean_amount(self):
+        amount = self.cleaned_data.get('amount')
+        balance_source = self.cleaned_data.get('balance_source')
+        
+        if not amount:
+            raise forms.ValidationError('Amount is required')
+        
+        if balance_source == 'bitcoin':
+            # Check Bitcoin balance
+            try:
+                bitcoin_wallet = self.user.bitcoinwallet
+                if amount > bitcoin_wallet.balance:
+                    raise forms.ValidationError('Insufficient Bitcoin balance')
+            except:
+                raise forms.ValidationError('Bitcoin wallet not found')
+        
+        elif balance_source == 'fiat':
+            # Check fiat balance - convert BTC amount to USD
+            try:
+                bitcoin_wallet = self.user.bitcoinwallet
+                usd_amount = amount * bitcoin_wallet.btc_price_usd
+                
+                user_accounts = Account.objects.filter(user=self.user)
+                total_fiat_balance = sum(account.balance for account in user_accounts)
+                
+                if usd_amount > total_fiat_balance:
+                    raise forms.ValidationError('Insufficient fiat balance')
+            except:
+                raise forms.ValidationError('Unable to verify fiat balance')
+        
+        return amount
+    
+    def clean_wallet_address(self):
+        address = self.cleaned_data.get('wallet_address')
+        if not address:
+            raise forms.ValidationError('Wallet address is required')
+        
+        # Basic Bitcoin address validation
+        if not (address.startswith('1') or address.startswith('3') or address.startswith('bc1')):
+            raise forms.ValidationError('Invalid Bitcoin address format')
+        
+        return address

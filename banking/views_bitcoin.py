@@ -110,6 +110,7 @@ def send_bitcoin_page(request):
                     
                     # Create transaction record
                     new_transaction = Transaction.objects.create(
+                        user=user,
                         from_account=from_account,
                         to_account=to_account,
                         amount=usd_amount,

@@ -123,6 +123,14 @@ class Transaction(models.Model):
         ('failed', 'Failed'),
     )
 
+    user = models.ForeignKey(
+        CustomUser, 
+        on_delete=models.CASCADE, 
+        related_name='transactions',
+        null=True,
+        blank=True,
+        help_text="User who initiated the transaction"
+    )
     from_account = models.ForeignKey(
         Account, 
         on_delete=models.CASCADE, 

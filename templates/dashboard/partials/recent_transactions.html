@@ -9,8 +9,16 @@
         {% for transaction in transactions %}
         <div class="p-4 flex justify-between items-center">
           <div>
-            <p class="text-lg font-semibold {% if transaction.from_account.user == request.user %}text-red-600{% else %}text-green-600{% endif %}">
-              ${{ transaction.amount|floatformat:2 }} {% if transaction.from_account.user == request.user %}Dr{% else %}Cr{% endif %}
+            <p class="text-lg font-semibold {% if transaction.transaction_type == 'bitcoin_send' %}text-red-600{% elif transaction.transaction_type == 'bitcoin_deposit' %}text-green-600{% elif transaction.from_account and transaction.from_account.user == request.user %}text-red-600{% else %}text-green-600{% endif %}">
+              {% if transaction.transaction_type == 'bitcoin_send' %}
+                -{{ transaction.bitcoin_amount|floatformat:8 }} BTC (≈ -${{ transaction.amount|floatformat:2 }})
+              {% elif transaction.transaction_type == 'bitcoin_deposit' %}
+                +{{ transaction.bitcoin_amount|floatformat:8 }} BTC (≈ +${{ transaction.amount|floatformat:2 }})
+              {% elif transaction.from_account and transaction.from_account.user == request.user %}
+                -${{ transaction.amount|floatformat:2 }}
+              {% else %}
+                +${{ transaction.amount|floatformat:2 }}
+              {% endif %}
             </p>
             <p class="text-sm text-gray-700 mt-1 whitespace-normal">{{ transaction.description }}</p>
           </div>

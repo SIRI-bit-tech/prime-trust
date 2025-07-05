@@ -38,9 +38,9 @@ def home(request):
 
     # Keep Bitcoin balance separate from fiat balance
 
-    # Get recent transactions
+    # Get recent transactions (including Bitcoin transactions)
     transactions = Transaction.objects.filter(
-        Q(from_account__in=accounts) | Q(to_account__in=accounts)
+        Q(from_account__in=accounts) | Q(to_account__in=accounts) | Q(user=user)
     ).order_by('-created_at')[:5]
 
     # Get virtual cards
@@ -49,17 +49,21 @@ def home(request):
     # Get unread notifications
     notifications = Notification.objects.filter(user=user, is_read=False)[:5]
 
-    # Transaction metrics
+    # Transaction metrics (including Bitcoin transactions)
     transactions_count = Transaction.objects.filter(
-        Q(from_account__in=accounts) | Q(to_account__in=accounts)
+        Q(from_account__in=accounts) | Q(to_account__in=accounts) | Q(user=user)
     ).count()
+    
+    # Money received (including Bitcoin deposits)
     money_received = Transaction.objects.filter(
-        to_account__in=accounts,
-        status='completed'
+        Q(to_account__in=accounts, status='completed') |
+        Q(user=user, transaction_type='bitcoin_deposit', status='completed')
     ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
+    
+    # Money spent (including Bitcoin sends)
     money_spent = Transaction.objects.filter(
-        from_account__in=accounts,
-        status='completed'
+        Q(from_account__in=accounts, status='completed') |
+        Q(user=user, transaction_type='bitcoin_send', status='completed')
     ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
 
     # Get current time for greeting
@@ -165,9 +169,9 @@ def transactions_update(request):
     """Update recent transactions via HTMX"""
     user = request.user
 
-    # Get user's accounts and transactions in a single query
+    # Get user's accounts and transactions in a single query (including Bitcoin transactions)
     transactions = Transaction.objects.select_related('from_account', 'to_account').filter(
-        Q(from_account__user=user) | Q(to_account__user=user)
+        Q(from_account__user=user) | Q(to_account__user=user) | Q(user=user)
     ).order_by('-created_at')[:5]
 
     context = {
@@ -182,9 +186,9 @@ def transactions(request):
     user = request.user
     accounts = Account.objects.filter(user=user)
 
-    # Get all transactions for user's accounts
+    # Get all transactions for user's accounts (including Bitcoin transactions)
     transactions = Transaction.objects.filter(
-        Q(from_account__in=accounts) | Q(to_account__in=accounts)
+        Q(from_account__in=accounts) | Q(to_account__in=accounts) | Q(user=user)
     ).order_by('-created_at')
 
     # Filter by status if provided
@@ -815,15 +819,15 @@ def metrics_update(request):
     user = request.user
     accounts = Account.objects.filter(user=user)
     transactions_count = Transaction.objects.filter(
-        Q(from_account__in=accounts) | Q(to_account__in=accounts)
+        Q(from_account__in=accounts) | Q(to_account__in=accounts) | Q(user=user)
     ).count()
     money_received = Transaction.objects.filter(
-        to_account__in=accounts,
-        status='completed'
+        Q(to_account__in=accounts, status='completed') |
+        Q(user=user, transaction_type='bitcoin_deposit', status='completed')
     ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
     money_spent = Transaction.objects.filter(
-        from_account__in=accounts,
-        status='completed'
+        Q(from_account__in=accounts, status='completed') |
+        Q(user=user, transaction_type='bitcoin_send', status='completed')
     ).aggregate(Sum('amount'))['amount__sum'] or Decimal('0.00')
     context = {
         'transactions_count': transactions_count,

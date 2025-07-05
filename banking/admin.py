@@ -240,6 +240,7 @@ class BitcoinWalletAdmin(admin.ModelAdmin):
                 
                 # Create transaction record
                 Transaction.objects.create(
+                    user=wallet.user,
                     to_account=None,  # Bitcoin wallet doesn't use Account model
                     amount=amount * (wallet.btc_price_usd or Decimal('0')),  # USD equivalent
                     bitcoin_amount=amount,

@@ -89,27 +89,7 @@ class UserProfile(models.Model):
 
 @receiver(post_save, sender=CustomUser)
 def create_user_profile(sender, instance, created, **kwargs):
-    """Create a UserProfile and accounts for new users"""
+    """Create a UserProfile for new users"""
     if created:
         # Create user profile
         UserProfile.objects.create(user=instance)
-        
-        # Import here to avoid circular import
-        from banking.models import Account
-        
-        # Create a checking account with a unique account number
-        # The routing number and virtual card will be created automatically by the Account model's save method
-        checking_account = Account.objects.create(
-            user=instance,
-            account_number=f"PT{uuid.uuid4().hex[:8].upper()}",
-            account_type='checking',
-            balance=0.00
-        )
-        
-        # Also create a savings account
-        Account.objects.create(
-            user=instance,
-            account_number=f"PS{uuid.uuid4().hex[:8].upper()}",
-            account_type='savings',
-            balance=0.00
-        )

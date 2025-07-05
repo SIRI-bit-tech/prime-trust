@@ -49,10 +49,14 @@ def notify_account_updated(sender, instance, created, **kwargs):
 def create_user_accounts(sender, instance, created, **kwargs):
     """Create accounts for new users"""
     if created:
-        # Create checking account
+        import uuid
+        
+        # Create a single checking account with a unique account number
         Account.objects.create(
             user=instance,
-            account_type='checking'
+            account_number=f"PT{uuid.uuid4().hex[:8].upper()}",
+            account_type='checking',
+            balance=0.00
         )
         
         # Create Bitcoin wallet with a unique address

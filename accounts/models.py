@@ -1,10 +1,11 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, MinLengthValidator
 from django.utils import timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.contrib.auth.hashers import make_password, check_password
 import random
 import string
 import uuid
@@ -43,14 +44,12 @@ class CustomUser(AbstractUser):
     
     def set_security_question(self, question, answer):
         """Set the security question and hashed answer."""
-        from django.contrib.auth.hashers import make_password
         self.security_question = question
         self.security_answer = make_password(answer.lower().strip())
         self.save()
     
     def check_security_answer(self, answer):
         """Verify the security answer."""
-        from django.contrib.auth.hashers import check_password
         if not self.security_answer:
             return False
         return check_password(answer.lower().strip(), self.security_answer)
@@ -63,12 +62,30 @@ class UserProfile(models.Model):
     date_of_birth = models.DateField(blank=True, null=True)
     profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
     company = models.CharField(max_length=100, blank=True)
+    transaction_pin = models.CharField(
+        max_length=128,  # Using 128 for hashed pin storage
+        null=True,
+        blank=True,
+        help_text=_('4-digit PIN used for transaction verification')
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.user.get_full_name()}'s Profile"
 
+    def set_transaction_pin(self, pin):
+        """Set the transaction PIN using proper hashing."""
+        if not pin.isdigit() or len(pin) != 4:
+            raise ValueError(_('Transaction PIN must be exactly 4 digits'))
+        self.transaction_pin = make_password(pin)
+        self.save()
+
+    def check_transaction_pin(self, pin):
+        """Verify the transaction PIN."""
+        if not self.transaction_pin:
+            return False
+        return check_password(pin, self.transaction_pin)
 
 @receiver(post_save, sender=CustomUser)
 def create_user_profile(sender, instance, created, **kwargs):

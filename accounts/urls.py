@@ -13,6 +13,8 @@ urlpatterns = [
     path('logout/', views.user_logout, name='logout'),
     path('profile/', views.profile, name='profile'),
     path('change-password/', views.change_password, name='change_password'),
+    path('change-transaction-pin/', views.change_transaction_pin, name='change_transaction_pin'),
+    path('setup-pin/', views.setup_pin, name='setup_pin'),
     
     # Password reset URLs
     path('password_reset/', auth_views.PasswordResetView.as_view(

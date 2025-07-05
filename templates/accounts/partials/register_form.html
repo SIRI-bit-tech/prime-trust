@@ -269,9 +269,46 @@
                 <div class="mt-1">
                     <input type="password" name="password2" id="{{ form.password2.id_for_label }}" required
                         class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                        placeholder="••••••••">
+                        placeholder="Confirm your password">
                     {% if form.password2.errors %}
                     <p class="mt-2 text-sm text-red-600">{{ form.password2.errors.0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <label for="{{ form.transaction_pin.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Transaction PIN
+                </label>
+                <div class="mt-1">
+                    <input type="password" name="transaction_pin" id="{{ form.transaction_pin.id_for_label }}" required
+                        class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                        placeholder="Enter 4-digit PIN"
+                        maxlength="4"
+                        pattern="[0-9]*"
+                        inputmode="numeric"
+                        autocomplete="off">
+                    {% if form.transaction_pin.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.transaction_pin.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-gray-500">This PIN will be required for all transactions</p>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <label for="{{ form.confirm_transaction_pin.id_for_label }}" class="block text-sm font-medium text-gray-700">
+                    Confirm Transaction PIN
+                </label>
+                <div class="mt-1">
+                    <input type="password" name="confirm_transaction_pin" id="{{ form.confirm_transaction_pin.id_for_label }}" required
+                        class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                        placeholder="Confirm 4-digit PIN"
+                        maxlength="4"
+                        pattern="[0-9]*"
+                        inputmode="numeric"
+                        autocomplete="off">
+                    {% if form.confirm_transaction_pin.errors %}
+                    <p class="mt-2 text-sm text-red-600">{{ form.confirm_transaction_pin.errors.0 }}</p>
                     {% endif %}
                 </div>
             </div>

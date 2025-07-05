@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Set Transaction PIN - PrimeTrust{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/registration.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="flex min-h-screen flex-col items-center justify-center bg-gray-100 py-12">
+    <div class="w-full max-w-md">
+        <div class="mb-8 text-center">
+            <img class="mx-auto h-16" src="{% static 'img/Primetrust-logo-med.png' %}" alt="PrimeTrust">
+            <h2 class="mt-6 text-2xl font-bold text-gray-900">Set Your Transaction PIN</h2>
+            <p class="mt-2 text-sm text-gray-600">This PIN will be used to authorize your transactions.</p>
+        </div>
+
+        <div class="bg-white px-8 py-6 shadow-md rounded-lg">
+            <form method="post" class="space-y-4" id="pinSetupForm" novalidate>
+                {% csrf_token %}
+                
+                <div class="space-y-4">
+                    <div>
+                        {{ form.transaction_pin }}
+                        <div class="text-xs text-gray-500 mt-1">Enter a 4-digit PIN for transactions</div>
+                        {% if form.transaction_pin.errors %}
+                        <div class="text-red-500 text-xs mt-1">
+                            {{ form.transaction_pin.errors|join:", " }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        {{ form.confirm_transaction_pin }}
+                        {% if form.confirm_transaction_pin.errors %}
+                        <div class="text-red-500 text-xs mt-1">
+                            {{ form.confirm_transaction_pin.errors|join:", " }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="text-xs text-gray-500 mt-4">
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Your PIN must be exactly 4 digits</li>
+                        <li>Keep your PIN secure and don't share it with anyone</li>
+                        <li>You'll need this PIN for all transactions</li>
+                    </ul>
+                </div>
+
+                <button type="submit" class="w-full bg-green-500 text-white text-lg font-bold py-2 px-4 rounded-md hover:bg-green-600 mt-6">
+                    Set PIN
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('pinSetupForm');
+    const pinInput = document.querySelector('input[name="transaction_pin"]');
+    const confirmPinInput = document.querySelector('input[name="confirm_transaction_pin"]');
+
+    function validatePin(input) {
+        if (!/^\d{4}$/.test(input.value)) {
+            input.setCustomValidity('PIN must be exactly 4 digits');
+        } else {
+            input.setCustomValidity('');
+        }
+    }
+
+    pinInput.addEventListener('input', () => validatePin(pinInput));
+    confirmPinInput.addEventListener('input', () => validatePin(confirmPinInput));
+
+    form.addEventListener('submit', function(e) {
+        validatePin(pinInput);
+        validatePin(confirmPinInput);
+
+        if (pinInput.value !== confirmPinInput.value) {
+            confirmPinInput.setCustomValidity('PINs do not match');
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %} 

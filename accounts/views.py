@@ -19,7 +19,9 @@ from .forms import (
     LoginForm, 
     ProfileUpdateForm, 
     UserProfileUpdateForm,
-    PasswordChangeForm
+    PasswordChangeForm,
+    TransactionPINChangeForm,
+    TransactionPINSetupForm
 )
 from .utils import generate_verification_code, send_verification_email, verify_code
 
@@ -37,6 +39,15 @@ def register(request):
                 user = form.save(commit=False)
                 user.is_active = False
                 user.save()
+                
+                # Create or update UserProfile
+                profile = UserProfile.objects.get_or_create(user=user)[0]
+                profile.date_of_birth = form.cleaned_data['date_of_birth']
+                profile.gender = request.POST.get('gender')  # Get gender from POST data
+                profile.city = form.cleaned_data['city']
+                profile.state = form.cleaned_data['state']
+                profile.address = form.cleaned_data['address']
+                profile.save()
                 
                 # Generate and send verification code
                 code = generate_verification_code()
@@ -58,11 +69,15 @@ def register(request):
                     messages.error(request, 'Error sending verification email. Please try again.')
                     user.delete()  # Delete the user if email sending fails
             except Exception as e:
-                messages.error(request, 'An error occurred during registration. Please try again.')
+                messages.error(request, f'An error occurred during registration: {str(e)}')
         else:
+            # Show form validation errors
             for field, errors in form.errors.items():
                 for error in errors:
-                    messages.error(request, f"{field}: {error}")
+                    if field == 'email' and 'already exists' in error:
+                        messages.error(request, 'This email address is already registered. Please use a different email or try logging in.')
+                    else:
+                        messages.error(request, f"{field.replace('_', ' ').title()}: {error}")
     else:
         form = CustomUserCreationForm()
     
@@ -91,14 +106,17 @@ def verify_email(request):
                     
                     # Log the user in
                     login(request, user)
-                    messages.success(request, 'Email verified successfully! Welcome to PrimeTrust.')
+                    messages.success(request, 'Email verified successfully!')
+                    
+                    # Redirect to PIN setup instead of dashboard
+                    redirect_url = reverse('accounts:setup_pin')
                     
                     # Handle HTMX request
                     if request.htmx:
-                        response = HttpResponseClientRedirect(reverse('dashboard:home'))
+                        response = HttpResponseClientRedirect(redirect_url)
                         return response
                     
-                    return redirect('dashboard:home')
+                    return redirect('accounts:setup_pin')
                 else:
                     messages.error(request, 'Invalid or expired verification code.')
             except Exception as e:
@@ -311,6 +329,63 @@ def change_password(request):
     if request.htmx:
         return render(request, 'accounts/partials/password_change_form.html', context)
     return render(request, 'accounts/change_password.html', context)
+
+@login_required
+def change_transaction_pin(request):
+    """Handle transaction PIN changes"""
+    if request.method == 'POST':
+        form = TransactionPINChangeForm(request.user, request.POST)
+        if form.is_valid():
+            try:
+                form.save()
+                messages.success(request, 'Transaction PIN updated successfully.')
+                
+                # Return success message for HTMX
+                return HttpResponse(
+                    '<div class="rounded-md bg-green-50 p-4 mb-6">'
+                    '<div class="flex">'
+                    '<div class="flex-shrink-0">'
+                    '<svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">'
+                    '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>'
+                    '</svg>'
+                    '</div>'
+                    '<div class="ml-3">'
+                    '<p class="text-sm font-medium text-green-800">Transaction PIN updated successfully</p>'
+                    '</div>'
+                    '</div>'
+                    '</div>'
+                )
+            except Exception as e:
+                messages.error(request, 'An error occurred. Please try again.')
+    else:
+        form = TransactionPINChangeForm(request.user)
+    
+    return render(request, 'accounts/partials/transaction_pin_form.html', {'form': form})
+
+@login_required
+def setup_pin(request):
+    """Handle initial transaction PIN setup"""
+    # Check if PIN is already set
+    if request.user.profile.transaction_pin:
+        messages.info(request, 'Transaction PIN is already set.')
+        return redirect('dashboard:home')
+    
+    if request.method == 'POST':
+        form = TransactionPINSetupForm(request.POST)
+        if form.is_valid():
+            try:
+                # Set the transaction PIN
+                request.user.profile.set_transaction_pin(form.cleaned_data['transaction_pin'])
+                request.user.profile.save()
+                
+                messages.success(request, 'Transaction PIN set successfully! Welcome to PrimeTrust.')
+                return redirect('dashboard:home')
+            except Exception as e:
+                messages.error(request, 'An error occurred while setting your PIN. Please try again.')
+    else:
+        form = TransactionPINSetupForm()
+    
+    return render(request, 'accounts/setup_pin.html', {'form': form})
 
 # Helper functions
 

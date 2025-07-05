@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const monthSelect = document.querySelector('select[name="birth_month"]');
     const daySelect = document.querySelector('select[name="birth_day"]');
     const yearSelect = document.querySelector('select[name="birth_year"]');
-    const dateInput = document.getElementById('id_date_of_birth');
+    const dateOfBirthInput = document.getElementById('id_date_of_birth');
     const stateSelect = document.getElementById('id_state');
     const citySelect = document.getElementById('id_city');
     const genderInputs = document.querySelectorAll('input[name="gender"]');
@@ -151,17 +151,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Handle password validation
     function validatePasswords() {
-        if (password1Input.value.length < 8) {
+        if (password1Input && password1Input.value.length < 8) {
             password1Error.classList.remove('hidden');
             return false;
-        } else {
+        } else if (password1Error) {
             password1Error.classList.add('hidden');
         }
 
-        if (password1Input.value !== password2Input.value) {
+        if (password1Input && password2Input && password1Input.value !== password2Input.value) {
             password2Error.classList.remove('hidden');
             return false;
-        } else {
+        } else if (password2Error) {
             password2Error.classList.add('hidden');
         }
         return true;
@@ -173,18 +173,19 @@ document.addEventListener('DOMContentLoaded', function() {
         password2Input.addEventListener('input', validatePasswords);
     }
 
-    // Handle date of birth fields
+    // Function to update the hidden date of birth input
     function updateDateOfBirth() {
-        if (!monthSelect.value || !daySelect.value || !yearSelect.value) return;
-        
-        const month = monthSelect.value.padStart(2, '0');
-        const day = daySelect.value.padStart(2, '0');
-        const year = yearSelect.value;
-        
-        dateInput.value = `${year}-${month}-${day}`;
+        if (monthSelect && daySelect && yearSelect && dateOfBirthInput) {
+            if (monthSelect.value && daySelect.value && yearSelect.value) {
+                const month = monthSelect.value.padStart(2, '0');
+                const day = daySelect.value.padStart(2, '0');
+                const year = yearSelect.value;
+                dateOfBirthInput.value = `${year}-${month}-${day}`;
+            }
+        }
     }
 
-    // Add event listeners for date of birth
+    // Add event listeners to the date selects
     if (monthSelect && daySelect && yearSelect) {
         monthSelect.addEventListener('change', updateDateOfBirth);
         daySelect.addEventListener('change', updateDateOfBirth);
@@ -198,16 +199,17 @@ document.addEventListener('DOMContentLoaded', function() {
         // Clear existing options
         citySelect.innerHTML = '<option value="">Select City</option>';
         citySelect.disabled = true;
-    
+        
         if (!stateValue) return;
-    
+        
         // Get cities for the selected state
         const cities = window.US_CITIES[stateValue];
         if (cities && cities.length > 0) {
-    cities.forEach(city => {
-        const option = document.createElement('option');
-        option.value = city;
-        option.textContent = city;
+            // Add cities as options
+            cities.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city;
+                option.textContent = city;
                 citySelect.appendChild(option);
             });
             citySelect.disabled = false;
@@ -229,37 +231,32 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle form submission
     if (form) {
         form.addEventListener('submit', function(e) {
-            // Update date of birth before validation
-            updateDateOfBirth();
+            e.preventDefault();
 
-            // Validate required fields
-            if (!monthSelect.value || !daySelect.value || !yearSelect.value) {
-                e.preventDefault();
-                alert('Please select a complete date of birth');
-                return;
-            }
-
-            if (!validatePasswords()) {
-                e.preventDefault();
+            // Validate date of birth
+            if (!dateOfBirthInput || !dateOfBirthInput.value) {
+                alert('Please select your date of birth');
                 return;
             }
 
             // Validate gender
-            const genderSelected = document.querySelector('input[name="gender"]:checked');
+            let genderSelected = false;
+            genderInputs.forEach(input => {
+                if (input.checked) genderSelected = true;
+            });
             if (!genderSelected) {
-                e.preventDefault();
-                alert('Please select a gender');
+                alert('Please select your gender');
                 return;
             }
 
             // Validate city
-            if (!citySelect.value) {
-                e.preventDefault();
+            if (!citySelect || !citySelect.value) {
                 alert('Please select a city');
                 return;
             }
 
-            // Let the form submit if all validations pass
+            // If all validations pass, submit the form
+            this.submit();
         });
     }
 });

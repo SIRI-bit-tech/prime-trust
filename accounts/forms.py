@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 import re
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 from .models import CustomUser, UserProfile
 
 # US States data
@@ -25,6 +26,12 @@ class CustomUserCreationForm(UserCreationForm):
     """
     A form for creating new users with email, phone number, password, and name.
     """
+    GENDER_CHOICES = [
+        ('F', 'Female'),
+        ('M', 'Male'),
+        ('C', 'Custom'),
+    ]
+
     first_name = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={
         'class': 'form-input',
         'placeholder': 'First name'
@@ -52,6 +59,7 @@ class CustomUserCreationForm(UserCreationForm):
         'id': 'id_password2'
     }))
     date_of_birth = forms.DateField(required=True, widget=forms.HiddenInput())
+    gender = forms.ChoiceField(choices=GENDER_CHOICES, required=True)
     state = forms.ChoiceField(
         choices=[('', 'Select State')] + US_STATES,
         required=True,
@@ -61,12 +69,8 @@ class CustomUserCreationForm(UserCreationForm):
         })
     )
     city = forms.CharField(
-        required=True,
-        widget=forms.Select(attrs={
-            'class': 'form-input',
-            'id': 'id_city',
-            'disabled': 'disabled'
-        })
+        max_length=100,
+        required=True
     )
     address = forms.CharField(widget=forms.Textarea(attrs={
         'class': 'form-textarea',
@@ -88,7 +92,7 @@ class CustomUserCreationForm(UserCreationForm):
     class Meta:
         model = CustomUser
         fields = ('first_name', 'last_name', 'email', 'phone_number',
-                 'date_of_birth', 'state', 'city', 'address', 'password1', 'password2',
+                 'date_of_birth', 'gender', 'state', 'city', 'address', 'password1', 'password2',
                  'security_question', 'security_answer')
 
     def clean(self):
@@ -153,6 +157,7 @@ class CustomUserCreationForm(UserCreationForm):
             profile.city = self.cleaned_data['city']
             profile.state = self.cleaned_data['state']
             profile.address = self.cleaned_data['address']
+            
             profile.save()
             
             # Set security question and answer on user
@@ -328,3 +333,118 @@ class PasswordChangeForm(forms.Form):
         if commit:
             self.user.save()
         return self.user
+
+class TransactionPINChangeForm(forms.Form):
+    """Form for changing transaction PIN"""
+    current_pin = forms.CharField(
+        max_length=4,
+        min_length=4,
+        required=True,
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-input',
+            'placeholder': 'Current PIN',
+            'pattern': '[0-9]*',
+            'inputmode': 'numeric',
+            'autocomplete': 'off'
+        })
+    )
+    new_pin = forms.CharField(
+        max_length=4,
+        min_length=4,
+        required=True,
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-input',
+            'placeholder': 'New PIN',
+            'pattern': '[0-9]*',
+            'inputmode': 'numeric',
+            'autocomplete': 'off'
+        })
+    )
+    confirm_new_pin = forms.CharField(
+        max_length=4,
+        min_length=4,
+        required=True,
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-input',
+            'placeholder': 'Confirm New PIN',
+            'pattern': '[0-9]*',
+            'inputmode': 'numeric',
+            'autocomplete': 'off'
+        })
+    )
+
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+    def clean_current_pin(self):
+        current_pin = self.cleaned_data.get('current_pin')
+        if not self.user.profile.check_transaction_pin(current_pin):
+            raise ValidationError(_('Current PIN is incorrect'))
+        return current_pin
+
+    def clean_new_pin(self):
+        new_pin = self.cleaned_data.get('new_pin')
+        if not new_pin.isdigit():
+            raise ValidationError(_('PIN must contain only digits'))
+        return new_pin
+
+    def clean(self):
+        cleaned_data = super().clean()
+        new_pin = cleaned_data.get('new_pin')
+        confirm_new_pin = cleaned_data.get('confirm_new_pin')
+
+        if new_pin and confirm_new_pin:
+            if new_pin != confirm_new_pin:
+                self.add_error('confirm_new_pin', _('New PINs do not match'))
+
+        return cleaned_data
+
+    def save(self):
+        new_pin = self.cleaned_data.get('new_pin')
+        self.user.profile.set_transaction_pin(new_pin)
+        return self.user.profile
+
+class TransactionPINSetupForm(forms.Form):
+    """Form for initial transaction PIN setup"""
+    transaction_pin = forms.CharField(
+        max_length=4,
+        min_length=4,
+        required=True,
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-input',
+            'placeholder': 'Enter 4-digit Transaction PIN',
+            'pattern': '[0-9]*',
+            'inputmode': 'numeric',
+            'autocomplete': 'off'
+        })
+    )
+    confirm_transaction_pin = forms.CharField(
+        max_length=4,
+        min_length=4,
+        required=True,
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-input',
+            'placeholder': 'Confirm Transaction PIN',
+            'pattern': '[0-9]*',
+            'inputmode': 'numeric',
+            'autocomplete': 'off'
+        })
+    )
+
+    def clean_transaction_pin(self):
+        pin = self.cleaned_data.get('transaction_pin')
+        if not pin.isdigit():
+            raise ValidationError(_('Transaction PIN must contain only digits'))
+        return pin
+
+    def clean(self):
+        cleaned_data = super().clean()
+        pin = cleaned_data.get('transaction_pin')
+        confirm_pin = cleaned_data.get('confirm_transaction_pin')
+
+        if pin and confirm_pin:
+            if pin != confirm_pin:
+                self.add_error('confirm_transaction_pin', _('Transaction PINs do not match'))
+
+        return cleaned_data

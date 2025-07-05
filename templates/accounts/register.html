@@ -105,7 +105,9 @@
 
                 <div class="flex gap-2">
                     {{ form.state }}
-                    {{ form.city }}
+                    <select name="city" id="id_city" class="flex-1 rounded-md border border-gray-300 px-3 py-2" disabled>
+                        <option value="">Select City</option>
+                    </select>
                 </div>
 
                 <div>

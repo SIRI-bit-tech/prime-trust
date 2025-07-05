@@ -20,6 +20,23 @@ def payment_fields(request):
     return render(request, 'banking/partials/payment_fields.html')
 
 @login_required
+def send_money_options(request):
+    """Show send money options page"""
+    from datetime import datetime
+    current_hour = datetime.now().hour
+    greeting = "Good Evening"
+    if current_hour < 12:
+        greeting = "Good Morning"
+    elif current_hour < 18:
+        greeting = "Good Afternoon"
+    
+    context = {
+        'greeting': greeting,
+    }
+    
+    return render(request, 'banking/send_money_options.html', context)
+
+@login_required
 def send_money(request):
     """Send money to another user"""
     user = request.user

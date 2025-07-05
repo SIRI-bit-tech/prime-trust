@@ -54,11 +54,39 @@ class SendMoneyForm(forms.Form):
         })
     )
     
+    transaction_pin = forms.CharField(
+        label='Transaction PIN',
+        max_length=4,
+        min_length=4,
+        required=True,
+        widget=forms.PasswordInput(attrs={
+            'class': 'appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm text-center font-mono',
+            'placeholder': 'Enter your 4-digit PIN',
+            'maxlength': '4',
+            'pattern': '[0-9]*',
+            'inputmode': 'numeric',
+            'autocomplete': 'off'
+        })
+    )
+    
     def __init__(self, *args, **kwargs):
-        user = kwargs.pop('user', None)
+        self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
-        if user:
-            self.fields['from_account'].queryset = Account.objects.filter(user=user)
+        if self.user:
+            self.fields['from_account'].queryset = Account.objects.filter(user=self.user)
+    
+    def clean_transaction_pin(self):
+        pin = self.cleaned_data.get('transaction_pin')
+        if not pin:
+            raise forms.ValidationError('Transaction PIN is required')
+        
+        if not pin.isdigit():
+            raise forms.ValidationError('Transaction PIN must contain only digits')
+        
+        if self.user and not self.user.profile.check_transaction_pin(pin):
+            raise forms.ValidationError('Invalid transaction PIN')
+        
+        return pin
 
     def clean_amount(self):
         amount = self.cleaned_data.get('amount')

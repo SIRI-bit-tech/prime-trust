@@ -14,7 +14,7 @@
         </a>
         
         <!-- Send Money -->
-        <a href="{% url 'banking:send_money' %}" class="flex flex-col items-center justify-center flex-1 h-full text-gray-500 hover:text-primary-600 transition-colors {% if active_tab == 'send_money' %}text-primary-600{% endif %}">
+        <a href="{% url 'banking:send_money_options' %}" class="flex flex-col items-center justify-center flex-1 h-full text-gray-500 hover:text-primary-600 transition-colors {% if active_tab == 'send_money' %}text-primary-600{% endif %}">
             <div class="relative p-2 rounded-full {% if active_tab == 'send_money' %}bg-primary-50{% endif %}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />

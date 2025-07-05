@@ -43,7 +43,7 @@
                 Banking
             </h3>
         </div>
-        <a href="{% url 'banking:send_money' %}" 
+        <a href="{% url 'banking:send_money_options' %}" 
            class="{% if active_tab == 'send_money' %}bg-primary-100 text-primary-900{% else %}text-gray-600 hover:bg-gray-100 hover:text-gray-900{% endif %} group flex items-center px-3 py-3 text-sm font-medium rounded-md">
             <svg class="{% if active_tab == 'send_money' %}text-primary-600{% else %}text-gray-400 group-hover:text-gray-500{% endif %} mr-3 h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -106,7 +106,7 @@
         </a>
         
         <!-- Send Money -->
-        <a href="{% url 'banking:send_money' %}" class="flex flex-col items-center justify-center {% if active_tab == 'send_money' %}text-primary-600{% else %}text-gray-500 hover:text-gray-900{% endif %}">
+        <a href="{% url 'banking:send_money_options' %}" class="flex flex-col items-center justify-center {% if active_tab == 'send_money' %}text-primary-600{% else %}text-gray-500 hover:text-gray-900{% endif %}">
             <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
             </svg>

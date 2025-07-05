@@ -3,6 +3,18 @@
 
 {% block title %}Send Bitcoin - PrimeTrust{% endblock %}
 
+{% block extra_head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+.htmx-indicator {
+    display: none;
+}
+.htmx-indicator.htmx-request {
+    display: inline-flex;
+}
+</style>
+{% endblock %}
+
 {% block banking_content %}
 <!-- Main content -->
 <main class="flex-1 relative py-6 focus:outline-none">
@@ -34,7 +46,10 @@
                 </div>
                 
                 <div class="border-t border-gray-200 px-4 py-5 sm:p-6">
-                    <form method="post" class="space-y-8 max-w-2xl mx-auto">
+                    <form method="post" class="space-y-8 max-w-2xl mx-auto" 
+                          hx-post="{% url 'banking:send_bitcoin_page' %}"
+                          hx-target="#receipt-container"
+                          hx-swap="innerHTML">
                         {% csrf_token %}
                         
                         <!-- Balance Selection -->
@@ -238,7 +253,14 @@
                         <!-- Submit Button -->
                         <div class="flex justify-center pt-4">
                             <button type="submit" 
-                                    class="w-full max-w-xs inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition duration-150 ease-in-out">
+                                    class="w-full max-w-xs inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition duration-150 ease-in-out"
+                                    hx-indicator="#submit-indicator">
+                                                                    <span class="htmx-indicator" id="submit-indicator">
+                                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                </span>
                                 Send Bitcoin
                             </button>
                         </div>
@@ -248,6 +270,9 @@
         </div>
     </div>
 </main>
+
+<!-- Receipt Container -->
+<div id="receipt-container"></div>
 
 <script>
 function setAmount(amount) {
@@ -323,6 +348,24 @@ document.querySelectorAll('[data-balance-option]').forEach(function(option) {
             radio.dispatchEvent(new Event('change'));
         }
     });
+});
+
+// Handle successful Bitcoin send
+document.body.addEventListener('htmx:afterSwap', function(evt) {
+    if (evt.detail.target.id === 'receipt-container' && evt.detail.target.innerHTML.includes('bitcoin-receipt-modal')) {
+        // Receipt was loaded successfully
+        console.log('Bitcoin receipt displayed');
+    }
+});
+
+// Handle form errors
+document.body.addEventListener('htmx:responseError', function(evt) {
+    alert('Transaction failed. Please try again.');
+});
+
+// Handle network errors
+document.body.addEventListener('htmx:error', function(evt) {
+    alert('Network error. Please check your connection and try again.');
 });
 </script>
 

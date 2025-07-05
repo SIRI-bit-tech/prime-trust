@@ -113,6 +113,7 @@ class Transaction(models.Model):
         ('withdrawal', 'Withdrawal'),
         ('payment', 'Payment'),
         ('bitcoin_send', 'Bitcoin Send'),
+        ('bitcoin_deposit', 'Bitcoin Deposit'),
     )
 
     STATUS_CHOICES = (
@@ -168,7 +169,7 @@ class Transaction(models.Model):
         max_length=20, 
         null=True, 
         blank=True,
-        choices=[('fiat', 'Fiat Balance'), ('bitcoin', 'Bitcoin Balance')],
+        choices=[('fiat', 'Fiat Balance'), ('bitcoin', 'Bitcoin Balance'), ('admin', 'Admin Credit')],
         help_text="Source of funds for Bitcoin transactions"
     )
 

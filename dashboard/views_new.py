@@ -36,8 +36,7 @@ def home(request):
         bitcoin_balance_usd = Decimal('0.00')
         btc_price = Decimal('0.00')
 
-    # Add Bitcoin balance to total balance
-    total_balance = total_balance + bitcoin_balance_usd
+    # Keep Bitcoin balance separate from fiat balance
 
     # Get recent transactions
     transactions = Transaction.objects.filter(

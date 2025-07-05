@@ -30,14 +30,13 @@ def home(request):
         bitcoin_wallet = BitcoinWallet.objects.get(user=user)
         btc_price = update_btc_price() or Decimal('0.00')
         cache.set('btc_price_usd', btc_price, timeout=300)  # Cache for 5 minutes
-        bitcoin_balance_usd = bitcoin_wallet.balance * btc_price
+        bitcoin_wallet.btc_price_usd = btc_price
+        bitcoin_wallet.save()
     except BitcoinWallet.DoesNotExist:
         bitcoin_wallet = None
-        bitcoin_balance_usd = Decimal('0.00')
         btc_price = Decimal('0.00')
 
-    # Add Bitcoin balance to total balance
-    total_balance = total_balance + bitcoin_balance_usd
+    # Keep Bitcoin balance separate from fiat balance
 
     # Get recent transactions
     transactions = Transaction.objects.filter(
@@ -119,8 +118,7 @@ def balance_update(request):
         bitcoin_balance_usd = Decimal('0.00')
         btc_price = Decimal('0.00')
 
-    # Add Bitcoin balance to total balance
-    total_balance = total_balance + bitcoin_balance_usd
+    # Keep Bitcoin balance separate from fiat balance
 
     # Get current time for greeting
     from datetime import datetime

@@ -1,0 +1,244 @@
+{% load static %}
+<!-- Bitcoin Receipt Modal -->
+<div id="bitcoin-receipt-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 relative">
+        <!-- Close Button -->
+        <button onclick="closeBitcoinReceipt()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none z-10">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+
+        <!-- Receipt Content -->
+        <div id="receipt-content" class="p-6">
+            <!-- Receipt Header -->
+            <div class="text-center mb-8">
+                <!-- Decorative dots -->
+                <div class="flex justify-center mb-4">
+                    <div class="flex space-x-1">
+                        {% for i in "123456789012345" %}
+                        <div class="w-2 h-2 bg-gray-800 rounded-full"></div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Logo and Title -->
+                <div class="flex items-center justify-center mb-4">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center mr-3">
+                            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v8H4V6z"/>
+                            </svg>
+                        </div>
+                        <span class="text-2xl font-bold text-primary-600">PrimeTrust</span>
+                    </div>
+                    <div class="ml-auto">
+                        <span class="text-lg font-semibold text-gray-700">Transaction Receipt</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Amount and Status -->
+            <div class="text-center mb-8">
+                <div class="text-4xl font-bold text-primary-600 mb-2">
+                    {{ btc_amount|floatformat:8 }} BTC
+                </div>
+                <div class="text-lg text-gray-600 mb-2">
+                    ≈ ${{ usd_amount|floatformat:2 }} USD
+                </div>
+                <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                    </svg>
+                    Successful
+                </div>
+                <div class="text-sm text-gray-500 mt-2">
+                    {{ transaction_date }}
+                </div>
+            </div>
+
+            <!-- Transaction Details -->
+            <div class="border-t border-gray-200 pt-6">
+                <div class="space-y-4">
+                    <!-- From Address -->
+                    <div class="flex justify-between items-start">
+                        <div class="text-sm text-gray-600">From Address</div>
+                        <div class="text-right">
+                            <div class="font-mono text-sm text-gray-900">{{ from_address }}</div>
+                            <div class="text-xs text-gray-500">PrimeTrust Wallet</div>
+                        </div>
+                    </div>
+                    
+                    <!-- To Address -->
+                    <div class="flex justify-between items-start">
+                        <div class="text-sm text-gray-600">To Address</div>
+                        <div class="text-right">
+                            <div class="font-mono text-sm text-gray-900 break-all">{{ to_address }}</div>
+                            <div class="text-xs text-gray-500">External Wallet</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Balance Source -->
+                    <div class="flex justify-between items-center">
+                        <div class="text-sm text-gray-600">Payment Method</div>
+                        <div class="text-sm text-gray-900 font-medium">
+                            {% if balance_source == 'bitcoin' %}
+                                Bitcoin Balance
+                            {% else %}
+                                Fiat Balance
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Transaction Hash -->
+                    <div class="flex justify-between items-start">
+                        <div class="text-sm text-gray-600">Transaction Hash</div>
+                        <div class="text-right">
+                            <div class="font-mono text-xs text-gray-900 break-all">{{ transaction_hash }}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Reference -->
+                    <div class="flex justify-between items-center">
+                        <div class="text-sm text-gray-600">Reference</div>
+                        <div class="font-mono text-sm text-gray-900">{{ reference }}</div>
+                    </div>
+                    
+                    <!-- Transaction Fee -->
+                    <div class="flex justify-between items-center">
+                        <div class="text-sm text-gray-600">Network Fee</div>
+                        <div class="text-sm text-gray-900">0.00001 BTC</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="border-t border-gray-200 pt-6 mt-6">
+                <div class="text-center text-xs text-gray-500 mb-4">
+                    Your Bitcoin has been successfully sent to the recipient's wallet address.
+                    Transaction details are recorded on the blockchain.
+                </div>
+                
+                <div class="text-center text-xs text-gray-500 mb-4">
+                    PrimeTrust is licensed by the CBN and insured by the NDIC.
+                    Enjoy secure digital asset transfers with PrimeTrust.
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex space-x-3 mt-6">
+                    <button onclick="shareReceipt()" class="flex-1 bg-primary-600 text-white py-2 px-4 rounded-md text-sm font-medium hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
+                        Share Receipt
+                    </button>
+                    <button onclick="downloadReceipt()" class="flex-1 bg-gray-600 text-white py-2 px-4 rounded-md text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                        Download
+                    </button>
+                </div>
+                
+                <!-- Decorative dots -->
+                <div class="flex justify-center mt-6">
+                    <div class="flex space-x-1">
+                        {% for i in "123456789012345" %}
+                        <div class="w-2 h-2 bg-gray-800 rounded-full"></div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function closeBitcoinReceipt() {
+    const modal = document.getElementById('bitcoin-receipt-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function shareReceipt() {
+    // Generate receipt image and share
+    downloadReceipt(true);
+}
+
+function downloadReceipt(isShare = false) {
+    const receiptContent = document.getElementById('receipt-content');
+    
+    // Create a temporary container for the receipt
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.left = '-9999px';
+    tempContainer.style.top = '-9999px';
+    tempContainer.style.width = '400px';
+    tempContainer.style.backgroundColor = 'white';
+    tempContainer.style.padding = '20px';
+    tempContainer.style.fontFamily = 'Arial, sans-serif';
+    
+    // Clone the receipt content
+    const clonedContent = receiptContent.cloneNode(true);
+    tempContainer.appendChild(clonedContent);
+    document.body.appendChild(tempContainer);
+    
+    // Use html2canvas to generate image
+    if (typeof html2canvas !== 'undefined') {
+        html2canvas(tempContainer, {
+            backgroundColor: '#ffffff',
+            scale: 2,
+            logging: false,
+            useCORS: true,
+            allowTaint: true
+        }).then(function(canvas) {
+            // Clean up
+            document.body.removeChild(tempContainer);
+            
+            if (isShare && navigator.share) {
+                // Convert canvas to blob for sharing
+                canvas.toBlob(function(blob) {
+                    const file = new File([blob], 'bitcoin-receipt.png', { type: 'image/png' });
+                    navigator.share({
+                        title: 'Bitcoin Transaction Receipt',
+                        text: 'Bitcoin transaction completed successfully',
+                        files: [file]
+                    }).catch(err => {
+                        console.log('Error sharing:', err);
+                        // Fallback to download
+                        downloadCanvas(canvas);
+                    });
+                });
+            } else {
+                // Download the image
+                downloadCanvas(canvas);
+            }
+        }).catch(function(error) {
+            console.log('Error generating receipt:', error);
+            document.body.removeChild(tempContainer);
+            alert('Error generating receipt. Please try again.');
+        });
+    } else {
+        // Fallback: Load html2canvas dynamically
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+        script.onload = function() {
+            downloadReceipt(isShare);
+        };
+        script.onerror = function() {
+            document.body.removeChild(tempContainer);
+            alert('Error loading receipt generator. Please try again.');
+        };
+        document.head.appendChild(script);
+    }
+}
+
+function downloadCanvas(canvas) {
+    const link = document.createElement('a');
+    link.download = 'bitcoin-receipt-' + new Date().getTime() + '.png';
+    link.href = canvas.toDataURL();
+    link.click();
+}
+
+// Close modal when clicking outside
+document.getElementById('bitcoin-receipt-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeBitcoinReceipt();
+    }
+});
+</script> 

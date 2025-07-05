@@ -140,6 +140,25 @@ def send_bitcoin_page(request):
                             related_transaction=new_transaction
                         )
                         
+                        # Get user's Bitcoin wallet address (from address)
+                        from_address = bitcoin_wallet.address[:6] + '...' if bitcoin_wallet else 'N/A'
+                        
+                        # Prepare receipt data
+                        receipt_context = {
+                            'btc_amount': btc_amount,
+                            'usd_amount': usd_amount,
+                            'from_address': from_address,
+                            'to_address': wallet_address,
+                            'transaction_hash': bitcoin_tx_hash,
+                            'reference': transaction_ref,
+                            'balance_source': balance_source,
+                            'transaction_date': new_transaction.created_at.strftime('%b %d, %Y %I:%M:%S %p'),
+                        }
+                        
+                        # Return receipt modal for HTMX
+                        if request.htmx:
+                            return render(request, 'banking/partials/bitcoin_receipt.html', receipt_context)
+                        
                         messages.success(request, f"Successfully sent {btc_amount:.8f} BTC to {wallet_address}")
                         return redirect('dashboard:transactions')
                     else:

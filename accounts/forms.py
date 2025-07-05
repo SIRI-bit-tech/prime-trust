@@ -225,41 +225,64 @@ class LoginForm(forms.Form):
 
 class ProfileUpdateForm(forms.ModelForm):
     """Form for updating user profile information"""
-    first_name = forms.CharField(max_length=30, required=True)
-    email = forms.EmailField(required=True)
-    phone_number = forms.CharField(max_length=17, required=True)
+    first_name = forms.CharField(
+        max_length=30, 
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm',
+            'placeholder': 'First Name'
+        })
+    )
+    last_name = forms.CharField(
+        max_length=30, 
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm',
+            'placeholder': 'Last Name'
+        })
+    )
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={
+            'class': 'appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm',
+            'placeholder': 'Email Address'
+        })
+    )
+    phone_number = forms.CharField(
+        max_length=17, 
+        required=True,
+        widget=forms.TextInput(attrs={
+            'class': 'appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm',
+            'placeholder': 'Phone Number'
+        })
+    )
     
     class Meta:
         model = CustomUser
-        fields = ('first_name', 'email', 'phone_number')
-    
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['email'].widget.attrs.update({'class': 'form-input'})
-        self.fields['first_name'].widget.attrs.update({'class': 'form-input', 'placeholder': 'Full Name'})
-        self.fields['phone_number'].widget.attrs.update({'class': 'form-input'})
+        fields = ('first_name', 'last_name', 'email', 'phone_number')
 
 class UserProfileUpdateForm(forms.ModelForm):
     """Form for updating additional user profile information"""
     date_of_birth = forms.DateField(
         required=False,
         widget=forms.DateInput(attrs={
-            'class': 'form-input',
+            'class': 'appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm',
             'type': 'date'
         })
     )
     address = forms.CharField(
         required=False,
         widget=forms.Textarea(attrs={
-            'class': 'form-textarea',
-            'rows': 3
+            'class': 'appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm',
+            'rows': 3,
+            'placeholder': 'Street Address'
         })
     )
     city = forms.CharField(
         max_length=100,
         required=False,
         widget=forms.TextInput(attrs={
-            'class': 'form-input',
+            'class': 'appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm',
             'placeholder': 'City'
         })
     )
@@ -267,14 +290,14 @@ class UserProfileUpdateForm(forms.ModelForm):
         max_length=100,
         required=False,
         widget=forms.TextInput(attrs={
-            'class': 'form-input',
+            'class': 'appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm',
             'placeholder': 'State'
         })
     )
     profile_picture = forms.ImageField(
         required=False,
         widget=forms.FileInput(attrs={
-            'class': 'form-input'
+            'class': 'block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100'
         })
     )
     

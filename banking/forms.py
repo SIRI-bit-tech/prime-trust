@@ -26,13 +26,7 @@ class SendMoneyForm(forms.Form):
             'placeholder': 'Enter 10-digit account number'
         })
     )
-    from_account = forms.ModelChoiceField(
-        queryset=Account.objects.none(),
-        label='From Account',
-        widget=forms.Select(attrs={
-            'class': 'appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm'
-        })
-    )
+    
     amount = forms.DecimalField(
         label='Amount',
         max_digits=15,
@@ -72,8 +66,9 @@ class SendMoneyForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+        # Get user's account for validation
         if self.user:
-            self.fields['from_account'].queryset = Account.objects.filter(user=self.user)
+            self.user_account = Account.objects.filter(user=self.user).first()
     
     def clean_transaction_pin(self):
         pin = self.cleaned_data.get('transaction_pin')
@@ -90,10 +85,10 @@ class SendMoneyForm(forms.Form):
 
     def clean_amount(self):
         amount = self.cleaned_data.get('amount')
-        from_account = self.cleaned_data.get('from_account')
         
-        if from_account and amount and amount > from_account.balance:
-            raise forms.ValidationError(f"Insufficient funds. Your current balance is ${from_account.balance}")
+        if hasattr(self, 'user_account') and self.user_account and amount:
+            if amount > self.user_account.balance:
+                raise forms.ValidationError(f"Insufficient funds. Your current balance is ${self.user_account.balance}")
         
         return amount
 

@@ -41,14 +41,13 @@ def send_money(request):
     """Send money to another user"""
     user = request.user
     
-    # Get user's accounts for the form
-    accounts = Account.objects.filter(user=user)
+    # Get user's account (there should be only one per user)
+    user_account = Account.objects.filter(user=user).first()
     
     if request.method == 'POST':
         form = SendMoneyForm(request.POST, user=user)
         if form.is_valid():
             recipient_account_number = form.cleaned_data['recipient_account_number']
-            from_account = form.cleaned_data['from_account']
             amount = form.cleaned_data['amount']
             description = form.cleaned_data['description']
             
@@ -68,7 +67,7 @@ def send_money(request):
                 # Create the transaction
                 with transaction.atomic():
                     # Check if user has sufficient funds
-                    if from_account.balance < amount:
+                    if user_account.balance < amount:
                         if request.htmx:
                             response = HttpResponse("<div class='text-red-600'>Insufficient funds</div>")
                             return response
@@ -79,7 +78,7 @@ def send_money(request):
                     transaction_ref = f"TRF{uuid.uuid4().hex[:8].upper()}"
                     new_transaction = Transaction.objects.create(
                         user=user,
-                        from_account=from_account,
+                        from_account=user_account,
                         to_account=recipient_account,
                         amount=amount,
                         transaction_type='transfer',
@@ -89,8 +88,8 @@ def send_money(request):
                     )
                     
                     # Update account balances
-                    from_account.balance -= amount
-                    from_account.save()
+                    user_account.balance -= amount
+                    user_account.save()
                     
                     recipient_account.balance += amount
                     recipient_account.save()
@@ -121,8 +120,8 @@ def send_money(request):
                     receipt_context = {
                         'amount': amount,
                         'transaction_date': new_transaction.created_at.strftime('%B %d, %Y at %I:%M %p'),
-                        'from_account_number': from_account.account_number,
-                        'from_account_type': from_account.get_account_type_display(),
+                        'from_account_number': user_account.account_number,
+                        'from_account_type': user_account.get_account_type_display(),
                         'to_account_number': recipient_account_number,
                         'recipient_name': recipient.get_full_name(),
                         'description': description,
@@ -156,6 +155,7 @@ def send_money(request):
     context = {
         'greeting': greeting,
         'form': form,
+        'user_account': user_account,
         'active_tab': 'send_money'
     }
     
@@ -278,3 +278,43 @@ def payment_fields(request):
     }
     
     return render(request, 'banking/partials/payment_fields.html', context)
+
+@login_required
+def verify_account_number(request):
+    """Verify if an account number exists and return the account holder's name"""
+    if request.method == 'POST':
+        account_number = request.POST.get('recipient_account_number', '').strip()
+        
+        if not account_number:
+            return HttpResponse(
+                '<div class="text-sm text-gray-500">Enter account number to verify</div>'
+            )
+        
+        if len(account_number) != 10 or not account_number.isdigit():
+            return HttpResponse(
+                '<div class="text-sm text-red-600">Account number must be exactly 10 digits</div>'
+            )
+        
+        try:
+            # Find the account
+            account = Account.objects.get(account_number=account_number)
+            
+            # Don't allow sending to self
+            if account.user == request.user:
+                return HttpResponse(
+                    '<div class="text-sm text-red-600">You cannot send money to yourself</div>'
+                )
+            
+            # Return success with account holder name
+            return HttpResponse(
+                f'<div class="text-sm text-green-600">✓ Account verified: {account.user.get_full_name()}</div>'
+            )
+            
+        except Account.DoesNotExist:
+            return HttpResponse(
+                '<div class="text-sm text-red-600">Account number not found. Please check and try again.</div>'
+            )
+    
+    return HttpResponse(
+        '<div class="text-sm text-gray-500">Enter account number to verify</div>'
+    )

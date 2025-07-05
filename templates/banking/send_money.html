@@ -31,8 +31,28 @@
                                         {{ form.recipient_account_number.label }}
                                     </label>
                                     <div class="mt-1">
-                                        {{ form.recipient_account_number }}
-                                        <div id="recipient-check" class="mt-1 text-sm"></div>
+                                        <input type="text" 
+                                               name="recipient_account_number" 
+                                               id="{{ form.recipient_account_number.id_for_label }}"
+                                               required
+                                               maxlength="10"
+                                               pattern="[0-9]*"
+                                               inputmode="numeric"
+                                               class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                                               placeholder="Enter 10-digit account number"
+                                               hx-post="{% url 'banking:verify_account_number' %}"
+                                               hx-target="#recipient-check"
+                                               hx-trigger="input changed delay:500ms"
+                                               hx-indicator="#verify-indicator">
+                                        <div id="recipient-check" class="mt-1 text-sm text-gray-500">
+                                            <div id="verify-indicator" class="htmx-indicator">
+                                                <svg class="animate-spin h-4 w-4 text-primary-500 inline mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                                Verifying account...
+                                            </div>
+                                        </div>
                                         {% if form.recipient_account_number.errors %}
                                         <p class="mt-2 text-sm text-red-600">{{ form.recipient_account_number.errors.0 }}</p>
                                         {% endif %}
@@ -41,14 +61,16 @@
                                 </div>
                                 
                                 <div>
-                                    <label for="{{ form.from_account.id_for_label }}" class="block text-sm font-medium text-gray-700">
-                                        {{ form.from_account.label }}
+                                    <label class="block text-sm font-medium text-gray-700">
+                                        From Account
                                     </label>
                                     <div class="mt-1">
-                                        {{ form.from_account }}
-                                        {% if form.from_account.errors %}
-                                        <p class="mt-2 text-sm text-red-600">{{ form.from_account.errors.0 }}</p>
-                                        {% endif %}
+                                        <div class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 sm:text-sm">
+                                            <div class="flex justify-between items-center">
+                                                <span>{{ user_account.get_account_type_display }} ({{ user_account.account_number }})</span>
+                                                <span class="font-medium text-gray-900">${{ user_account.balance|floatformat:2 }}</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 

@@ -31,6 +31,9 @@ urlpatterns = [
     path('dashboard/', include('dashboard.urls', namespace='dashboard')),
     path('pages/', include('pages.urls', namespace='pages')),
     
+    # API endpoints
+    path('api/', include('api.urls', namespace='api')),
+    
     # SEO URLs
     path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
     path('robots.txt', RedirectView.as_view(url=settings.STATIC_URL + 'robots.txt', permanent=True)),

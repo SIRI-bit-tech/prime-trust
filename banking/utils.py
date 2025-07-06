@@ -10,8 +10,32 @@ import logging
 from django.db import transaction
 from django.core.mail import EmailMessage
 from smtplib import SMTPException
+import random
+import string
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
+
+def generate_reference_number(prefix="TXN"):
+    """
+    Generate a unique reference number for transactions.
+    
+    Args:
+        prefix (str): Prefix for the reference number (default: "TXN")
+        
+    Returns:
+        str: A unique reference number
+    """
+    # Get current date in YYYYMMDD format
+    date_str = datetime.now().strftime("%Y%m%d")
+    
+    # Generate a random 6-digit number
+    random_part = ''.join(random.choices(string.digits, k=6))
+    
+    # Combine prefix, date, and random part
+    reference_number = f"{prefix}-{date_str}-{random_part}"
+    
+    return reference_number
 
 def send_notification(user, notification_type, title, message, related_transaction=None):
     """

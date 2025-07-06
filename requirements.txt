@@ -8,6 +8,13 @@ django-crispy-forms==2.4
 django-htmx==1.23.0
 django-meta==2.5.0
 django-robots==6.1
+# Django REST Framework and API dependencies
+djangorestframework==3.15.2
+djangorestframework-simplejwt==5.3.0
+django-cors-headers==4.3.1
+django-filter==24.3
+drf-spectacular==0.27.2
+PyJWT==2.9.0
 gunicorn==23.0.0
 idna==3.10
 nulltype==2.3.1

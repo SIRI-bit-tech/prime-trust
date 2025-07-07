@@ -52,6 +52,12 @@ INSTALLED_APPS = [
     'django_filters',
     'drf_spectacular',
     
+    # Production Security Apps
+    'axes',
+    'defender',
+    'encrypted_model_fields',
+    # 'django_ratelimit',  # Temporarily disabled due to cache backend incompatibility
+    
     # Local
     'accounts.apps.AccountsConfig',
     'banking.apps.BankingConfig',
@@ -68,6 +74,12 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    
+    # Security Middleware
+    'axes.middleware.AxesMiddleware',
+    'defender.middleware.FailedLoginMiddleware',
+    'accounts.audit_logging.AuditMiddleware',
+    
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_htmx.middleware.HtmxMiddleware',
@@ -113,7 +125,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
         'OPTIONS': {
-            'min_length': 8,
+            'min_length': 12,  # Increased minimum length
         }
     },
     {
@@ -232,35 +244,49 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'security': {
+            'format': '{asctime} {levelname} SECURITY: {message}',
             'style': '{',
         },
     },
     'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'django.log',
             'formatter': 'verbose',
         },
-        'file': {
+        'security_file': {
+            'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'debug.log'),
+            'filename': 'security.log',
+            'formatter': 'security',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'file'],
+            'handlers': ['file', 'console'],
             'level': 'INFO',
-        },
-        'accounts': {
-            'handlers': ['console', 'file'],
-            'level': 'DEBUG',
             'propagate': True,
         },
-    },
-    'root': {
-        'handlers': ['console', 'file'],
-        'level': 'INFO',
+        'security': {
+            'handlers': ['security_file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'accounts.security': {
+            'handlers': ['security_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
     },
 }
 
@@ -399,3 +425,112 @@ API_VERSION = 'v1'
 if not DEBUG:
     SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
     SECURE_REFERRER_POLICY = 'same-origin'
+
+# Production Security Configuration
+FIELD_ENCRYPTION_KEY = os.environ.get('FIELD_ENCRYPTION_KEY', 'UzWtJN5K4jU9Wz-rGx8vQ2nM7yB3kR1pE6fX0dL4aP8=')
+
+# Authentication Backends
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',  # AxesStandaloneBackend should be first
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# Django Axes Configuration (Brute Force Protection)
+AXES_ENABLED = True
+AXES_FAILURE_LIMIT = 5  # Number of failed attempts before lockout
+AXES_COOLOFF_TIME = 1  # Hours to lockout
+AXES_RESET_ON_SUCCESS = True
+AXES_LOCKOUT_TEMPLATE = 'accounts/lockout.html'
+
+# Django Defender Configuration
+DEFENDER_LOGIN_FAILURE_LIMIT = 3
+DEFENDER_COOLOFF_TIME = 300  # 5 minutes
+DEFENDER_LOCKOUT_TEMPLATE = 'accounts/lockout.html'
+
+# Rate Limiting Configuration (using custom implementation instead of django_ratelimit)
+# RATELIMIT_ENABLE = True
+# RATELIMIT_USE_CACHE = 'default'
+
+# Session Security
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_AGE = 3600  # 1 hour
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+
+# CSRF Protection
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Lax'
+
+# Security Headers
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+# Custom Security Settings
+SECURITY_SETTINGS = {
+    # 2FA Configuration
+    'TWO_FACTOR_ISSUER': 'PrimeTrust Banking',
+    'TWO_FACTOR_CODE_LENGTH': 6,
+    'TWO_FACTOR_VALIDITY_PERIOD': 30,  # seconds
+    'BACKUP_CODE_COUNT': 10,
+    
+    # Device Management
+    'DEVICE_TRUST_DURATION': 30,  # days
+    'NEW_DEVICE_NOTIFICATION': True,
+    'DEVICE_FINGERPRINTING': True,
+    
+    # Risk Scoring
+    'RISK_SCORE_THRESHOLD_HIGH': 70,
+    'RISK_SCORE_THRESHOLD_CRITICAL': 85,
+    'RISK_CALCULATION_INTERVAL': 300,  # seconds
+    
+    # Geographic Security
+    'GEO_RESTRICTION_ENABLED': False,
+    'ALLOWED_COUNTRIES': [],  # Empty = all allowed
+    'GEO_ANOMALY_DETECTION': True,
+    
+    # Transaction Security
+    'HIGH_VALUE_THRESHOLD': 10000,  # USD
+    'VELOCITY_CHECK_ENABLED': True,
+    'DAILY_TRANSACTION_LIMIT': 50000,  # USD
+    
+    # Security Notifications
+    'SECURITY_EMAIL_NOTIFICATIONS': True,
+    'LOGIN_NOTIFICATION_ENABLED': True,
+    'SUSPICIOUS_ACTIVITY_ALERTS': True,
+}
+
+# Cache Configuration for Security (Using database backend for atomic operations)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'django_cache_table',
+        'TIMEOUT': 300,
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+        }
+    },
+    'security': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'django_security_cache_table',
+        'TIMEOUT': 600,
+        'OPTIONS': {
+            'MAX_ENTRIES': 500,
+        }
+    }
+}
+
+# GeoIP Configuration (for geographic security)
+GEOIP_PATH = os.path.join(BASE_DIR, 'geoip')
+
+# API Rate Limiting per user
+API_RATE_LIMITS = {
+    'default': '100/hour',
+    'login': '10/hour',
+    'password_reset': '5/hour',
+    'transaction': '50/hour',
+    'high_value_transaction': '10/hour',
+}

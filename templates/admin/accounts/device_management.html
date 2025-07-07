@@ -1,0 +1,233 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block title %}Device Management for {{ user.email }}{% endblock %}
+
+{% block extrastyle %}
+    <style>
+        .security-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #e9ecef;
+        }
+        .security-header {
+            font-size: 18px;
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 15px;
+        }
+        .device-card {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .device-info {
+            flex: 1;
+        }
+        .device-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .trust-trusted { color: #28a745; background: #d4edda; }
+        .trust-recognized { color: #ffc107; background: #fff3cd; }
+        .trust-new { color: #17a2b8; background: #d1ecf1; }
+        .trust-suspicious { color: #fd7e14; background: #ffeaa7; }
+        .trust-blocked { color: #dc3545; background: #f8d7da; }
+        
+        .trust-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .action-button {
+            padding: 6px 12px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 12px;
+            border: none;
+            cursor: pointer;
+        }
+        .action-button.danger {
+            background: #dc3545;
+            color: white;
+        }
+        .action-button.warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        .action-button.info {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .device-details {
+            font-size: 14px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .device-status {
+            font-weight: bold;
+        }
+        .device-status.active { color: #28a745; }
+        .device-status.inactive { color: #dc3545; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="module">
+    <h1>Device Management for {{ user.email }}</h1>
+    
+    <div class="security-section">
+        <div class="security-header">Device Overview</div>
+        <p><strong>Total Devices:</strong> {{ devices.count }}</p>
+        <p><strong>Active Devices:</strong> {{ devices|length }}</p>
+        <p><strong>Trusted Devices:</strong> {{ devices|dictsort:"trust_level"|slice:":5"|length }}</p>
+    </div>
+
+    <div class="security-section">
+        <div class="security-header">Registered Devices</div>
+        
+        {% if devices %}
+            {% for device in devices %}
+                <div class="device-card">
+                    <div class="device-info">
+                        <h4 style="margin: 0 0 5px 0;">{{ device.device_name }}</h4>
+                        <div class="device-details">
+                            <strong>Type:</strong> {{ device.device_type|title }} | 
+                            <strong>Platform:</strong> {{ device.platform|default:"Unknown" }} |
+                            <strong>Status:</strong> 
+                            <span class="device-status {% if device.is_active %}active{% else %}inactive{% endif %}">
+                                {% if device.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="device-details">
+                            <strong>First Seen:</strong> {{ device.created_at|date:"M j, Y g:i A" }} | 
+                            <strong>Last Seen:</strong> {{ device.last_seen|date:"M j, Y g:i A" }}
+                        </div>
+                        
+                        <div class="device-details">
+                            <strong>Location:</strong> {{ device.location|default:"Unknown" }} |
+                            <strong>IP Address:</strong> {{ device.ip_address|default:"Unknown" }}
+                        </div>
+                        
+                        <div class="device-details" style="margin-top: 8px;">
+                            <span class="trust-badge trust-{{ device.trust_level }}">
+                                {{ device.get_trust_level_display }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="device-actions">
+                        {% if device.is_active %}
+                            <form method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="device_id" value="{{ device.id }}">
+                                <button type="submit" name="action" value="revoke_device" 
+                                        class="action-button danger"
+                                        onclick="return confirm('Are you sure you want to revoke this device?')">
+                                    Revoke Device
+                                </button>
+                            </form>
+                        {% endif %}
+                        
+                        {% if device.trust_level == 'suspicious' or device.trust_level == 'blocked' %}
+                            <form method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="device_id" value="{{ device.id }}">
+                                <button type="submit" name="action" value="trust_device" 
+                                        class="action-button info">
+                                    Trust Device
+                                </button>
+                            </form>
+                        {% endif %}
+                        
+                        {% if device.trust_level != 'blocked' %}
+                            <form method="post" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="device_id" value="{{ device.id }}">
+                                <button type="submit" name="action" value="block_device" 
+                                        class="action-button warning"
+                                        onclick="return confirm('Are you sure you want to block this device?')">
+                                    Block Device
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Device Details Section -->
+                <div class="security-section" style="margin-left: 20px; background: #ffffff;">
+                    <details>
+                        <summary style="cursor: pointer; font-weight: bold;">Technical Details</summary>
+                        <div style="margin-top: 10px;">
+                            <p><strong>User Agent:</strong> {{ device.user_agent|truncatechars:100 }}</p>
+                            <p><strong>Device Fingerprint:</strong> {{ device.device_fingerprint|truncatechars:50 }}</p>
+                            <p><strong>Browser:</strong> {{ device.browser_name|default:"Unknown" }} {{ device.browser_version|default:"" }}</p>
+                            <p><strong>Operating System:</strong> {{ device.os_name|default:"Unknown" }} {{ device.os_version|default:"" }}</p>
+                            <p><strong>Screen Resolution:</strong> {{ device.screen_resolution|default:"Unknown" }}</p>
+                            <p><strong>Language:</strong> {{ device.language|default:"Unknown" }}</p>
+                            <p><strong>Timezone:</strong> {{ device.timezone|default:"Unknown" }}</p>
+                        </div>
+                    </details>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="alert alert-info">
+                <p>No devices registered for this user.</p>
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="security-section">
+        <div class="security-header">Device Trust Levels</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+            <div>
+                <span class="trust-badge trust-trusted">Trusted</span>
+                <p style="font-size: 14px; margin: 5px 0;">Devices that have been verified and are regularly used</p>
+            </div>
+            <div>
+                <span class="trust-badge trust-recognized">Recognized</span>
+                <p style="font-size: 14px; margin: 5px 0;">Devices that have been seen before but not fully trusted</p>
+            </div>
+            <div>
+                <span class="trust-badge trust-new">New</span>
+                <p style="font-size: 14px; margin: 5px 0;">Recently registered devices awaiting verification</p>
+            </div>
+            <div>
+                <span class="trust-badge trust-suspicious">Suspicious</span>
+                <p style="font-size: 14px; margin: 5px 0;">Devices showing unusual or potentially malicious behavior</p>
+            </div>
+            <div>
+                <span class="trust-badge trust-blocked">Blocked</span>
+                <p style="font-size: 14px; margin: 5px 0;">Devices that have been blocked from accessing the account</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="security-section">
+        <div class="security-header">Actions</div>
+        <p>
+            <a href="{% url 'admin:accounts_customuser_manage_2fa' user.id %}" class="button">
+                Manage 2FA Settings
+            </a>
+            <a href="{% url 'admin:accounts_customuser_security_details' user.id %}" class="button">
+                View Security Details
+            </a>
+            <a href="{% url 'admin:accounts_customuser_change' user.id %}" class="button">
+                Edit User
+            </a>
+        </p>
+    </div>
+</div>
+{% endblock %} 

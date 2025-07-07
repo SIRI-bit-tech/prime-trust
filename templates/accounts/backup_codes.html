@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Backup Codes - PrimeTrust{% endblock %}
+
+{% block content %}
+<div class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <img class="mx-auto h-16" src="{% static 'img/Primetrust-logo-med.png' %}" alt="PrimeTrust Logo">
+        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Save Your Backup Codes
+        </h2>
+        <p class="mt-2 text-center text-sm text-gray-600">
+            These codes can be used to access your account if you lose your authenticator device.
+        </p>
+    </div>
+
+    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+
+            <!-- Important Warning -->
+            <div class="mb-6 bg-yellow-50 border border-yellow-200 rounded-md p-4">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-yellow-800">Important!</h3>
+                        <div class="mt-2 text-sm text-yellow-700">
+                            <p>These backup codes are your only way to access your account if you lose your authenticator device. Save them securely.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Info -->
+            <div class="mb-6 text-center">
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Your Backup Codes</h3>
+                <p class="text-sm text-gray-600"><strong>Account:</strong> {{ user.email }}</p>
+                <p class="text-sm text-gray-600"><strong>Generated:</strong> {% now "F j, Y g:i A" %}</p>
+            </div>
+
+            <!-- Backup Codes Grid -->
+            <div class="mb-6">
+                <div class="grid grid-cols-2 gap-3 bg-gray-50 p-4 rounded-lg border">
+                    {% for code in backup_codes %}
+                        <div class="bg-white p-3 rounded border text-center font-mono text-sm font-semibold text-gray-800">
+                            {{ code }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="mb-6 bg-blue-50 border border-blue-200 rounded-md p-4">
+                <h4 class="text-sm font-medium text-blue-800 mb-2">How to use backup codes:</h4>
+                <ul class="text-sm text-blue-700 space-y-1">
+                    <li>• Each code can only be used once</li>
+                    <li>• Use when you don't have access to your authenticator app</li>
+                    <li>• Enter the code in place of your 2FA token when logging in</li>
+                    <li>• Generate new codes from account settings if you run out</li>
+                </ul>
+            </div>
+
+            <!-- Save Options -->
+            <div class="mb-6">
+                <h4 class="text-sm font-medium text-gray-900 mb-3">Save these codes:</h4>
+                <div class="space-y-2">
+                    <button type="button" onclick="downloadCodes()" 
+                            class="w-full flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Download as Text File
+                    </button>
+                    <button type="button" onclick="printCodes()" 
+                            class="w-full flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                        </svg>
+                        Print Codes
+                    </button>
+                    <button type="button" onclick="copyCodes()" 
+                            class="w-full flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        Copy to Clipboard
+                    </button>
+                </div>
+            </div>
+
+            <!-- Confirmation -->
+            <div class="mb-6">
+                <label class="flex items-center">
+                    <input type="checkbox" id="codes-saved" required 
+                           class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded">
+                    <span class="ml-2 text-sm text-gray-700">I have saved my backup codes in a secure location</span>
+                </label>
+            </div>
+
+            <!-- Continue Button -->
+            <div>
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" id="continue-btn" disabled
+                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                        Continue to Transaction PIN Setup
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Print-only styles -->
+<style>
+@media print {
+    .no-print { display: none !important; }
+    .print-only { display: block !important; }
+    .bg-gray-50 { border: 2px solid #000 !important; page-break-inside: avoid; }
+}
+.print-only { display: none; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const codesSavedCheckbox = document.getElementById('codes-saved');
+    const continueBtn = document.getElementById('continue-btn');
+    
+    // Enable continue button when checkbox is checked
+    codesSavedCheckbox.addEventListener('change', function() {
+        continueBtn.disabled = !this.checked;
+        
+        if (this.checked) {
+            // Mark form as ready to submit
+            continueBtn.onclick = function() {
+                // Set hidden form field to confirm codes saved
+                const form = continueBtn.closest('form');
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'codes_confirmed';
+                input.value = 'true';
+                form.appendChild(input);
+                form.submit();
+            };
+        }
+    });
+});
+
+function downloadCodes() {
+    const codes = [
+        {% for code in backup_codes %}
+            "{{ code }}",
+        {% endfor %}
+    ];
+    
+    const content = `PrimeTrust Backup Codes
+Account: {{ user.email }}
+Generated: {% now "F j, Y g:i A" %}
+
+Your Backup Codes:
+${codes.join('\n')}
+
+IMPORTANT:
+- Keep these codes in a safe place
+- Each code can only be used once
+- Use these codes when you don't have access to your authenticator app
+- Generate new codes if you lose these`;
+    
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'primetrust-backup-codes.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+
+function printCodes() {
+    // Add print-only content
+    const printContent = `
+        <div class="print-only">
+            <h2>PrimeTrust Backup Codes</h2>
+            <p><strong>Account:</strong> {{ user.email }}</p>
+            <p><strong>Generated:</strong> {% now "F j, Y g:i A" %}</p>
+            <div style="margin: 20px 0;">
+                <strong>Your Backup Codes:</strong><br>
+                {% for code in backup_codes %}{{ code }}<br>{% endfor %}
+            </div>
+            <p><strong>Instructions:</strong></p>
+            <ul>
+                <li>Keep these codes in a safe place</li>
+                <li>Each code can only be used once</li>
+                <li>Use these codes when you don't have access to your authenticator app</li>
+                <li>Generate new codes if you lose these</li>
+            </ul>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', printContent);
+    window.print();
+}
+
+function copyCodes() {
+    const codes = [
+        {% for code in backup_codes %}
+            "{{ code }}",
+        {% endfor %}
+    ];
+    
+    const content = `PrimeTrust Backup Codes - {{ user.email }}
+${codes.join('\n')}`;
+    
+    navigator.clipboard.writeText(content).then(function() {
+        // Show success notification
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 bg-green-600 text-white px-4 py-2 rounded-md shadow-lg z-50';
+        notification.textContent = 'Backup codes copied to clipboard!';
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }, function(err) {
+        console.error('Could not copy codes: ', err);
+        alert('Could not copy to clipboard. Please download or print the codes instead.');
+    });
+}
+</script>
+{% endblock %} 

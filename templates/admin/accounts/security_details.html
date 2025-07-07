@@ -1,0 +1,260 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block title %}Security Details for {{ user.email }}{% endblock %}
+
+{% block extrastyle %}
+    <style>
+        .security-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #e9ecef;
+        }
+        .security-header {
+            font-size: 18px;
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 15px;
+        }
+        .status-high { color: #28a745; }
+        .status-medium { color: #ffc107; }
+        .status-low { color: #dc3545; }
+        .risk-high { color: #dc3545; background: #f8d7da; }
+        .risk-medium { color: #856404; background: #fff3cd; }
+        .risk-low { color: #155724; background: #d4edda; }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .data-table th, .data-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .data-table th {
+            background: #e9ecef;
+            font-weight: bold;
+        }
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .metric-item {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+        }
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #495057;
+        }
+        .metric-label {
+            color: #6c757d;
+            font-size: 14px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="module">
+    <h1>Security Details for {{ user.email }}</h1>
+    
+    <div class="security-section">
+        <div class="security-header">Security Overview</div>
+        
+        <div class="metric-grid">
+            <div class="metric-item">
+                <div class="metric-value 
+                    {% if security_settings.security_score >= 80 %}status-high
+                    {% elif security_settings.security_score >= 60 %}status-medium
+                    {% else %}status-low{% endif %}">
+                    {{ security_settings.security_score }}/100
+                </div>
+                <div class="metric-label">Security Score</div>
+            </div>
+            
+            <div class="metric-item">
+                <div class="metric-value">{{ security_settings.failed_login_attempts }}</div>
+                <div class="metric-label">Failed Login Attempts</div>
+            </div>
+            
+            <div class="metric-item">
+                <div class="metric-value">{{ devices.count }}</div>
+                <div class="metric-label">Registered Devices</div>
+            </div>
+            
+            <div class="metric-item">
+                <div class="metric-value">{{ events.count }}</div>
+                <div class="metric-label">Recent Security Events</div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <p><strong>2FA Status:</strong> 
+                {% if security_settings.two_factor_enabled %}
+                    <span class="status-high">✓ Enabled</span>
+                {% else %}
+                    <span class="status-low">✗ Disabled</span>
+                {% endif %}
+            </p>
+            
+            <p><strong>Account Status:</strong> 
+                {% if security_settings.account_locked %}
+                    <span class="status-low">🔒 Locked</span>
+                {% else %}
+                    <span class="status-high">🔓 Unlocked</span>
+                {% endif %}
+            </p>
+            
+            <p><strong>Last Updated:</strong> {{ security_settings.updated_at|date:"F j, Y g:i A" }}</p>
+        </div>
+    </div>
+
+    <div class="security-section">
+        <div class="security-header">Registered Devices ({{ devices.count }})</div>
+        
+        {% if devices %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Device Name</th>
+                        <th>Type</th>
+                        <th>Trust Level</th>
+                        <th>Status</th>
+                        <th>Last Seen</th>
+                        <th>Location</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for device in devices %}
+                    <tr>
+                        <td>{{ device.device_name }}</td>
+                        <td>{{ device.device_type }}</td>
+                        <td>
+                            <span class="
+                                {% if device.trust_level == 'trusted' %}status-high
+                                {% elif device.trust_level == 'recognized' %}status-medium
+                                {% else %}status-low{% endif %}">
+                                {{ device.get_trust_level_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if device.is_active %}
+                                <span class="status-high">Active</span>
+                            {% else %}
+                                <span class="status-low">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ device.last_seen|date:"M j, Y g:i A" }}</td>
+                        <td>{{ device.location|default:"Unknown" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No devices registered for this user.</p>
+        {% endif %}
+    </div>
+
+    <div class="security-section">
+        <div class="security-header">Recent Security Events ({{ events.count }})</div>
+        
+        {% if events %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Event Type</th>
+                        <th>Risk Level</th>
+                        <th>Description</th>
+                        <th>Timestamp</th>
+                        <th>IP Address</th>
+                        <th>Action Taken</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for event in events %}
+                    <tr>
+                        <td>{{ event.event_type }}</td>
+                        <td>
+                            <span class="risk-{{ event.risk_level }}">
+                                {{ event.get_risk_level_display }}
+                            </span>
+                        </td>
+                        <td>{{ event.description|truncatechars:50 }}</td>
+                        <td>{{ event.timestamp|date:"M j, Y g:i A" }}</td>
+                        <td>{{ event.ip_address }}</td>
+                        <td>{{ event.action_taken|default:"None" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No security events recorded for this user.</p>
+        {% endif %}
+    </div>
+
+    <div class="security-section">
+        <div class="security-header">Login Attempts ({{ login_attempts.count }})</div>
+        
+        {% if login_attempts %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Failure Reason</th>
+                        <th>Timestamp</th>
+                        <th>IP Address</th>
+                        <th>User Agent</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for attempt in login_attempts %}
+                    <tr>
+                        <td>
+                            {% if attempt.success %}
+                                <span class="status-high">✓ Success</span>
+                            {% else %}
+                                <span class="status-low">✗ Failed</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ attempt.failure_reason|default:"N/A" }}</td>
+                        <td>{{ attempt.timestamp|date:"M j, Y g:i A" }}</td>
+                        <td>{{ attempt.ip_address }}</td>
+                        <td>{{ attempt.user_agent|truncatechars:50 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No login attempts recorded for this user.</p>
+        {% endif %}
+    </div>
+    
+    <div class="security-section">
+        <div class="security-header">Actions</div>
+        <p>
+            <a href="{% url 'admin:accounts_customuser_manage_2fa' user.id %}" class="button">
+                Manage 2FA Settings
+            </a>
+            <a href="{% url 'admin:accounts_customuser_device_management' user.id %}" class="button">
+                Manage Devices
+            </a>
+            <a href="{% url 'admin:accounts_customuser_change' user.id %}" class="button">
+                Edit User
+            </a>
+        </p>
+    </div>
+</div>
+{% endblock %} 

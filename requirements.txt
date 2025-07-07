@@ -3,7 +3,7 @@ certifi==2025.4.26
 charset-normalizer==3.4.2
 crispy-tailwind==1.0.3
 dj-database-url==2.3.0
-Django==5.2.1
+Django==4.2.7
 django-crispy-forms==2.4
 django-htmx==1.23.0
 django-meta==2.5.0
@@ -15,14 +15,14 @@ django-cors-headers==4.3.1
 django-filter==24.3
 drf-spectacular==0.27.2
 PyJWT==2.9.0
-gunicorn==23.0.0
+gunicorn==21.2.0
 idna==3.10
 nulltype==2.3.1
 packaging==25.0
-pillow==11.2.1
+pillow==10.1.0
 plaid-python==33.0.0
-psycopg2-binary==2.9.10
-python-dateutil==2.9.0.post0
+psycopg2-binary==2.9.9
+python-dateutil==2.8.2
 python-dotenv==1.1.0
 requests==2.32.3
 sib-api-v3-sdk==7.6.0
@@ -31,4 +31,23 @@ sqlparse==0.5.3
 typing_extensions==4.13.2
 tzdata==2025.2
 urllib3==2.4.0
-whitenoise==6.9.0
+whitenoise==6.6.0
+
+# Production Security Dependencies
+pyotp==2.9.0
+qrcode[pil]==7.4.2
+cryptography
+user-agents==2.2.0
+django-ratelimit==4.1.0
+django-session-security==2.6.7
+geoip2
+maxminddb
+django-axes==6.1.1
+django-encrypted-model-fields==0.6.5
+bcrypt==4.1.2
+
+# Additional Security & Monitoring
+django-audit-log
+django-defender==0.9.7
+django-security
+django-ipware

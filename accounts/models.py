@@ -18,6 +18,14 @@ class CustomUser(AbstractUser):
     )
     phone_number = models.CharField(validators=[phone_regex], max_length=17, blank=True)
     
+    # Gender field
+    GENDER_CHOICES = [
+        ('F', 'Female'),
+        ('M', 'Male'),
+        ('C', 'Custom'),
+    ]
+    gender = models.CharField(max_length=1, choices=GENDER_CHOICES, blank=True)
+    
     # Security question fields
     SECURITY_QUESTIONS = [
         ('mother_maiden', "What is your mother's maiden name?"),

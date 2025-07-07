@@ -1,0 +1,179 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block title %}Manage 2FA for {{ user.email }}{% endblock %}
+
+{% block extrastyle %}
+    <style>
+        .security-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #e9ecef;
+        }
+        .security-header {
+            font-size: 18px;
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 15px;
+        }
+        .status-enabled {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .status-disabled {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .action-button {
+            display: inline-block;
+            padding: 8px 16px;
+            margin: 5px;
+            background: #007cba;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+        }
+        .action-button:hover {
+            background: #005a87;
+            color: white;
+        }
+        .action-button.danger {
+            background: #dc3545;
+        }
+        .action-button.danger:hover {
+            background: #c82333;
+        }
+        .qr-code-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .backup-codes {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="module">
+    <h1>Manage 2FA Settings</h1>
+    
+    <div class="security-section">
+        <div class="security-header">User Information</div>
+        <p><strong>Email:</strong> {{ user.email }}</p>
+        <p><strong>Name:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+        <p><strong>Account Status:</strong> 
+            {% if user.is_active %}
+                <span class="status-enabled">Active</span>
+            {% else %}
+                <span class="status-disabled">Inactive</span>
+            {% endif %}
+        </p>
+    </div>
+
+    <div class="security-section">
+        <div class="security-header">2FA Status</div>
+        <p><strong>2FA Enabled:</strong> 
+            {% if two_fa_status.enabled %}
+                <span class="status-enabled">Yes</span>
+            {% else %}
+                <span class="status-disabled">No</span>
+            {% endif %}
+        </p>
+        
+        {% if two_fa_status.enabled %}
+            <p><strong>Secret Key Set:</strong> 
+                {% if two_fa_status.secret_set %}
+                    <span class="status-enabled">Yes</span>
+                {% else %}
+                    <span class="status-disabled">No</span>
+                {% endif %}
+            </p>
+            <p><strong>Backup Codes:</strong> {{ two_fa_status.backup_codes_count }}</p>
+        {% endif %}
+    </div>
+
+    <div class="security-section">
+        <div class="security-header">Available Actions</div>
+        
+        <form method="post" style="display: inline;">
+            {% csrf_token %}
+            
+            {% if not two_fa_status.enabled %}
+                <button type="submit" name="action" value="enable_2fa" class="action-button">
+                    Enable 2FA
+                </button>
+            {% else %}
+                <button type="submit" name="action" value="disable_2fa" class="action-button danger">
+                    Disable 2FA
+                </button>
+                
+                <button type="submit" name="action" value="generate_backup_codes" class="action-button">
+                    Generate New Backup Codes
+                </button>
+                
+                <button type="submit" name="action" value="reset_2fa" class="action-button danger">
+                    Reset 2FA Settings
+                </button>
+            {% endif %}
+        </form>
+        
+        <div style="margin-top: 15px;">
+            <a href="{% url 'admin:accounts_customuser_security_details' user.id %}" class="action-button">
+                View Security Details
+            </a>
+            <a href="{% url 'admin:accounts_customuser_device_management' user.id %}" class="action-button">
+                Manage Devices
+            </a>
+            <a href="{% url 'admin:accounts_customuser_change' user.id %}" class="action-button">
+                Edit User
+            </a>
+        </div>
+    </div>
+    
+    {% if two_fa_status.enabled %}
+        <div class="security-section">
+            <div class="security-header">Security Information</div>
+            <div class="alert alert-info">
+                <strong>Important:</strong> This user has 2FA enabled. Any changes to 2FA settings will be logged 
+                and the user will be notified via email.
+            </div>
+            
+            <p><strong>Setup Date:</strong> {{ two_fa_status.setup_date|date:"F j, Y g:i A" }}</p>
+            <p><strong>Last Used:</strong> {{ two_fa_status.last_used|date:"F j, Y g:i A"|default:"Never" }}</p>
+        </div>
+    {% endif %}
+    
+    <div class="security-section">
+        <div class="security-header">Admin Notes</div>
+        <ul>
+            <li>Enabling 2FA will require the user to set up an authenticator app on their next login</li>
+            <li>Disabling 2FA will remove all authentication requirements but may reduce account security</li>
+            <li>Generating new backup codes will invalidate all existing backup codes</li>
+            <li>Resetting 2FA will completely remove all 2FA settings and require fresh setup</li>
+            <li>All actions are logged in the security audit trail</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add confirmation for dangerous actions
+    document.querySelectorAll('.action-button.danger').forEach(function(button) {
+        button.addEventListener('click', function(e) {
+            if (!confirm('Are you sure you want to perform this action? This cannot be undone.')) {
+                e.preventDefault();
+            }
+        });
+    });
+});
+</script>
+{% endblock %} 

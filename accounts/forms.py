@@ -91,9 +91,8 @@ class CustomUserCreationForm(UserCreationForm):
     
     class Meta:
         model = CustomUser
-        fields = ('first_name', 'last_name', 'email', 'phone_number',
-                 'date_of_birth', 'gender', 'state', 'city', 'address', 'password1', 'password2',
-                 'security_question', 'security_answer')
+        fields = ('first_name', 'last_name', 'email', 'phone_number', 'gender',
+                 'password1', 'password2', 'security_question', 'security_answer')
 
     def clean(self):
         cleaned_data = super().clean()
@@ -114,6 +113,31 @@ class CustomUserCreationForm(UserCreationForm):
                 username = f"{base_username}{counter}"
                 counter += 1
             cleaned_data['username'] = username
+        
+        # Validate gender
+        gender = cleaned_data.get('gender')
+        if not gender:
+            self.add_error('gender', 'Please select a gender.')
+        
+        # Validate date of birth
+        date_of_birth = cleaned_data.get('date_of_birth')
+        if not date_of_birth:
+            self.add_error('date_of_birth', 'Please provide your date of birth.')
+        
+        # Validate state
+        state = cleaned_data.get('state')
+        if not state:
+            self.add_error('state', 'Please select a state.')
+        
+        # Validate city
+        city = cleaned_data.get('city')
+        if not city:
+            self.add_error('city', 'Please enter your city.')
+        
+        # Validate address
+        address = cleaned_data.get('address')
+        if not address:
+            self.add_error('address', 'Please enter your address.')
 
         return cleaned_data
     
@@ -153,12 +177,19 @@ class CustomUserCreationForm(UserCreationForm):
             user.save()
             # Create or update UserProfile
             profile, created = UserProfile.objects.get_or_create(user=user)
-            profile.date_of_birth = self.cleaned_data['date_of_birth']
-            profile.city = self.cleaned_data['city']
-            profile.state = self.cleaned_data['state']
-            profile.address = self.cleaned_data['address']
             
+            # Save profile fields
+            profile.date_of_birth = self.cleaned_data.get('date_of_birth')
+            profile.city = self.cleaned_data.get('city')
+            profile.state = self.cleaned_data.get('state')
+            profile.address = self.cleaned_data.get('address')
             profile.save()
+            
+            # Handle gender field - save in user object if it has the field
+            gender = self.cleaned_data.get('gender')
+            if gender and hasattr(user, 'gender'):
+                user.gender = gender
+                user.save()
             
             # Set security question and answer on user
             question = self.cleaned_data.get('security_question')
@@ -470,4 +501,49 @@ class TransactionPINSetupForm(forms.Form):
             if pin != confirm_pin:
                 self.add_error('confirm_transaction_pin', _('Transaction PINs do not match'))
 
+        return cleaned_data
+
+class TransactionPinForm(forms.Form):
+    """Transaction PIN form for registration"""
+    pin = forms.CharField(
+        max_length=6,
+        min_length=4,
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter 4-6 digit PIN',
+            'pattern': '[0-9]{4,6}',
+            'title': 'Enter a 4-6 digit PIN'
+        })
+    )
+    confirm_pin = forms.CharField(
+        max_length=6,
+        min_length=4,
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Confirm your PIN',
+            'pattern': '[0-9]{4,6}',
+            'title': 'Confirm your 4-6 digit PIN'
+        })
+    )
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        pin = cleaned_data.get('pin')
+        confirm_pin = cleaned_data.get('confirm_pin')
+        
+        if pin and confirm_pin:
+            if pin != confirm_pin:
+                raise ValidationError("PINs don't match")
+            
+            # Validate PIN format
+            if not pin.isdigit():
+                raise ValidationError("PIN must contain only numbers")
+            
+            # Check for weak PINs
+            if len(set(pin)) == 1:  # All same digits
+                raise ValidationError("PIN cannot have all same digits")
+            
+            if pin in ['1234', '0000', '1111', '2222', '3333', '4444', '5555', '6666', '7777', '8888', '9999']:
+                raise ValidationError("PIN is too common. Please choose a different PIN")
+        
         return cleaned_data

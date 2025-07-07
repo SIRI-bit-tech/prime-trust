@@ -3,70 +3,145 @@
 
 {% block title %}Set Transaction PIN - PrimeTrust{% endblock %}
 
-{% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/registration.css' %}">
-{% endblock %}
-
 {% block content %}
-<div class="flex min-h-screen flex-col items-center justify-center bg-gray-100 py-12">
-    <div class="w-full max-w-md">
-        <div class="mb-8 text-center">
-            <img class="mx-auto h-16" src="{% static 'img/Primetrust-logo-med.png' %}" alt="PrimeTrust">
-            <h2 class="mt-6 text-2xl font-bold text-gray-900">Set Your Transaction PIN</h2>
-            <p class="mt-2 text-sm text-gray-600">This PIN will be used to authorize your transactions.</p>
-        </div>
+<div class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <img class="mx-auto h-16" src="{% static 'img/Primetrust-logo-med.png' %}" alt="PrimeTrust Logo">
+        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Set Your Transaction PIN
+        </h2>
+        <p class="mt-2 text-center text-sm text-gray-600">
+            This PIN will be used to authorize your transactions.
+        </p>
+    </div>
 
-        <div class="bg-white px-8 py-6 shadow-md rounded-lg">
-            <form method="post" class="space-y-4" id="pinSetupForm" novalidate>
-                {% csrf_token %}
-                
-                <div class="space-y-4">
-                    <div>
-                        {{ form.transaction_pin }}
-                        <div class="text-xs text-gray-500 mt-1">Enter a 4-digit PIN for transactions</div>
-                        {% if form.transaction_pin.errors %}
-                        <div class="text-red-500 text-xs mt-1">
-                            {{ form.transaction_pin.errors|join:", " }}
+    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+
+            <!-- Display Form Errors -->
+            {% if form.errors %}
+                <div class="mb-4 rounded-md bg-red-50 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            </svg>
                         </div>
-                        {% endif %}
-                    </div>
-                    <div>
-                        {{ form.confirm_transaction_pin }}
-                        {% if form.confirm_transaction_pin.errors %}
-                        <div class="text-red-500 text-xs mt-1">
-                            {{ form.confirm_transaction_pin.errors|join:", " }}
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">Please correct the following errors:</h3>
+                            <div class="mt-2 text-sm text-red-700">
+                                <ul class="list-disc list-inside space-y-1">
+                                    {% for field, errors in form.errors.items %}
+                                        {% for error in errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
                         </div>
-                        {% endif %}
                     </div>
                 </div>
+            {% endif %}
 
-                <div class="text-xs text-gray-500 mt-4">
-                    <ul class="list-disc list-inside space-y-1">
-                        <li>Your PIN must be exactly 4 digits</li>
-                        <li>Keep your PIN secure and don't share it with anyone</li>
-                        <li>You'll need this PIN for all transactions</li>
+            <form method="post" class="space-y-6" id="pinSetupForm">
+                {% csrf_token %}
+                
+                <!-- PIN Input -->
+                <div>
+                    <label for="id_pin" class="block text-sm font-medium text-gray-700">
+                        Enter Transaction PIN
+                    </label>
+                    <div class="mt-1">
+                        <input type="password" 
+                               name="pin" 
+                               id="id_pin"
+                               maxlength="6" 
+                               minlength="4"
+                               pattern="[0-9]{4,6}"
+                               required
+                               class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm text-center text-lg font-mono"
+                               placeholder="Enter 4-6 digit PIN"
+                               autocomplete="off"
+                               inputmode="numeric">
+                    </div>
+                    {% if form.pin.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {{ form.pin.errors|join:", " }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Confirm PIN Input -->
+                <div>
+                    <label for="id_confirm_pin" class="block text-sm font-medium text-gray-700">
+                        Confirm Transaction PIN
+                    </label>
+                    <div class="mt-1">
+                        <input type="password" 
+                               name="confirm_pin" 
+                               id="id_confirm_pin"
+                               maxlength="6" 
+                               minlength="4"
+                               pattern="[0-9]{4,6}"
+                               required
+                               class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm text-center text-lg font-mono"
+                               placeholder="Confirm your PIN"
+                               autocomplete="off"
+                               inputmode="numeric">
+                    </div>
+                    {% if form.confirm_pin.errors %}
+                        <div class="mt-1 text-sm text-red-600">
+                            {{ form.confirm_pin.errors|join:", " }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- PIN Requirements -->
+                <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
+                    <h4 class="text-sm font-medium text-blue-800 mb-2">PIN Requirements:</h4>
+                    <ul class="text-sm text-blue-700 space-y-1">
+                        <li>• Your PIN must be exactly 4-6 digits</li>
+                        <li>• Keep your PIN secure and don't share it with anyone</li>
+                        <li>• You'll need this PIN for all transactions</li>
+                        <li>• Avoid common patterns like 1234 or 0000</li>
                     </ul>
                 </div>
 
-                <button type="submit" class="w-full bg-green-500 text-white text-lg font-bold py-2 px-4 rounded-md hover:bg-green-600 mt-6">
-                    Set PIN
-                </button>
+                <!-- Submit Button -->
+                <div>
+                    <button type="submit" 
+                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        Complete Registration
+                    </button>
+                </div>
             </form>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('pinSetupForm');
-    const pinInput = document.querySelector('input[name="transaction_pin"]');
-    const confirmPinInput = document.querySelector('input[name="confirm_transaction_pin"]');
+    const pinInput = document.getElementById('id_pin');
+    const confirmPinInput = document.getElementById('id_confirm_pin');
 
+    // Only allow numeric input
+    function handleInput(e) {
+        e.target.value = e.target.value.replace(/[^0-9]/g, '');
+    }
+
+    pinInput.addEventListener('input', handleInput);
+    confirmPinInput.addEventListener('input', handleInput);
+
+    // Validate PIN format
     function validatePin(input) {
-        if (!/^\d{4}$/.test(input.value)) {
-            input.setCustomValidity('PIN must be exactly 4 digits');
+        const value = input.value;
+        if (value.length < 4) {
+            input.setCustomValidity('PIN must be at least 4 digits');
+        } else if (value.length > 6) {
+            input.setCustomValidity('PIN must be no more than 6 digits');
+        } else if (!/^\d+$/.test(value)) {
+            input.setCustomValidity('PIN must contain only digits');
         } else {
             input.setCustomValidity('');
         }
@@ -75,12 +150,29 @@ document.addEventListener('DOMContentLoaded', function() {
     pinInput.addEventListener('input', () => validatePin(pinInput));
     confirmPinInput.addEventListener('input', () => validatePin(confirmPinInput));
 
+    // Form validation
     form.addEventListener('submit', function(e) {
         validatePin(pinInput);
         validatePin(confirmPinInput);
 
         if (pinInput.value !== confirmPinInput.value) {
             confirmPinInput.setCustomValidity('PINs do not match');
+            e.preventDefault();
+        } else {
+            confirmPinInput.setCustomValidity('');
+        }
+
+        // Check for weak PINs
+        const pin = pinInput.value;
+        const weakPins = ['1234', '0000', '1111', '2222', '3333', '4444', '5555', '6666', '7777', '8888', '9999'];
+        if (weakPins.includes(pin)) {
+            pinInput.setCustomValidity('This PIN is too common. Please choose a different PIN.');
+            e.preventDefault();
+        }
+
+        // Check for all same digits
+        if (pin && new Set(pin).size === 1) {
+            pinInput.setCustomValidity('PIN cannot have all same digits.');
             e.preventDefault();
         }
     });

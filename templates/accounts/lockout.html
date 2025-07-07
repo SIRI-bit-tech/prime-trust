@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Account Locked - PrimeTrust{% endblock %}
+
+{% block extra_css %}
+<style>
+    .lockout-container {
+        max-width: 500px;
+        margin: 50px auto;
+        padding: 40px;
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+    
+    .lockout-icon {
+        font-size: 64px;
+        color: #dc3545;
+        margin-bottom: 20px;
+    }
+    
+    .lockout-title {
+        font-size: 24px;
+        font-weight: bold;
+        color: #343a40;
+        margin-bottom: 15px;
+    }
+    
+    .lockout-message {
+        font-size: 16px;
+        color: #6c757d;
+        line-height: 1.6;
+        margin-bottom: 30px;
+    }
+    
+    .alert {
+        padding: 15px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        text-align: left;
+    }
+    
+    .alert-danger {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+    }
+    
+    .security-reasons {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+        text-align: left;
+    }
+    
+    .security-reasons h4 {
+        color: #495057;
+        margin-bottom: 10px;
+    }
+    
+    .security-reasons ul {
+        margin: 10px 0;
+        padding-left: 20px;
+    }
+    
+    .security-reasons li {
+        margin-bottom: 5px;
+        color: #6c757d;
+    }
+    
+    .contact-info {
+        background: #e7f3ff;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+    }
+    
+    .contact-info h4 {
+        color: #0056b3;
+        margin-bottom: 10px;
+    }
+    
+    .contact-method {
+        display: flex;
+        align-items: center;
+        margin: 10px 0;
+        padding: 10px;
+        background: white;
+        border-radius: 6px;
+    }
+    
+    .contact-method i {
+        font-size: 18px;
+        margin-right: 10px;
+        color: #0056b3;
+    }
+    
+    .btn {
+        display: inline-block;
+        padding: 12px 24px;
+        background: #007cba;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 500;
+        margin: 10px 5px;
+        transition: background 0.3s ease;
+    }
+    
+    .btn:hover {
+        background: #005a87;
+        text-decoration: none;
+        color: white;
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+    }
+    
+    .btn-secondary:hover {
+        background: #545b62;
+    }
+    
+    .time-stamp {
+        font-size: 14px;
+        color: #868e96;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #dee2e6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lockout-container">
+    <div class="lockout-icon">🔒</div>
+    
+    <h1 class="lockout-title">Account Temporarily Locked</h1>
+    
+    <div class="alert alert-danger">
+        <strong>Security Alert:</strong> Your account has been temporarily locked due to security concerns.
+    </div>
+    
+    <div class="lockout-message">
+        Your PrimeTrust account has been temporarily locked to protect your financial information and ensure account security.
+    </div>
+    
+    <div class="security-reasons">
+        <h4>Common reasons for account lockout:</h4>
+        <ul>
+            <li>Multiple failed login attempts</li>
+            <li>Suspicious login activity detected</li>
+            <li>Login from unrecognized device or location</li>
+            <li>Unusual account activity patterns</li>
+            <li>Security policy violations</li>
+        </ul>
+    </div>
+    
+    <div class="contact-info">
+        <h4>How to regain access:</h4>
+        
+        <div class="contact-method">
+            <i class="fas fa-phone"></i>
+            <div>
+                <strong>Call Customer Support</strong><br>
+                <span>1-800-TRUST-01 (1-800-878-7801)</span><br>
+                <small>Available 24/7 for account lockouts</small>
+            </div>
+        </div>
+        
+        <div class="contact-method">
+            <i class="fas fa-envelope"></i>
+            <div>
+                <strong>Email Support</strong><br>
+                <span>security@primetrust.com</span><br>
+                <small>Response within 1 hour for security issues</small>
+            </div>
+        </div>
+        
+        <div class="contact-method">
+            <i class="fas fa-comments"></i>
+            <div>
+                <strong>Live Chat</strong><br>
+                <span>Available on our website</span><br>
+                <small>Fastest response for urgent issues</small>
+            </div>
+        </div>
+    </div>
+    
+    <div style="margin: 30px 0;">
+        <p><strong>What you'll need when contacting us:</strong></p>
+        <ul style="text-align: left; display: inline-block;">
+            <li>Your email address</li>
+            <li>Account verification information</li>
+            <li>Government-issued ID (for phone/video verification)</li>
+            <li>Recent transaction details (if available)</li>
+        </ul>
+    </div>
+    
+    <div style="margin: 30px 0;">
+        <a href="tel:1-800-878-7801" class="btn">📞 Call Support Now</a>
+        <a href="mailto:security@primetrust.com" class="btn btn-secondary">✉️ Email Support</a>
+    </div>
+    
+    <div style="margin: 30px 0;">
+        <a href="{% url 'landing' %}" class="btn btn-secondary">← Back to Home</a>
+    </div>
+    
+    <div class="time-stamp">
+        <p>If you believe this lockout was made in error, please contact our security team immediately.</p>
+        <p><small>Lockout timestamp: {% now "F j, Y g:i A T" %}</small></p>
+    </div>
+</div>
+
+<script>
+// Add some interactivity
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus on the phone number when clicked
+    document.querySelector('a[href^="tel:"]').addEventListener('click', function() {
+        // Log the support call attempt (could be sent to analytics)
+        console.log('User attempted to call support from lockout page');
+    });
+    
+    // Track email clicks
+    document.querySelector('a[href^="mailto:"]').addEventListener('click', function() {
+        console.log('User attempted to email support from lockout page');
+    });
+});
+</script>
+{% endblock %} 

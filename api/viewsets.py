@@ -6,15 +6,29 @@ from django.shortcuts import get_object_or_404
 from django.db import transaction
 from django.utils import timezone
 from decimal import Decimal
-from banking.models import Account, Transaction
+from banking.models import Account, Transaction, Notification, BitcoinWallet, VirtualCard
+from banking.models_loans import LoanApplication, LoanAccount, LoanPayment
+from banking.models_investments_insurance import InvestmentAccount, Investment, InsurancePolicy, InsuranceClaim
+from banking.models_bills import Biller, BillPayment, Payee, ScheduledPayment
 from .serializers import (
     AccountSerializer, TransactionSerializer, MoneyTransferSerializer,
-    TransactionCreateSerializer
+    TransactionCreateSerializer, BitcoinWalletSerializer, BitcoinSendSerializer,
+    BitcoinSwapSerializer, LoanApplicationSerializer, LoanAccountSerializer,
+    LoanPaymentSerializer, LoanPaymentCreateSerializer, InvestmentAccountSerializer,
+    InvestmentSerializer, InvestmentCreateSerializer, InsurancePolicySerializer,
+    InsuranceClaimSerializer, InsuranceClaimCreateSerializer, BillerSerializer,
+    BillPaymentSerializer, BillPaymentCreateSerializer, PayeeSerializer,
+    ScheduledPaymentSerializer, ScheduledPaymentCreateSerializer, NotificationSerializer,
+    AccountSummarySerializer, TransactionAnalyticsSerializer, VirtualCardCreateSerializer,
+    VirtualCardSerializer, CardTransactionSerializer
 )
 from banking.utils import generate_reference_number
 import random
 import string
 from django.db import models
+from django.db.models import Sum, Q, Count
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 
 
 class AccountViewSet(viewsets.ReadOnlyModelViewSet):
@@ -295,4 +309,808 @@ class BankingViewSet(viewsets.GenericViewSet):
             return Response(
                 {'error': 'No account found'}, 
                 status=status.HTTP_404_NOT_FOUND
-            ) 
+            )
+
+
+# ====== BITCOIN/CRYPTOCURRENCY VIEWSETS ======
+
+class BitcoinViewSet(viewsets.ModelViewSet):
+    """Bitcoin wallet management and operations"""
+    serializer_class = BitcoinWalletSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return BitcoinWallet.objects.filter(user=self.request.user)
+    
+    @action(detail=False, methods=['get'])
+    def wallet_info(self, request):
+        """Get user's Bitcoin wallet information"""
+        try:
+            wallet = BitcoinWallet.objects.get(user=request.user)
+            serializer = self.get_serializer(wallet)
+            return Response(serializer.data)
+        except BitcoinWallet.DoesNotExist:
+            return Response(
+                {'error': 'No Bitcoin wallet found. Create one first.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+    
+    @action(detail=False, methods=['post'])
+    def send_bitcoin(self, request):
+        """Send Bitcoin to another address"""
+        serializer = BitcoinSendSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                with transaction.atomic():
+                    wallet = BitcoinWallet.objects.get(user=request.user)
+                    amount = serializer.validated_data['amount']
+                    wallet_address = serializer.validated_data['wallet_address']
+                    balance_source = serializer.validated_data['balance_source']
+                    
+                    # Update BTC price
+                    from banking.views_bitcoin import update_btc_price
+                    btc_price = update_btc_price() or wallet.btc_price_usd
+                    wallet.btc_price_usd = btc_price
+                    wallet.save()
+                    
+                    # Calculate USD amount
+                    usd_amount = amount * btc_price
+                    
+                    # Validate sufficient balance
+                    if balance_source == 'bitcoin':
+                        if wallet.balance < amount:
+                            return Response(
+                                {'error': 'Insufficient Bitcoin balance'},
+                                status=status.HTTP_400_BAD_REQUEST
+                            )
+                        wallet.balance -= amount
+                        wallet.save()
+                        from_account = None
+                    else:  # fiat
+                        primary_account = Account.objects.filter(
+                            user=request.user, 
+                            account_type='checking'
+                        ).first()
+                        if not primary_account or primary_account.balance < usd_amount:
+                            return Response(
+                                {'error': 'Insufficient fiat balance'},
+                                status=status.HTTP_400_BAD_REQUEST
+                            )
+                        primary_account.balance -= usd_amount
+                        primary_account.save()
+                        from_account = primary_account
+                    
+                    # Create transaction record
+                    tx = Transaction.objects.create(
+                        user=request.user,
+                        from_account=from_account,
+                        amount=usd_amount,
+                        bitcoin_amount=amount,
+                        bitcoin_address=wallet_address,
+                        transaction_type='bitcoin_send',
+                        status='completed',
+                        description=f"Bitcoin sent to {wallet_address}",
+                        balance_source=balance_source
+                    )
+                    
+                    return Response({
+                        'message': 'Bitcoin sent successfully',
+                        'transaction_id': tx.id,
+                        'amount': amount,
+                        'usd_amount': usd_amount,
+                        'wallet_address': wallet_address
+                    })
+                    
+            except BitcoinWallet.DoesNotExist:
+                return Response(
+                    {'error': 'Bitcoin wallet not found'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                return Response(
+                    {'error': str(e)},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['post'])
+    def swap_bitcoin(self, request):
+        """Buy or sell Bitcoin"""
+        serializer = BitcoinSwapSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                with transaction.atomic():
+                    wallet = BitcoinWallet.objects.get(user=request.user)
+                    swap_type = serializer.validated_data['swap_type']
+                    amount = serializer.validated_data['amount']
+                    account_id = serializer.validated_data['account_id']
+                    
+                    account = get_object_or_404(Account, id=account_id, user=request.user)
+                    
+                    # Update BTC price
+                    from banking.views_bitcoin import update_btc_price
+                    btc_price = update_btc_price() or wallet.btc_price_usd
+                    wallet.btc_price_usd = btc_price
+                    wallet.save()
+                    
+                    usd_amount = amount * btc_price
+                    
+                    if swap_type == 'buy':
+                        # Buy Bitcoin with fiat
+                        if account.balance < usd_amount:
+                            return Response(
+                                {'error': 'Insufficient fiat balance'},
+                                status=status.HTTP_400_BAD_REQUEST
+                            )
+                        account.balance -= usd_amount
+                        wallet.balance += amount
+                        description = f"Bought {amount} BTC"
+                    else:  # sell
+                        # Sell Bitcoin for fiat
+                        if wallet.balance < amount:
+                            return Response(
+                                {'error': 'Insufficient Bitcoin balance'},
+                                status=status.HTTP_400_BAD_REQUEST
+                            )
+                        wallet.balance -= amount
+                        account.balance += usd_amount
+                        description = f"Sold {amount} BTC"
+                    
+                    account.save()
+                    wallet.save()
+                    
+                    # Create transaction record
+                    tx = Transaction.objects.create(
+                        user=request.user,
+                        from_account=account if swap_type == 'buy' else None,
+                        to_account=account if swap_type == 'sell' else None,
+                        amount=usd_amount,
+                        bitcoin_amount=amount,
+                        transaction_type=f'bitcoin_{swap_type}',
+                        status='completed',
+                        description=description
+                    )
+                    
+                    return Response({
+                        'message': f'Bitcoin {swap_type} completed successfully',
+                        'transaction_id': tx.id,
+                        'btc_amount': amount,
+                        'usd_amount': usd_amount,
+                        'new_btc_balance': wallet.balance,
+                        'new_account_balance': account.balance
+                    })
+                    
+            except BitcoinWallet.DoesNotExist:
+                return Response(
+                    {'error': 'Bitcoin wallet not found'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            except Exception as e:
+                return Response(
+                    {'error': str(e)},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['get'])
+    def price_info(self, request):
+        """Get current Bitcoin price information"""
+        try:
+            from banking.views_bitcoin import update_btc_price
+            btc_price = update_btc_price()
+            if btc_price:
+                return Response({
+                    'btc_price_usd': btc_price,
+                    'last_updated': timezone.now()
+                })
+            return Response(
+                {'error': 'Unable to fetch Bitcoin price'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+# ====== LOAN MANAGEMENT VIEWSETS ======
+
+class LoanApplicationViewSet(viewsets.ModelViewSet):
+    """Loan application management"""
+    serializer_class = LoanApplicationSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return LoanApplication.objects.filter(user=self.request.user)
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+    
+    @action(detail=True, methods=['post'])
+    def submit(self, request, pk=None):
+        """Submit loan application for review"""
+        application = self.get_object()
+        if application.status == 'draft':
+            application.status = 'submitted'
+            application.save()
+            return Response({'message': 'Application submitted successfully'})
+        return Response(
+            {'error': 'Application cannot be submitted'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    @action(detail=True, methods=['post'])
+    def withdraw(self, request, pk=None):
+        """Withdraw loan application"""
+        application = self.get_object()
+        if application.status in ['submitted', 'under_review']:
+            application.status = 'withdrawn'
+            application.save()
+            return Response({'message': 'Application withdrawn successfully'})
+        return Response(
+            {'error': 'Application cannot be withdrawn'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+class LoanAccountViewSet(viewsets.ReadOnlyModelViewSet):
+    """Loan account management (read-only)"""
+    serializer_class = LoanAccountSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return LoanAccount.objects.filter(application__user=self.request.user)
+    
+    @action(detail=True, methods=['get'])
+    def payment_history(self, request, pk=None):
+        """Get loan payment history"""
+        loan = self.get_object()
+        payments = LoanPayment.objects.filter(loan=loan)
+        serializer = LoanPaymentSerializer(payments, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'])
+    def make_payment(self, request, pk=None):
+        """Make a loan payment"""
+        loan = self.get_object()
+        serializer = LoanPaymentCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                with transaction.atomic():
+                    payment_amount = serializer.validated_data['amount']
+                    payment_method = serializer.validated_data['payment_method']
+                    
+                    # Validate payment amount
+                    if payment_amount > loan.current_balance:
+                        return Response(
+                            {'error': 'Payment amount exceeds loan balance'},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                    
+                    # Calculate principal and interest
+                    monthly_interest = loan.interest_rate / Decimal('1200')
+                    interest_amount = loan.current_balance * monthly_interest
+                    principal_amount = payment_amount - interest_amount
+                    
+                    if principal_amount < 0:
+                        principal_amount = payment_amount
+                        interest_amount = Decimal('0')
+                    
+                    # Create payment record
+                    payment = LoanPayment.objects.create(
+                        loan=loan,
+                        amount=payment_amount,
+                        principal_amount=principal_amount,
+                        interest_amount=interest_amount,
+                        payment_date=timezone.now().date(),
+                        due_date=loan.next_payment_date,
+                        payment_method=payment_method,
+                        status='completed',
+                        notes=serializer.validated_data.get('notes', '')
+                    )
+                    
+                    # Update loan balance
+                    loan.current_balance -= principal_amount
+                    loan.next_payment_date = loan.next_payment_date + relativedelta(months=1)
+                    loan.save()
+                    
+                    return Response({
+                        'message': 'Payment processed successfully',
+                        'payment_id': payment.id,
+                        'remaining_balance': loan.current_balance
+                    })
+                    
+            except Exception as e:
+                return Response(
+                    {'error': str(e)},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ====== INVESTMENT MANAGEMENT VIEWSETS ======
+
+class InvestmentAccountViewSet(viewsets.ModelViewSet):
+    """Investment account management"""
+    serializer_class = InvestmentAccountSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return InvestmentAccount.objects.filter(user=self.request.user)
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+    
+    @action(detail=True, methods=['get'])
+    def portfolio(self, request, pk=None):
+        """Get investment portfolio for this account"""
+        account = self.get_object()
+        investments = Investment.objects.filter(account=account)
+        serializer = InvestmentSerializer(investments, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'])
+    def buy_investment(self, request, pk=None):
+        """Buy new investment"""
+        account = self.get_object()
+        serializer = InvestmentCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                with transaction.atomic():
+                    investment_data = serializer.validated_data
+                    total_cost = investment_data['quantity'] * investment_data['purchase_price']
+                    
+                    # Check account balance
+                    if account.balance < total_cost:
+                        return Response(
+                            {'error': 'Insufficient account balance'},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                    
+                    # Create investment
+                    investment = Investment.objects.create(
+                        account=account,
+                        **investment_data
+                    )
+                    
+                    # Update account balance
+                    account.balance -= total_cost
+                    account.save()
+                    
+                    return Response({
+                        'message': 'Investment purchased successfully',
+                        'investment_id': investment.id,
+                        'remaining_balance': account.balance
+                    })
+                    
+            except Exception as e:
+                return Response(
+                    {'error': str(e)},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class InvestmentViewSet(viewsets.ReadOnlyModelViewSet):
+    """Investment management (read-only)"""
+    serializer_class = InvestmentSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return Investment.objects.filter(account__user=self.request.user)
+
+
+# ====== INSURANCE VIEWSETS ======
+
+class InsurancePolicyViewSet(viewsets.ModelViewSet):
+    """Insurance policy management"""
+    serializer_class = InsurancePolicySerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return InsurancePolicy.objects.filter(user=self.request.user)
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+    
+    @action(detail=True, methods=['get'])
+    def claims(self, request, pk=None):
+        """Get claims for this policy"""
+        policy = self.get_object()
+        claims = InsuranceClaim.objects.filter(policy=policy)
+        serializer = InsuranceClaimSerializer(claims, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'])
+    def file_claim(self, request, pk=None):
+        """File a new insurance claim"""
+        policy = self.get_object()
+        serializer = InsuranceClaimCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            claim = serializer.save(policy=policy)
+            return Response({
+                'message': 'Claim filed successfully',
+                'claim_id': claim.id,
+                'claim_number': claim.claim_number
+            })
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class InsuranceClaimViewSet(viewsets.ReadOnlyModelViewSet):
+    """Insurance claim management (read-only)"""
+    serializer_class = InsuranceClaimSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return InsuranceClaim.objects.filter(policy__user=self.request.user)
+
+
+# ====== BILL PAYMENT VIEWSETS ======
+
+class BillerViewSet(viewsets.ReadOnlyModelViewSet):
+    """Available billers (read-only)"""
+    serializer_class = BillerSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return Biller.objects.filter(is_active=True)
+
+
+class BillPaymentViewSet(viewsets.ModelViewSet):
+    """Bill payment management"""
+    serializer_class = BillPaymentSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return BillPayment.objects.filter(user=self.request.user)
+    
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return BillPaymentCreateSerializer
+        return BillPaymentSerializer
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+    
+    @action(detail=True, methods=['post'])
+    def cancel(self, request, pk=None):
+        """Cancel a scheduled bill payment"""
+        payment = self.get_object()
+        if payment.status == 'scheduled':
+            payment.status = 'cancelled'
+            payment.save()
+            return Response({'message': 'Payment cancelled successfully'})
+        return Response(
+            {'error': 'Payment cannot be cancelled'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+class PayeeViewSet(viewsets.ModelViewSet):
+    """Payee management"""
+    serializer_class = PayeeSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return Payee.objects.filter(user=self.request.user)
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+    
+    @action(detail=True, methods=['post'])
+    def toggle_favorite(self, request, pk=None):
+        """Toggle favorite status for payee"""
+        payee = self.get_object()
+        payee.is_favorite = not payee.is_favorite
+        payee.save()
+        return Response({
+            'message': 'Favorite status updated',
+            'is_favorite': payee.is_favorite
+        })
+
+
+class ScheduledPaymentViewSet(viewsets.ModelViewSet):
+    """Scheduled payment management"""
+    serializer_class = ScheduledPaymentSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return ScheduledPayment.objects.filter(user=self.request.user)
+    
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return ScheduledPaymentCreateSerializer
+        return ScheduledPaymentSerializer
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+    
+    @action(detail=True, methods=['post'])
+    def pause(self, request, pk=None):
+        """Pause scheduled payment"""
+        payment = self.get_object()
+        payment.status = 'paused'
+        payment.save()
+        return Response({'message': 'Payment paused successfully'})
+    
+    @action(detail=True, methods=['post'])
+    def resume(self, request, pk=None):
+        """Resume scheduled payment"""
+        payment = self.get_object()
+        payment.status = 'active'
+        payment.save()
+        return Response({'message': 'Payment resumed successfully'})
+
+
+# ====== NOTIFICATION VIEWSETS ======
+
+class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
+    """Notification management"""
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user)
+    
+    @action(detail=True, methods=['post'])
+    def mark_read(self, request, pk=None):
+        """Mark notification as read"""
+        notification = self.get_object()
+        notification.is_read = True
+        notification.save()
+        return Response({'message': 'Notification marked as read'})
+    
+    @action(detail=False, methods=['post'])
+    def mark_all_read(self, request):
+        """Mark all notifications as read"""
+        count = Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+        return Response({'message': f'{count} notifications marked as read'})
+
+
+# ====== ANALYTICS & REPORTING VIEWSETS ======
+
+class AnalyticsViewSet(viewsets.ViewSet):
+    """Advanced analytics and reporting"""
+    permission_classes = [IsAuthenticated]
+    
+    @action(detail=False, methods=['get'])
+    def account_summary(self, request):
+        """Get comprehensive account summary"""
+        user = request.user
+        
+        # Get account balances
+        accounts = Account.objects.filter(user=user)
+        total_checking = accounts.filter(account_type='checking').aggregate(Sum('balance'))['balance__sum'] or 0
+        total_savings = accounts.filter(account_type='savings').aggregate(Sum('balance'))['balance__sum'] or 0
+        total_credit = accounts.filter(account_type='credit').aggregate(Sum('balance'))['balance__sum'] or 0
+        total_balance = total_checking + total_savings + total_credit
+        
+        # Get Bitcoin information
+        try:
+            wallet = BitcoinWallet.objects.get(user=user)
+            total_bitcoin = wallet.balance
+            bitcoin_value_usd = wallet.balance * wallet.btc_price_usd
+        except BitcoinWallet.DoesNotExist:
+            total_bitcoin = 0
+            bitcoin_value_usd = 0
+        
+        # Get investment information
+        investment_accounts = InvestmentAccount.objects.filter(user=user)
+        total_investments = investment_accounts.aggregate(Sum('balance'))['balance__sum'] or 0
+        
+        # Get loan information
+        loan_accounts = LoanAccount.objects.filter(application__user=user)
+        total_loans = loan_accounts.aggregate(Sum('current_balance'))['current_balance__sum'] or 0
+        
+        data = {
+            'total_checking': total_checking,
+            'total_savings': total_savings,
+            'total_credit': total_credit,
+            'total_balance': total_balance,
+            'total_bitcoin': total_bitcoin,
+            'bitcoin_value_usd': bitcoin_value_usd,
+            'total_investments': total_investments,
+            'total_loans': total_loans
+        }
+        
+        serializer = AccountSummarySerializer(data)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def transaction_analytics(self, request):
+        """Get transaction analytics"""
+        user = request.user
+        
+        # Get date range (default to last 30 days)
+        end_date = timezone.now().date()
+        start_date = end_date - timedelta(days=30)
+        
+        if request.query_params.get('start_date'):
+            start_date = datetime.strptime(request.query_params['start_date'], '%Y-%m-%d').date()
+        if request.query_params.get('end_date'):
+            end_date = datetime.strptime(request.query_params['end_date'], '%Y-%m-%d').date()
+        
+        # Get transactions
+        transactions = Transaction.objects.filter(
+            user=user,
+            created_at__date__gte=start_date,
+            created_at__date__lte=end_date
+        )
+        
+        # Calculate totals
+        total_transactions = transactions.count()
+        total_income = transactions.filter(transaction_type='deposit').aggregate(Sum('amount'))['amount__sum'] or 0
+        total_expenses = transactions.filter(transaction_type__in=['withdrawal', 'transfer', 'bill_payment']).aggregate(Sum('amount'))['amount__sum'] or 0
+        net_cash_flow = total_income - total_expenses
+        
+        # Category breakdown
+        categories = {}
+        for tx in transactions:
+            category = tx.transaction_type
+            if category not in categories:
+                categories[category] = 0
+            categories[category] += float(tx.amount)
+        
+        # Monthly trends (simplified)
+        monthly_trends = []
+        current_date = start_date
+        while current_date <= end_date:
+            month_transactions = transactions.filter(
+                created_at__date__month=current_date.month,
+                created_at__date__year=current_date.year
+            )
+            monthly_trends.append({
+                'month': current_date.strftime('%Y-%m'),
+                'total_amount': float(month_transactions.aggregate(Sum('amount'))['amount__sum'] or 0),
+                'transaction_count': month_transactions.count()
+            })
+            current_date = current_date + relativedelta(months=1)
+        
+        data = {
+            'total_transactions': total_transactions,
+            'total_income': total_income,
+            'total_expenses': total_expenses,
+            'net_cash_flow': net_cash_flow,
+            'categories': categories,
+            'monthly_trends': monthly_trends
+        }
+        
+        serializer = TransactionAnalyticsSerializer(data)
+        return Response(serializer.data)
+
+
+# ====== VIRTUAL CARD VIEWSETS ======
+
+class VirtualCardViewSet(viewsets.ModelViewSet):
+    """Virtual card management"""
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return VirtualCard.objects.filter(user=self.request.user)
+    
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return VirtualCardCreateSerializer
+        return VirtualCardSerializer
+    
+    def perform_create(self, serializer):
+        # Generate card details
+        from datetime import date
+        from dateutil.relativedelta import relativedelta
+        import random
+        
+        card_type = serializer.validated_data.get('card_type', 'visa')
+        
+        # Generate card number
+        prefix = '4' if card_type == 'visa' else '5'
+        card_number = prefix + ''.join([str(random.randint(0, 9)) for _ in range(15)])
+        
+        # Generate expiry date (3 years from now)
+        expiry_date = date.today() + relativedelta(years=3)
+        
+        # Generate CVV
+        cvv = str(random.randint(100, 999))
+        
+        serializer.save(
+            user=self.request.user,
+            card_number=card_number,
+            expiry_date=expiry_date,
+            cvv=cvv
+        )
+    
+    @action(detail=True, methods=['post'])
+    def activate(self, request, pk=None):
+        """Activate a virtual card"""
+        card = self.get_object()
+        card.is_active = True
+        card.save()
+        return Response({'message': 'Card activated successfully'})
+    
+    @action(detail=True, methods=['post'])
+    def deactivate(self, request, pk=None):
+        """Deactivate a virtual card"""
+        card = self.get_object()
+        card.is_active = False
+        card.save()
+        return Response({'message': 'Card deactivated successfully'})
+    
+    @action(detail=True, methods=['post'])
+    def transaction(self, request, pk=None):
+        """Process a card transaction"""
+        card = self.get_object()
+        if not card.is_active:
+            return Response(
+                {'error': 'Card is not active'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        serializer = CardTransactionSerializer(data=request.data)
+        if serializer.is_valid():
+            try:
+                with transaction.atomic():
+                    amount = serializer.validated_data['amount']
+                    merchant_name = serializer.validated_data['merchant_name']
+                    description = serializer.validated_data.get('description', '')
+                    
+                    # Get primary account for payment
+                    primary_account = Account.objects.filter(
+                        user=request.user,
+                        account_type='checking'
+                    ).first()
+                    
+                    if not primary_account:
+                        return Response(
+                            {'error': 'No primary account found'},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                    
+                    # Check balance
+                    if primary_account.balance < amount:
+                        return Response(
+                            {'error': 'Insufficient funds'},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                    
+                    # Process transaction
+                    primary_account.balance -= amount
+                    primary_account.save()
+                    
+                    # Create transaction record
+                    tx = Transaction.objects.create(
+                        user=request.user,
+                        from_account=primary_account,
+                        amount=amount,
+                        transaction_type='payment',
+                        description=f"Card payment to {merchant_name}: {description}",
+                        status='completed'
+                    )
+                    
+                    return Response({
+                        'message': 'Transaction successful',
+                        'transaction_id': tx.id,
+                        'amount': amount,
+                        'merchant': merchant_name,
+                        'remaining_balance': primary_account.balance
+                    })
+                    
+            except Exception as e:
+                return Response(
+                    {'error': str(e)},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=True, methods=['get'])
+    def transactions(self, request, pk=None):
+        """Get card transaction history"""
+        card = self.get_object()
+        # Get transactions related to this card (simplified)
+        transactions = Transaction.objects.filter(
+            user=request.user,
+            transaction_type='payment',
+            description__icontains='Card payment'
+        ).order_by('-created_at')[:20]
+        
+        serializer = TransactionSerializer(transactions, many=True)
+        return Response(serializer.data) 

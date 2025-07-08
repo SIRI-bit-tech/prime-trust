@@ -1335,13 +1335,27 @@ class WebhookDeliveryViewSet(viewsets.ReadOnlyModelViewSet):
         for name, stats in endpoint_stats.items():
             stats['success_rate'] = (stats['successful'] / stats['total'] * 100) if stats['total'] > 0 else 0
         
+        # Get additional required stats for the serializer
+        endpoints = WebhookEndpoint.objects.filter(user=user)
+        total_endpoints = endpoints.count()
+        active_endpoints = endpoints.filter(is_active=True).count()
+        
+        events = WebhookEvent.objects.filter(user=user)
+        total_events = events.count()
+        pending_events = events.filter(status='pending').count()
+        failed_events = events.filter(status='failed').count()
+        
         data = {
+            'total_endpoints': total_endpoints,
+            'active_endpoints': active_endpoints,
+            'total_events': total_events,
+            'pending_events': pending_events,
+            'failed_events': failed_events,
             'total_deliveries': total_deliveries,
             'successful_deliveries': successful_deliveries,
             'failed_deliveries': failed_deliveries,
             'success_rate': (successful_deliveries / total_deliveries * 100) if total_deliveries > 0 else 0,
             'average_response_time': round(avg_response_time, 2),
-            'endpoint_stats': endpoint_stats
         }
         
         serializer = WebhookStatsSerializer(data)

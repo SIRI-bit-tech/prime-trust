@@ -1,10 +1,16 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from accounts.models import UserProfile
-from banking.models import Account, Transaction, Notification, BitcoinWallet, VirtualCard
+from banking.models import (
+    Account, Transaction, BitcoinWallet, VirtualCard, Notification
+)
 from banking.models_loans import LoanApplication, LoanAccount, LoanPayment
 from banking.models_investments_insurance import InvestmentAccount, Investment, InsurancePolicy, InsuranceClaim
 from banking.models_bills import Biller, BillPayment, Payee, ScheduledPayment
+from .models import (
+    WebhookEndpoint, WebhookEvent, WebhookDelivery, 
+    WebhookSignature, WebhookTemplate, WebhookLog
+)
 from django.contrib.auth.password_validation import validate_password
 from django.contrib.auth import authenticate
 from django.core.exceptions import ValidationError
@@ -464,4 +470,180 @@ class CardTransactionSerializer(serializers.Serializer):
     def validate_amount(self, value):
         if value <= 0:
             raise serializers.ValidationError("Amount must be greater than 0")
+        return value
+
+
+# ====== WEBHOOK SERIALIZERS ======
+
+class WebhookEndpointSerializer(serializers.ModelSerializer):
+    success_rate = serializers.ReadOnlyField()
+    
+    class Meta:
+        model = WebhookEndpoint
+        fields = [
+            'id', 'name', 'url', 'events', 'secret', 'is_active',
+            'timeout_seconds', 'max_retries', 'retry_delay_seconds',
+            'total_deliveries', 'successful_deliveries', 'failed_deliveries',
+            'success_rate', 'created_at', 'updated_at', 'last_used_at'
+        ]
+        read_only_fields = [
+            'id', 'total_deliveries', 'successful_deliveries', 'failed_deliveries',
+            'success_rate', 'created_at', 'updated_at', 'last_used_at'
+        ]
+        extra_kwargs = {
+            'secret': {'write_only': True}
+        }
+
+    def validate_events(self, value):
+        if not value:
+            raise serializers.ValidationError("At least one event must be selected")
+        
+        valid_events = [choice[0] for choice in WebhookEndpoint.WEBHOOK_EVENTS]
+        for event in value:
+            if event not in valid_events:
+                raise serializers.ValidationError(f"Invalid event type: {event}")
+        
+        return value
+
+    def validate_url(self, value):
+        # Additional URL validation
+        if not value.startswith(('http://', 'https://')):
+            raise serializers.ValidationError("URL must start with http:// or https://")
+        return value
+
+
+class WebhookEndpointCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WebhookEndpoint
+        fields = [
+            'name', 'url', 'events', 'secret', 'timeout_seconds',
+            'max_retries', 'retry_delay_seconds'
+        ]
+
+    def validate_events(self, value):
+        if not value:
+            raise serializers.ValidationError("At least one event must be selected")
+        return value
+
+
+class WebhookEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WebhookEvent
+        fields = [
+            'id', 'event_type', 'status', 'payload', 'user',
+            'delivery_attempts', 'next_retry_at', 'created_at', 'processed_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'processed_at']
+
+
+class WebhookEventCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WebhookEvent
+        fields = ['event_type', 'payload', 'user']
+
+    def validate_payload(self, value):
+        if not value:
+            raise serializers.ValidationError("Payload cannot be empty")
+        return value
+
+
+class WebhookDeliverySerializer(serializers.ModelSerializer):
+    webhook_endpoint_name = serializers.CharField(source='webhook_endpoint.name', read_only=True)
+    webhook_event_type = serializers.CharField(source='webhook_event.event_type', read_only=True)
+    is_successful = serializers.ReadOnlyField()
+    
+    class Meta:
+        model = WebhookDelivery
+        fields = [
+            'id', 'webhook_endpoint', 'webhook_endpoint_name', 'webhook_event',
+            'webhook_event_type', 'status', 'http_status_code', 'response_body',
+            'error_message', 'response_time_ms', 'attempt_number', 'is_retry',
+            'is_successful', 'attempted_at', 'completed_at'
+        ]
+        read_only_fields = [
+            'id', 'webhook_endpoint_name', 'webhook_event_type', 'is_successful',
+            'attempted_at', 'completed_at'
+        ]
+
+
+class WebhookSignatureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WebhookSignature
+        fields = [
+            'id', 'webhook_endpoint', 'method', 'secret_key', 'algorithm',
+            'issuer', 'audience', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+        extra_kwargs = {
+            'secret_key': {'write_only': True}
+        }
+
+
+class WebhookTemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WebhookTemplate
+        fields = [
+            'id', 'event_type', 'name', 'description', 'payload_template',
+            'headers_template', 'is_active', 'version', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def validate_payload_template(self, value):
+        if not value:
+            raise serializers.ValidationError("Payload template cannot be empty")
+        return value
+
+
+class WebhookLogSerializer(serializers.ModelSerializer):
+    webhook_endpoint_name = serializers.CharField(source='webhook_endpoint.name', read_only=True)
+    webhook_event_type = serializers.CharField(source='webhook_event.event_type', read_only=True)
+    
+    class Meta:
+        model = WebhookLog
+        fields = [
+            'id', 'webhook_endpoint', 'webhook_endpoint_name', 'webhook_event',
+            'webhook_event_type', 'webhook_delivery', 'level', 'message',
+            'details', 'created_at'
+        ]
+        read_only_fields = ['id', 'webhook_endpoint_name', 'webhook_event_type', 'created_at']
+
+
+class WebhookTestSerializer(serializers.Serializer):
+    """Serializer for testing webhook endpoints"""
+    url = serializers.URLField()
+    payload = serializers.JSONField()
+    headers = serializers.JSONField(required=False, default=dict)
+    timeout = serializers.IntegerField(default=30, min_value=1, max_value=300)
+
+    def validate_payload(self, value):
+        if not value:
+            raise serializers.ValidationError("Test payload cannot be empty")
+        return value
+
+
+class WebhookStatsSerializer(serializers.Serializer):
+    """Serializer for webhook statistics"""
+    total_endpoints = serializers.IntegerField()
+    active_endpoints = serializers.IntegerField()
+    total_events = serializers.IntegerField()
+    pending_events = serializers.IntegerField()
+    failed_events = serializers.IntegerField()
+    total_deliveries = serializers.IntegerField()
+    successful_deliveries = serializers.IntegerField()
+    failed_deliveries = serializers.IntegerField()
+    average_response_time = serializers.FloatField()
+    success_rate = serializers.FloatField()
+
+
+class WebhookRetrySerializer(serializers.Serializer):
+    """Serializer for retrying failed webhook events"""
+    event_ids = serializers.ListField(
+        child=serializers.UUIDField(),
+        allow_empty=False
+    )
+    delay_seconds = serializers.IntegerField(default=60, min_value=1, max_value=3600)
+
+    def validate_event_ids(self, value):
+        if len(value) > 100:
+            raise serializers.ValidationError("Cannot retry more than 100 events at once")
         return value 

@@ -29,7 +29,10 @@ from .viewsets import (
     InvestmentAccountViewSet, InvestmentViewSet,
     InsurancePolicyViewSet, InsuranceClaimViewSet,
     BillerViewSet, BillPaymentViewSet, PayeeViewSet, ScheduledPaymentViewSet,
-    NotificationViewSet, AnalyticsViewSet, VirtualCardViewSet
+    NotificationViewSet, AnalyticsViewSet, VirtualCardViewSet,
+    # Phase 4: Webhook System
+    WebhookEndpointViewSet, WebhookEventViewSet, WebhookDeliveryViewSet,
+    WebhookTemplateViewSet, WebhookLogViewSet
 )
 
 app_name = 'api'
@@ -55,6 +58,13 @@ router.register(r'payees', PayeeViewSet, basename='payee')
 router.register(r'scheduled-payments', ScheduledPaymentViewSet, basename='scheduled-payment')
 router.register(r'notifications', NotificationViewSet, basename='notification')
 router.register(r'analytics', AnalyticsViewSet, basename='analytics')
+
+# Phase 4: Webhook System
+router.register(r'webhooks/endpoints', WebhookEndpointViewSet, basename='webhook-endpoint')
+router.register(r'webhooks/events', WebhookEventViewSet, basename='webhook-event')
+router.register(r'webhooks/deliveries', WebhookDeliveryViewSet, basename='webhook-delivery')
+router.register(r'webhooks/templates', WebhookTemplateViewSet, basename='webhook-template')
+router.register(r'webhooks/logs', WebhookLogViewSet, basename='webhook-log')
 
 # API v1 URL patterns
 v1_patterns = [
@@ -84,7 +94,32 @@ v1_patterns = [
     path('', include(router.urls)),
 ]
 
+# Health check and monitoring endpoints (no versioning for health checks)
+from .health_views import (
+    health_check, readiness_check, liveness_check, system_metrics,
+    performance_summary, endpoint_performance, api_analytics,
+    system_health_history, active_alerts, resolve_alert, alert_rules,
+    database_metrics, monitoring_dashboard_data
+)
+
 urlpatterns = [
+    # Health check endpoints (publicly accessible)
+    path('health/', health_check, name='health_check'),
+    path('health/ready/', readiness_check, name='readiness_check'),
+    path('health/live/', liveness_check, name='liveness_check'),
+    
+    # Monitoring endpoints (admin only)
+    path('monitoring/system/', system_metrics, name='system_metrics'),
+    path('monitoring/performance/', performance_summary, name='performance_summary'),
+    path('monitoring/endpoint/', endpoint_performance, name='endpoint_performance'),
+    path('monitoring/analytics/', api_analytics, name='api_analytics'),
+    path('monitoring/health-history/', system_health_history, name='system_health_history'),
+    path('monitoring/alerts/', active_alerts, name='active_alerts'),
+    path('monitoring/alerts/<int:alert_id>/resolve/', resolve_alert, name='resolve_alert'),
+    path('monitoring/alert-rules/', alert_rules, name='alert_rules'),
+    path('monitoring/database/', database_metrics, name='database_metrics'),
+    path('monitoring/dashboard/', monitoring_dashboard_data, name='monitoring_dashboard_data'),
+    
     # API versioning
     path('v1/', include(v1_patterns)),
     

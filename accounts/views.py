@@ -410,7 +410,7 @@ def logout_view(request):
         logout(request)
         messages.success(request, f'Goodbye, {user_name}! You have been logged out securely.')
     
-    return redirect('landing')
+    return redirect('home')
 
 def get_client_ip(request):
     """Get client IP address"""

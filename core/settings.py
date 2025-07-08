@@ -2,6 +2,8 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 from datetime import timedelta
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 
 # Load environment variables
 load_dotenv()
@@ -16,6 +18,21 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key-here')
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,.onrender.com').split(',')
+
+# ===== GLITCHTIP CONFIGURATION =====
+# Configure GlitchTip for error monitoring using Sentry SDK
+GLITCHTIP_DSN = os.getenv('GLITCHTIP_DSN', 'https://1455826932ce426c8f44b6a0df2637f4@app.glitchtip.com/12017')
+
+if GLITCHTIP_DSN:
+    sentry_sdk.init(
+        dsn="https://1455826932ce426c8f44b6a0df2637f4@app.glitchtip.com/12017",
+        integrations=[DjangoIntegration()],
+        auto_session_tracking=False,
+        traces_sample_rate=0.01,
+        release=os.getenv('APP_VERSION', '1.0.0'),
+        environment='development' if DEBUG else 'production',
+    )
+    print(f"GlitchTip initialized with environment: {'development' if DEBUG else 'production'}")
 
 # Configure SSL for production
 SECURE_SSL_REDIRECT = not DEBUG
@@ -84,6 +101,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django_htmx.middleware.HtmxMiddleware',
 ]
+
+# GlitchTip uses Sentry SDK which automatically handles middleware through DjangoIntegration
+# No need to manually add middleware
 
 ROOT_URLCONF = 'core.urls'
 
@@ -251,34 +271,50 @@ LOGGING = {
             'format': '{asctime} {levelname} SECURITY: {message}',
             'style': '{',
         },
+        'production': {
+            'format': '{asctime} [{levelname}] {name}: {message}',
+            'style': '{',
+        },
     },
     'handlers': {
         'file': {
             'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': 'django.log',
-            'formatter': 'verbose',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'logs/django.log',
+            'maxBytes': 10485760,  # 10MB
+            'backupCount': 5,
+            'formatter': 'production' if not DEBUG else 'verbose',
         },
         'security_file': {
             'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': 'security.log',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'logs/security.log',
+            'maxBytes': 10485760,  # 10MB
+            'backupCount': 5,
             'formatter': 'security',
         },
+        'error_file': {
+            'level': 'ERROR',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'logs/errors.log',
+            'maxBytes': 10485760,  # 10MB
+            'backupCount': 10,
+            'formatter': 'production',
+        },
         'console': {
-            'level': 'DEBUG',
+            'level': 'DEBUG' if DEBUG else 'WARNING',
             'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
+            'formatter': 'verbose' if DEBUG else 'production',
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['file', 'console'],
+            'handlers': ['file', 'console'] if DEBUG else ['file', 'error_file'],
             'level': 'INFO',
             'propagate': True,
         },
         'security': {
-            'handlers': ['security_file', 'console'],
+            'handlers': ['security_file', 'console'] if DEBUG else ['security_file'],
             'level': 'INFO',
             'propagate': False,
         },
@@ -287,16 +323,37 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
+        'banking': {
+            'handlers': ['file', 'error_file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'api': {
+            'handlers': ['file', 'error_file'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'sentry_sdk': {
+            'handlers': ['error_file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
     },
 }
+
+# Create logs directory if it doesn't exist
+os.makedirs(os.path.join(BASE_DIR, 'logs'), exist_ok=True)
 
 # Crispy Forms
 CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwindcss"
 CRISPY_TEMPLATE_PACK = "tailwindcss"
 
 # Session settings
-SESSION_COOKIE_AGE = 1209600  # 2 weeks in seconds
+SESSION_COOKIE_AGE = int(os.getenv('SESSION_COOKIE_AGE', '3600'))  # 1 hour default
 SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = os.getenv('SESSION_EXPIRE_AT_BROWSER_CLOSE', 'True') == 'True'
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
 
 # Security settings (only in production)
 if not DEBUG:
@@ -309,6 +366,11 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000  # 1 year
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+    SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
+    SECURE_REFERRER_POLICY = 'same-origin'
+    
+    # Additional production security headers
+    SECURE_CONTENT_SECURITY_POLICY = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
 
 # Bank SWIFT code for wire transfers (Fictional for PrimeTrust)
 BANK_SWIFT_CODE = 'PTRTUS33XXX'
@@ -450,58 +512,6 @@ DEFENDER_LOCKOUT_TEMPLATE = 'accounts/lockout.html'
 # Rate Limiting Configuration (using custom implementation instead of django_ratelimit)
 # RATELIMIT_ENABLE = True
 # RATELIMIT_USE_CACHE = 'default'
-
-# Session Security
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_COOKIE_AGE = 3600  # 1 hour
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Lax'
-
-# CSRF Protection
-CSRF_COOKIE_HTTPONLY = True
-CSRF_COOKIE_SAMESITE = 'Lax'
-
-# Security Headers
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'DENY'
-SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
-
-# Custom Security Settings
-SECURITY_SETTINGS = {
-    # 2FA Configuration
-    'TWO_FACTOR_ISSUER': 'PrimeTrust Banking',
-    'TWO_FACTOR_CODE_LENGTH': 6,
-    'TWO_FACTOR_VALIDITY_PERIOD': 30,  # seconds
-    'BACKUP_CODE_COUNT': 10,
-    
-    # Device Management
-    'DEVICE_TRUST_DURATION': 30,  # days
-    'NEW_DEVICE_NOTIFICATION': True,
-    'DEVICE_FINGERPRINTING': True,
-    
-    # Risk Scoring
-    'RISK_SCORE_THRESHOLD_HIGH': 70,
-    'RISK_SCORE_THRESHOLD_CRITICAL': 85,
-    'RISK_CALCULATION_INTERVAL': 300,  # seconds
-    
-    # Geographic Security
-    'GEO_RESTRICTION_ENABLED': False,
-    'ALLOWED_COUNTRIES': [],  # Empty = all allowed
-    'GEO_ANOMALY_DETECTION': True,
-    
-    # Transaction Security
-    'HIGH_VALUE_THRESHOLD': 10000,  # USD
-    'VELOCITY_CHECK_ENABLED': True,
-    'DAILY_TRANSACTION_LIMIT': 50000,  # USD
-    
-    # Security Notifications
-    'SECURITY_EMAIL_NOTIFICATIONS': True,
-    'LOGIN_NOTIFICATION_ENABLED': True,
-    'SUSPICIOUS_ACTIVITY_ALERTS': True,
-}
 
 # Cache Configuration for Security (Using database backend for atomic operations)
 CACHES = {

@@ -3,7 +3,7 @@ certifi==2025.4.26
 charset-normalizer==3.4.2
 crispy-tailwind==1.0.3
 dj-database-url==2.3.0
-Django==4.2.7
+Django
 django-crispy-forms==2.4
 django-htmx==1.23.0
 django-meta==2.5.0
@@ -40,14 +40,36 @@ cryptography
 user-agents==2.2.0
 django-ratelimit==4.1.0
 django-session-security==2.6.7
-geoip2
-maxminddb
 django-axes==6.1.1
 django-encrypted-model-fields==0.6.5
 bcrypt==4.1.2
-
-# Additional Security & Monitoring
 django-audit-log
 django-defender==0.9.7
 django-security
 django-ipware
+
+# GeoIP and Location Services
+geoip2
+maxminddb
+
+
+# System Monitoring
+psutil
+
+# Banking APIs
+plaid-python
+
+# Email Service
+sib-api-v3-sdk
+
+# Utilities
+certifi
+charset-normalizer
+idna
+nulltype
+packaging
+python-dateutil
+requests
+six
+typing_extensions
+urllib3

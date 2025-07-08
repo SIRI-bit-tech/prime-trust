@@ -10,6 +10,7 @@ from banking.models import Account, Transaction, Notification, BitcoinWallet, Vi
 from banking.models_loans import LoanApplication, LoanAccount, LoanPayment
 from banking.models_investments_insurance import InvestmentAccount, Investment, InsurancePolicy, InsuranceClaim
 from banking.models_bills import Biller, BillPayment, Payee, ScheduledPayment
+from .models import WebhookEndpoint, WebhookEvent, WebhookDelivery, WebhookTemplate, WebhookLog
 from .serializers import (
     AccountSerializer, TransactionSerializer, MoneyTransferSerializer,
     TransactionCreateSerializer, BitcoinWalletSerializer, BitcoinSendSerializer,
@@ -20,7 +21,10 @@ from .serializers import (
     BillPaymentSerializer, BillPaymentCreateSerializer, PayeeSerializer,
     ScheduledPaymentSerializer, ScheduledPaymentCreateSerializer, NotificationSerializer,
     AccountSummarySerializer, TransactionAnalyticsSerializer, VirtualCardCreateSerializer,
-    VirtualCardSerializer, CardTransactionSerializer
+    VirtualCardSerializer, CardTransactionSerializer, WebhookEndpointSerializer,
+    WebhookEndpointCreateSerializer, WebhookEventSerializer, WebhookDeliverySerializer,
+    WebhookTestSerializer, WebhookRetrySerializer, WebhookStatsSerializer,
+    WebhookTemplateSerializer, WebhookLogSerializer
 )
 from banking.utils import generate_reference_number
 import random
@@ -1113,4 +1117,301 @@ class VirtualCardViewSet(viewsets.ModelViewSet):
         ).order_by('-created_at')[:20]
         
         serializer = TransactionSerializer(transactions, many=True)
-        return Response(serializer.data) 
+        return Response(serializer.data)
+
+
+# ====== WEBHOOK VIEWSETS ======
+
+class WebhookEndpointViewSet(viewsets.ModelViewSet):
+    """Webhook endpoint management"""
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return WebhookEndpoint.objects.filter(user=self.request.user)
+    
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return WebhookEndpointCreateSerializer
+        return WebhookEndpointSerializer
+    
+    def perform_create(self, serializer):
+        # Generate secret if not provided
+        import secrets
+        if not serializer.validated_data.get('secret'):
+            serializer.validated_data['secret'] = secrets.token_urlsafe(32)
+        
+        serializer.save(user=self.request.user)
+    
+    @action(detail=True, methods=['post'])
+    def test(self, request, pk=None):
+        """Test webhook endpoint"""
+        endpoint = self.get_object()
+        
+        serializer = WebhookTestSerializer(data=request.data)
+        if serializer.is_valid():
+            from .webhook_delivery import WebhookDeliveryService
+            
+            delivery_service = WebhookDeliveryService()
+            test_payload = serializer.validated_data['payload']
+            
+            # Create a test event
+            test_event = WebhookEvent.objects.create(
+                event_type='system.test',
+                payload=test_payload,
+                user=request.user,
+                status='processing'
+            )
+            
+            # Attempt delivery
+            success, response_data = delivery_service.deliver_webhook(endpoint, test_event)
+            
+            return Response({
+                'success': success,
+                'response_data': response_data,
+                'test_event_id': test_event.id
+            })
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=True, methods=['get'])
+    def events(self, request, pk=None):
+        """Get events for this endpoint"""
+        endpoint = self.get_object()
+        events = WebhookEvent.objects.filter(
+            event_type__in=endpoint.events,
+            user=request.user
+        ).order_by('-created_at')[:50]
+        
+        serializer = WebhookEventSerializer(events, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['get'])
+    def deliveries(self, request, pk=None):
+        """Get delivery history for this endpoint"""
+        endpoint = self.get_object()
+        deliveries = WebhookDelivery.objects.filter(
+            webhook_endpoint=endpoint
+        ).order_by('-attempted_at')[:100]
+        
+        serializer = WebhookDeliverySerializer(deliveries, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'])
+    def regenerate_secret(self, request, pk=None):
+        """Regenerate webhook secret"""
+        import secrets
+        endpoint = self.get_object()
+        endpoint.secret = secrets.token_urlsafe(32)
+        endpoint.save()
+        
+        return Response({
+            'message': 'Secret regenerated successfully',
+            'new_secret': endpoint.secret
+        })
+
+
+class WebhookEventViewSet(viewsets.ReadOnlyModelViewSet):
+    """Webhook event monitoring"""
+    serializer_class = WebhookEventSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return WebhookEvent.objects.filter(user=self.request.user).order_by('-created_at')
+    
+    @action(detail=False, methods=['post'])
+    def retry_failed(self, request):
+        """Retry failed webhook events"""
+        serializer = WebhookRetrySerializer(data=request.data)
+        if serializer.is_valid():
+            event_ids = serializer.validated_data['event_ids']
+            delay_seconds = serializer.validated_data['delay_seconds']
+            
+            events = WebhookEvent.objects.filter(
+                id__in=event_ids,
+                user=request.user,
+                status='failed'
+            )
+            
+            count = 0
+            for event in events:
+                event.status = 'pending'
+                event.schedule_retry(delay_seconds)
+                count += 1
+            
+            return Response({
+                'message': f'{count} events scheduled for retry',
+                'retried_events': count
+            })
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=['get'])
+    def stats(self, request):
+        """Get webhook event statistics"""
+        user = request.user
+        
+        # Get date range (default to last 7 days)
+        end_date = timezone.now()
+        start_date = end_date - timedelta(days=7)
+        
+        if request.query_params.get('start_date'):
+            start_date = datetime.strptime(request.query_params['start_date'], '%Y-%m-%d')
+        if request.query_params.get('end_date'):
+            end_date = datetime.strptime(request.query_params['end_date'], '%Y-%m-%d')
+        
+        events = WebhookEvent.objects.filter(
+            user=user,
+            created_at__gte=start_date,
+            created_at__lte=end_date
+        )
+        
+        total_events = events.count()
+        pending_events = events.filter(status='pending').count()
+        failed_events = events.filter(status='failed').count()
+        completed_events = events.filter(status='completed').count()
+        
+        # Event type breakdown
+        event_types = {}
+        for event in events:
+            event_type = event.event_type
+            if event_type not in event_types:
+                event_types[event_type] = 0
+            event_types[event_type] += 1
+        
+        return Response({
+            'total_events': total_events,
+            'pending_events': pending_events,
+            'failed_events': failed_events,
+            'completed_events': completed_events,
+            'success_rate': (completed_events / total_events * 100) if total_events > 0 else 0,
+            'event_types': event_types,
+            'date_range': {
+                'start': start_date.isoformat(),
+                'end': end_date.isoformat()
+            }
+        })
+
+
+class WebhookDeliveryViewSet(viewsets.ReadOnlyModelViewSet):
+    """Webhook delivery monitoring"""
+    serializer_class = WebhookDeliverySerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return WebhookDelivery.objects.filter(
+            webhook_endpoint__user=self.request.user
+        ).order_by('-attempted_at')
+    
+    @action(detail=False, methods=['get'])
+    def stats(self, request):
+        """Get delivery statistics"""
+        user = request.user
+        
+        deliveries = WebhookDelivery.objects.filter(
+            webhook_endpoint__user=user
+        )
+        
+        total_deliveries = deliveries.count()
+        successful_deliveries = deliveries.filter(status='success').count()
+        failed_deliveries = deliveries.filter(status='failed').count()
+        
+        # Average response time
+        avg_response_time = deliveries.filter(
+            response_time_ms__isnull=False
+        ).aggregate(avg_time=models.Avg('response_time_ms'))['avg_time'] or 0
+        
+        # Success rate by endpoint
+        endpoint_stats = {}
+        for delivery in deliveries.select_related('webhook_endpoint'):
+            endpoint_name = delivery.webhook_endpoint.name
+            if endpoint_name not in endpoint_stats:
+                endpoint_stats[endpoint_name] = {'total': 0, 'successful': 0}
+            
+            endpoint_stats[endpoint_name]['total'] += 1
+            if delivery.is_successful:
+                endpoint_stats[endpoint_name]['successful'] += 1
+        
+        # Calculate success rates
+        for name, stats in endpoint_stats.items():
+            stats['success_rate'] = (stats['successful'] / stats['total'] * 100) if stats['total'] > 0 else 0
+        
+        data = {
+            'total_deliveries': total_deliveries,
+            'successful_deliveries': successful_deliveries,
+            'failed_deliveries': failed_deliveries,
+            'success_rate': (successful_deliveries / total_deliveries * 100) if total_deliveries > 0 else 0,
+            'average_response_time': round(avg_response_time, 2),
+            'endpoint_stats': endpoint_stats
+        }
+        
+        serializer = WebhookStatsSerializer(data)
+        return Response(serializer.data)
+
+
+class WebhookTemplateViewSet(viewsets.ModelViewSet):
+    """Webhook template management"""
+    serializer_class = WebhookTemplateSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return WebhookTemplate.objects.filter(is_active=True).order_by('event_type')
+    
+    @action(detail=True, methods=['post'])
+    def preview(self, request, pk=None):
+        """Preview rendered template with sample data"""
+        template = self.get_object()
+        
+        # Sample context data
+        sample_data = {
+            'user_id': request.user.id,
+            'user_email': request.user.email,
+            'timestamp': timezone.now().isoformat(),
+            'event_id': 'sample-event-id',
+            'amount': '100.00',
+            'account_id': 'sample-account-id',
+            'transaction_id': 'sample-transaction-id'
+        }
+        
+        # Override with any provided context
+        if request.data.get('context'):
+            sample_data.update(request.data['context'])
+        
+        try:
+            rendered_payload = template.render_payload(sample_data)
+            return Response({
+                'template_name': template.name,
+                'event_type': template.event_type,
+                'rendered_payload': rendered_payload,
+                'context_used': sample_data
+            })
+        except Exception as e:
+            return Response(
+                {'error': f'Template rendering failed: {str(e)}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class WebhookLogViewSet(viewsets.ReadOnlyModelViewSet):
+    """Webhook log monitoring"""
+    serializer_class = WebhookLogSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return WebhookLog.objects.filter(
+            webhook_endpoint__user=self.request.user
+        ).order_by('-created_at')
+    
+    @action(detail=False, methods=['delete'])
+    def clear_old_logs(self, request):
+        """Clear logs older than specified days"""
+        days = int(request.query_params.get('days', 30))
+        
+        cutoff_date = timezone.now() - timedelta(days=days)
+        deleted_count = WebhookLog.objects.filter(
+            webhook_endpoint__user=request.user,
+            created_at__lt=cutoff_date
+        ).delete()[0]
+        
+        return Response({
+            'message': f'Deleted {deleted_count} log entries older than {days} days'
+        }) 

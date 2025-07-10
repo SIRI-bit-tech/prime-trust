@@ -106,6 +106,7 @@ class UserDevice(models.Model):
     is_active = models.BooleanField(default=True)
     last_used = models.DateTimeField(auto_now=True)
     first_seen = models.DateTimeField(auto_now_add=True)
+    login_count = models.PositiveIntegerField(default=0)  # Track number of logins from this device
     
     # Authentication
     requires_2fa = models.BooleanField(default=True)

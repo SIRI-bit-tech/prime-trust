@@ -20,10 +20,10 @@ urlpatterns = [
     path('change-transaction-pin/', views.change_transaction_pin, name='change_transaction_pin'),
     
     # Password Reset
-    path('password-reset/', auth_views.PasswordResetView.as_view(template_name='accounts/password_reset.html'), name='password_reset'),
-    path('password-reset/done/', auth_views.PasswordResetDoneView.as_view(template_name='accounts/password_reset_done.html'), name='password_reset_done'),
-    path('reset/<uidb64>/<token>/', auth_views.PasswordResetConfirmView.as_view(template_name='accounts/password_reset_confirm.html'), name='password_reset_confirm'),
-    path('reset/done/', auth_views.PasswordResetCompleteView.as_view(template_name='accounts/password_reset_complete.html'), name='password_reset_complete'),
+    path('password-reset/', views.custom_password_reset_view, name='password_reset'),
+    path('password-reset/done/', views.custom_password_reset_done_view, name='password_reset_done'),
+    path('reset/<uidb64>/<token>/', views.custom_password_reset_confirm_view, name='password_reset_confirm'),
+    path('reset/done/', views.custom_password_reset_complete_view, name='password_reset_complete'),
     
     # AJAX endpoints
     path('resend-verification/', views.resend_verification_code, name='resend_verification'),

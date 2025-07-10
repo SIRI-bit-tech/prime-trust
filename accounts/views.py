@@ -39,6 +39,17 @@ from .utils import (
 )
 from .device_management import DeviceManager
 from .audit_logging import AuditLogger
+# Import email functions and webhook triggers
+from banking.utils import send_welcome_email
+from api.webhook_delivery import trigger_user_created
+import logging
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth.forms import SetPasswordForm
+from .utils import send_password_reset_email
+
+logger = logging.getLogger(__name__)
 
 def register_view(request):
     """Enhanced registration with mandatory 2FA - Step 1: Basic Info"""
@@ -268,20 +279,42 @@ def setup_pin_view(request):
                 
                 # Create bank accounts
                 from banking.models import Account
-                Account.objects.create(
+                checking_account = Account.objects.create(
                     user=user,
                     account_type='checking',
                     balance=0.00
                 )
-                Account.objects.create(
+                savings_account = Account.objects.create(
                     user=user,
                     account_type='savings',
                     balance=0.00
                 )
                 
+                # Trigger webhook events for account creation
+                try:
+                    from api.webhook_delivery import trigger_account_created
+                    trigger_account_created(checking_account)
+                    trigger_account_created(savings_account)
+                except Exception as webhook_error:
+                    logger.error(f"Failed to trigger account_created webhooks for {user.email}: {str(webhook_error)}")
+                
                 # Register device
                 device_manager = DeviceManager(user)
                 device_manager.register_device(request, trust_level='trusted')
+                
+                # Send welcome email
+                try:
+                    send_welcome_email(user)
+                except Exception as e:
+                    # Don't break registration if email fails
+                    logger.error(f"Failed to send welcome email to {user.email}: {str(e)}")
+                
+                # Trigger webhook event
+                try:
+                    trigger_user_created(user)
+                except Exception as e:
+                    # Don't break registration if webhook fails
+                    logger.error(f"Failed to trigger user_created webhook for {user.email}: {str(e)}")
                 
                 # Log registration completion
                 audit_logger = AuditLogger(user=user, request=request)
@@ -543,5 +576,106 @@ def user_logout(request):
     return redirect('accounts:logout')
 
 def profile(request):
-    """Legacy profile view - redirect to new profile"""
+    """Legacy redirect to new profile view"""
     return redirect('accounts:profile')
+
+
+# Custom Password Reset Views using Gmail API
+def custom_password_reset_view(request):
+    """Custom password reset view using Gmail API"""
+    
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip()
+        
+        if not email:
+            messages.error(request, 'Email address is required.')
+            return render(request, 'accounts/password_reset.html')
+        
+        try:
+            user = CustomUser.objects.get(email=email, is_active=True)
+            
+            # Generate reset token
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            
+            # Create reset link
+            reset_link = request.build_absolute_uri(
+                reverse('accounts:password_reset_confirm', kwargs={
+                    'uidb64': uid,
+                    'token': token
+                })
+            )
+            
+            # Send password reset email via Gmail API
+            try:
+                send_password_reset_email(user, reset_link)
+                
+                # Log password reset request
+                audit_logger = AuditLogger(user=user, request=request)
+                audit_logger.log_security_event(
+                    'PASSWORD_RESET_REQUESTED',
+                    'User requested password reset',
+                    risk_level='low'
+                )
+                
+                messages.success(request, 'Password reset email sent successfully!')
+                return redirect('accounts:password_reset_done')
+                
+            except Exception as email_error:
+                logger.error(f"Failed to send password reset email: {str(email_error)}")
+                messages.error(request, 'Failed to send password reset email. Please try again.')
+                
+        except CustomUser.DoesNotExist:
+            # Don't reveal if email exists - security best practice
+            messages.success(request, 'If an account with that email exists, you will receive a password reset email.')
+            return redirect('accounts:password_reset_done')
+            
+    return render(request, 'accounts/password_reset.html')
+
+
+def custom_password_reset_done_view(request):
+    """Custom password reset done view"""
+    return render(request, 'accounts/password_reset_done.html')
+
+
+def custom_password_reset_confirm_view(request, uidb64, token):
+    """Custom password reset confirm view"""
+    
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = CustomUser.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
+        user = None
+    
+    # Check if token is valid
+    validlink = user is not None and default_token_generator.check_token(user, token)
+    
+    if request.method == 'POST' and validlink:
+        form = SetPasswordForm(user, request.POST)
+        if form.is_valid():
+            form.save()
+            
+            # Log password reset completion
+            audit_logger = AuditLogger(user=user, request=request)
+            audit_logger.log_security_event(
+                'PASSWORD_RESET_COMPLETED',
+                'User completed password reset',
+                risk_level='medium'
+            )
+            
+            messages.success(request, 'Password reset successfully! Please log in with your new password.')
+            return redirect('accounts:password_reset_complete')
+    else:
+        form = SetPasswordForm(user) if validlink else None
+    
+    context = {
+        'form': form,
+        'validlink': validlink,
+    }
+    
+    return render(request, 'accounts/password_reset_confirm.html', context)
+
+
+def custom_password_reset_complete_view(request):
+    """Custom password reset complete view"""
+    return render(request, 'accounts/password_reset_complete.html')

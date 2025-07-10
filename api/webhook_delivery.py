@@ -437,8 +437,8 @@ class WebhookDeliveryService:
             
             text_content = strip_tags(html_content)
             
-            # Send via Gmail API
-            if not settings.DEBUG and hasattr(settings, 'GMAIL_SENDER_EMAIL') and settings.GMAIL_SENDER_EMAIL:
+            # Send via Gmail API (always use Gmail API for production)
+            if hasattr(settings, 'GMAIL_SENDER_EMAIL') and settings.GMAIL_SENDER_EMAIL:
                 success, result = send_gmail(
                     to_emails=[user.email],
                     subject=subject,
@@ -498,8 +498,12 @@ class WebhookEventTrigger:
             event.save()
             return event
         
-        # Schedule delivery to all subscribed endpoints
-        WebhookProcessor.process_event_async(event.id)
+        # Process delivery immediately (synchronous)
+        try:
+            delivery_service = WebhookDeliveryService()
+            WebhookProcessor.process_event(event, delivery_service)
+        except Exception as e:
+            logger.error(f"Failed to process webhook event {event.id}: {str(e)}")
         
         return event
 
@@ -542,23 +546,57 @@ class WebhookProcessor:
             return
         
         # Deliver to all endpoints
+        delivery_count = 0
         for endpoint in endpoints:
             try:
                 delivery_service.deliver_webhook(endpoint, event)
+                delivery_count += 1
             except Exception as e:
                 logger.error(f"Failed to deliver webhook {event.id} to {endpoint.name}: {e}")
+        
+        # Mark event as completed after processing all endpoints
+        event.status = 'completed'
+        event.processed_at = timezone.now()
+        event.save()
+        
+        logger.info(f"Webhook event {event.id} processed successfully. Delivered to {delivery_count} endpoints.")
     
     @staticmethod
     def process_event_async(event_id: str):
         """
-        Process event asynchronously (placeholder for Celery task)
-        In production, this would be a Celery task
+        Process event immediately (synchronous processing)
+        In production, this could be enhanced with Celery for true async processing
         """
         try:
             event = WebhookEvent.objects.get(id=event_id)
-            WebhookProcessor.process_event(event)
+            delivery_service = WebhookDeliveryService()
+            WebhookProcessor.process_event(event, delivery_service)
+            logger.info(f"Processed webhook event {event_id} successfully")
         except WebhookEvent.DoesNotExist:
             logger.error(f"Webhook event {event_id} not found")
+        except Exception as e:
+            logger.error(f"Error processing webhook event {event_id}: {str(e)}")
+    
+    @staticmethod
+    def process_all_pending():
+        """Process all pending webhooks immediately"""
+        pending_events = WebhookEvent.objects.filter(
+            status='pending',
+            next_retry_at__lte=timezone.now()
+        ).order_by('created_at')
+        
+        delivery_service = WebhookDeliveryService()
+        processed_count = 0
+        
+        for event in pending_events:
+            try:
+                WebhookProcessor.process_event(event, delivery_service)
+                processed_count += 1
+            except Exception as e:
+                logger.error(f"Error processing pending webhook event {event.id}: {str(e)}")
+        
+        logger.info(f"Processed {processed_count} pending webhook events")
+        return processed_count
 
 
 # Convenience functions for triggering common events

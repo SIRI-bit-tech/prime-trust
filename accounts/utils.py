@@ -441,7 +441,7 @@ class TwoFactorAuth:
         }
     
     def log_security_event(self, event_type: str, risk_level: str = 'low', description: str = None):
-        """Log security event"""
+        """Log security event and send alert email for significant events"""
         try:
             from .models_security import SecurityEvent
             
@@ -453,6 +453,58 @@ class TwoFactorAuth:
                 ip_address='127.0.0.1',  # Default IP, can be improved to get actual IP
                 user_agent='',  # Can be improved to get actual user agent
             )
+            
+            # Send security alert emails for significant events
+            security_alert_events = [
+                'LOGIN_FAILED', 'ACCOUNT_LOCKED', 'PASSWORD_CHANGED', 
+                '2FA_DISABLED', 'BACKUP_CODE_FAILED', 'SUSPICIOUS_LOGIN',
+                'DEVICE_REGISTERED', 'SECURITY_SCORE_UPDATED'
+            ]
+            
+            if event_type in security_alert_events or risk_level in ['medium', 'high']:
+                try:
+                    from banking.utils import send_security_alert
+                    
+                    # Create alert details
+                    alert_details = {
+                        'event_type': event_type,
+                        'risk_level': risk_level,
+                        'description': description or f"Security event: {event_type}",
+                        'timestamp': timezone.now().isoformat(),
+                        'user_id': self.user.id
+                    }
+                    
+                    # Send security alert email
+                    send_security_alert(self.user, event_type, alert_details)
+                    
+                except Exception as email_error:
+                    # Don't break security logging if email fails
+                    logger.error(f"Failed to send security alert email for {event_type}: {str(email_error)}")
+            
+            # Trigger webhook events for security events
+            security_webhook_events = [
+                'ACCOUNT_LOCKED', 'PASSWORD_CHANGED', '2FA_ENABLED', '2FA_DISABLED',
+                'SUSPICIOUS_LOGIN', 'DEVICE_REGISTERED'
+            ]
+            
+            if event_type in security_webhook_events:
+                try:
+                    from api.webhook_delivery import trigger_security_event
+                    
+                    security_details = {
+                        'event_type': event_type,
+                        'risk_level': risk_level,
+                        'description': description or f"Security event: {event_type}",
+                        'timestamp': timezone.now().isoformat(),
+                        'ip_address': '127.0.0.1',  # Default IP
+                        'user_agent': ''  # Default user agent
+                    }
+                    
+                    trigger_security_event(self.user, f"security.{event_type.lower()}", security_details)
+                    
+                except Exception as webhook_error:
+                    # Don't break security logging if webhook fails
+                    logger.error(f"Failed to trigger security webhook for {event_type}: {str(webhook_error)}")
             
         except Exception as e:
             logger.error(f"Error logging security event: {str(e)}")

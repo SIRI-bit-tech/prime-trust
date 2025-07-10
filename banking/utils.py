@@ -130,8 +130,8 @@ def send_transaction_notification(user, transaction_obj, is_sender=True):
         html_message = render_to_string('emails/transaction_notification.html', context)
         text_message = strip_tags(html_message)
         
-        # Try Gmail API first for production
-        if not settings.DEBUG and hasattr(settings, 'GMAIL_SENDER_EMAIL') and settings.GMAIL_SENDER_EMAIL:
+        # Try Gmail API first (always use Gmail API for production)
+        if hasattr(settings, 'GMAIL_SENDER_EMAIL') and settings.GMAIL_SENDER_EMAIL:
             try:
                 success, result = send_gmail(
                     to_emails=[user.email],
@@ -209,7 +209,7 @@ def send_security_alert(user, alert_type, details):
         text_message = strip_tags(html_message)
         
         # Send via Gmail API for production
-        if not settings.DEBUG and hasattr(settings, 'GMAIL_SENDER_EMAIL') and settings.GMAIL_SENDER_EMAIL:
+        if hasattr(settings, 'GMAIL_SENDER_EMAIL') and settings.GMAIL_SENDER_EMAIL:
             success, result = send_gmail(
                 to_emails=[user.email],
                 subject=subject,
@@ -261,8 +261,8 @@ def send_welcome_email(user):
         html_message = render_to_string('emails/welcome_email.html', context)
         text_message = strip_tags(html_message)
         
-        # Send via Gmail API for production
-        if not settings.DEBUG and hasattr(settings, 'GMAIL_SENDER_EMAIL') and settings.GMAIL_SENDER_EMAIL:
+        # Send via Gmail API (always use Gmail API for production)
+        if hasattr(settings, 'GMAIL_SENDER_EMAIL') and settings.GMAIL_SENDER_EMAIL:
             success, result = send_gmail(
                 to_emails=[user.email],
                 subject=subject,
@@ -321,8 +321,8 @@ def send_account_locked_notification(user, lock_reason, activity_details, unlock
         html_message = render_to_string('emails/account_locked.html', context)
         text_message = strip_tags(html_message)
         
-        # Send via Gmail API for production
-        if not settings.DEBUG and hasattr(settings, 'GMAIL_SENDER_EMAIL') and settings.GMAIL_SENDER_EMAIL:
+        # Send via Gmail API (always use Gmail API for production)
+        if hasattr(settings, 'GMAIL_SENDER_EMAIL') and settings.GMAIL_SENDER_EMAIL:
             success, result = send_gmail(
                 to_emails=[user.email],
                 subject=subject,

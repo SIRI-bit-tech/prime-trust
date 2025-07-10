@@ -236,19 +236,15 @@ if not DEBUG:
 origins = os.getenv('CSRF_TRUSTED_ORIGINS', '')
 CSRF_TRUSTED_ORIGINS = [o for o in origins.split(',') if o.startswith('http')]
 
-# Email Configuration - Gmail API for Production
-EMAIL_BACKEND = 'core.gmail_backend.GmailBackend'  # Custom Gmail backend
-DEFAULT_FROM_EMAIL = os.getenv('GMAIL_SENDER_EMAIL', 'noreply@primetrust.com')
+# Email Configuration - Gmail API for Both Development and Production
+EMAIL_BACKEND = 'core.gmail_backend.GmailBackend'  # Always use Gmail API
+DEFAULT_FROM_EMAIL = os.getenv('GMAIL_SENDER_EMAIL', 'primetrustbank02@gmail.com')
 
 # Gmail API Configuration
-GMAIL_OAUTH_CREDENTIALS_FILE = os.getenv('GMAIL_OAUTH_CREDENTIALS_FILE', 'credentials/gmail-oauth.json')
-GMAIL_TOKEN_FILE = os.getenv('GMAIL_TOKEN_FILE', 'credentials/token.json')
-GMAIL_SENDER_EMAIL = os.getenv('GMAIL_SENDER_EMAIL')
-GMAIL_SUBJECT_PREFIX = os.getenv('GMAIL_SUBJECT_PREFIX', '[PrimeTrust] ')
-
-# Fallback SMTP configuration for development
-if DEBUG:
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+GMAIL_OAUTH_CREDENTIALS_FILE = os.getenv('GMAIL_OAUTH_CREDENTIALS_FILE', 'credentials/gmail-oauth-credentials.json')
+GMAIL_TOKEN_FILE = os.getenv('GMAIL_TOKEN_FILE', 'credentials/gmail-token.json')
+GMAIL_SENDER_EMAIL = os.getenv('GMAIL_SENDER_EMAIL', 'primetrustbank02@gmail.com')
+GMAIL_SUBJECT_PREFIX = os.getenv('GMAIL_SUBJECT_PREFIX', 'PrimeTrust - ')
 
 # Email timeout settings
 EMAIL_TIMEOUT = 30

@@ -222,7 +222,33 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             two_fa.security_settings.account_locked = True
             two_fa.security_settings.save()
             
+            # Log security event
             self.log_security_event(user, 'ACCOUNT_LOCKED', ip_address, user_agent, 'Too many failed attempts')
+            
+            # Send account locked notification email
+            try:
+                from banking.utils import send_account_locked_notification
+                
+                # Create unlock URL (can be customized)
+                unlock_url = f"{getattr(settings, 'SITE_URL', 'https://primetrust.com')}/accounts/unlock"
+                
+                activity_details = {
+                    'failed_attempts': two_fa.security_settings.failed_login_attempts,
+                    'last_attempt_ip': ip_address,
+                    'last_attempt_time': timezone.now().isoformat(),
+                    'user_agent': user_agent
+                }
+                
+                send_account_locked_notification(
+                    user=user,
+                    lock_reason='Too many failed login attempts',
+                    activity_details=activity_details,
+                    unlock_url=unlock_url
+                )
+                
+            except Exception as email_error:
+                # Don't break security flow if email fails
+                logger.error(f"Failed to send account locked notification to {user.email}: {str(email_error)}")
         else:
             two_fa.security_settings.save()
             
@@ -299,19 +325,77 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             return 'Desktop'
     
     def log_security_event(self, user, event_type, ip_address, user_agent, details=None):
-        """Log security event"""
+        """Log security event and send alert email for significant events"""
         try:
             from accounts.models_security import SecurityEvent
+            
+            # Determine severity based on event type
+            severity = 'info' if 'SUCCESS' in event_type else 'warning'
+            if event_type in ['ACCOUNT_LOCKED', 'SUSPICIOUS_LOGIN']:
+                severity = 'critical'
             
             SecurityEvent.objects.create(
                 user=user,
                 event_type=event_type,
-                severity='info' if 'SUCCESS' in event_type else 'warning',
+                severity=severity,
                 ip_address=ip_address,
                 user_agent=user_agent,
                 details=details or "",
                 timestamp=timezone.now()
             )
+            
+            # Send security alert emails for significant events
+            security_alert_events = [
+                'LOGIN_FAILED', 'ACCOUNT_LOCKED', 'SUSPICIOUS_LOGIN',
+                'PASSWORD_CHANGED', 'DEVICE_REGISTERED'
+            ]
+            
+            if event_type in security_alert_events or severity in ['warning', 'critical']:
+                try:
+                    from banking.utils import send_security_alert
+                    
+                    # Create alert details
+                    alert_details = {
+                        'event_type': event_type,
+                        'severity': severity,
+                        'description': details or f"Security event: {event_type}",
+                        'timestamp': timezone.now().isoformat(),
+                        'user_id': user.id,
+                        'ip_address': ip_address,
+                        'user_agent': user_agent
+                    }
+                    
+                    # Send security alert email
+                    send_security_alert(user, event_type, alert_details)
+                    
+                except Exception as email_error:
+                    # Don't break security logging if email fails
+                    logger.error(f"Failed to send security alert email for {event_type}: {str(email_error)}")
+            
+            # Trigger webhook events for security events
+            security_webhook_events = [
+                'ACCOUNT_LOCKED', 'PASSWORD_CHANGED', 'SUSPICIOUS_LOGIN',
+                'DEVICE_REGISTERED', 'LOGIN_SUCCESS', 'LOGIN_2FA_SUCCESS'
+            ]
+            
+            if event_type in security_webhook_events:
+                try:
+                    from api.webhook_delivery import trigger_security_event
+                    
+                    security_details = {
+                        'event_type': event_type,
+                        'severity': severity,
+                        'description': details or f"Security event: {event_type}",
+                        'timestamp': timezone.now().isoformat(),
+                        'ip_address': ip_address,
+                        'user_agent': user_agent
+                    }
+                    
+                    trigger_security_event(user, f"security.{event_type.lower()}", security_details)
+                    
+                except Exception as webhook_error:
+                    # Don't break security logging if webhook fails
+                    logger.error(f"Failed to trigger security webhook for {event_type}: {str(webhook_error)}")
             
         except Exception as e:
             logger.error(f"Error logging security event: {str(e)}")

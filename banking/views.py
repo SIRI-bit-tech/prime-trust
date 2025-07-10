@@ -7,6 +7,9 @@ from django.db.models import Q
 from django.utils import timezone
 from decimal import Decimal
 import uuid
+import logging
+
+logger = logging.getLogger(__name__)
 
 from accounts.models import CustomUser
 from .models import Account, Transaction, Notification
@@ -114,6 +117,14 @@ def send_money(request):
                     # Send email notifications
                     send_transaction_notification(user, new_transaction, is_sender=True)
                     send_transaction_notification(recipient, new_transaction, is_sender=False)
+                    
+                    # Trigger webhook events for transaction
+                    try:
+                        from api.webhook_delivery import trigger_transaction_completed
+                        trigger_transaction_completed(new_transaction)
+                    except Exception as webhook_error:
+                        # Don't break transaction flow if webhook fails
+                        logger.error(f"Failed to trigger transaction webhook for {new_transaction.reference}: {str(webhook_error)}")
                 
                 if request.htmx:
                     # Create receipt context
@@ -236,6 +247,14 @@ def deposit(request):
                     message=f"You deposited ${amount} into your {to_account.get_account_type_display()} account",
                     related_transaction=new_transaction
                 )
+                
+                # Trigger webhook events for transaction
+                try:
+                    from api.webhook_delivery import trigger_transaction_completed
+                    trigger_transaction_completed(new_transaction)
+                except Exception as webhook_error:
+                    # Don't break transaction flow if webhook fails
+                    logger.error(f"Failed to trigger transaction webhook for {new_transaction.reference}: {str(webhook_error)}")
             
             if request.htmx:
                 response = HttpResponse()

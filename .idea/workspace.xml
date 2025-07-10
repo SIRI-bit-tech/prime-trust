@@ -1,0 +1,416 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="508c94cb-4a46-461c-b031-2e0fbe154a57" name="Changes" comment="feat: update web manifest and image assets for improved branding&#10;&#10;- Updated site.webmanifest to include new icon paths and added purpose attributes for better compatibility.&#10;- Removed outdated favicon and logo images, replacing them with new assets for a refreshed look.&#10;- Adjusted image references in templates to point to the new logo files, ensuring consistent branding across the application.">
+      <change beforePath="$PROJECT_DIR$/accounts/forms.py" beforeDir="false" afterPath="$PROJECT_DIR$/accounts/forms.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/accounts/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/accounts/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/accounts/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/accounts/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/accounts/partials/register_form.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/accounts/partials/register_form.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/accounts/register.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/accounts/register.html" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ChangesViewManager">
+    <option name="groupingKeys">
+      <option value="directory" />
+      <option value="repository" />
+    </option>
+  </component>
+  <component name="DjangoConsoleOptions" custom-start-script="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;import django; print('Django %s' % django.get_version())&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;if 'setup' in dir(django): django.setup()&#10;import django_manage_shell; django_manage_shell.run(PROJECT_ROOT)">
+    <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;import django; print('Django %s' % django.get_version())&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;if 'setup' in dir(django): django.setup()&#10;import django_manage_shell; django_manage_shell.run(PROJECT_ROOT)" />
+  </component>
+  <component name="FlaskConsoleOptions" custom-start-script="import sys; print('Python %s on %s' % (sys.version, sys.platform)); sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo, NoAppException&#10;for module in [&quot;main.py&quot;, &quot;wsgi.py&quot;, &quot;app.py&quot;]:&#10;    try: locals().update(ScriptInfo(app_import_path=module, create_app=None).load_app().make_shell_context()); print(&quot;\nFlask App: %s&quot; % app.import_name); break&#10;    except NoAppException: pass">
+    <envs>
+      <env key="FLASK_APP" value="app" />
+    </envs>
+    <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform)); sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo, NoAppException&#10;for module in [&quot;main.py&quot;, &quot;wsgi.py&quot;, &quot;app.py&quot;]:&#10;    try: locals().update(ScriptInfo(app_import_path=module, create_app=None).load_app().make_shell_context()); print(&quot;\nFlask App: %s&quot; % app.import_name); break&#10;    except NoAppException: pass" />
+    <option name="myEnvs">
+      <map>
+        <entry key="FLASK_APP" value="app" />
+      </map>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;SIRI-bit-tech&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;git@github.com:SIRI-bit-tech/prime-trust.git&quot;,
+    &quot;accountId&quot;: &quot;372b505b-2de8-4574-bfed-c5852e68bfc4&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 5
+}</component>
+  <component name="ProjectId" id="2xf6DgbD0dbDsmTOUur0XWnBsvj" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.OpenDjangoStructureViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;django.template.preview.state&quot;: &quot;SHOW_EDITOR_AND_PREVIEW&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;database.data.csv.formats&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RunManager" selected="Django Server.primetrust">
+    <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="primetrust" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="primetrust" type="Python.DjangoServer" factoryName="Django server">
+      <module name="primetrust" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="launchJavascriptDebuger" value="false" />
+      <option name="port" value="8000" />
+      <option name="host" value="" />
+      <option name="additionalOptions" value="" />
+      <option name="browserUrl" value="" />
+      <option name="runTestServer" value="false" />
+      <option name="runNoReload" value="false" />
+      <option name="useCustomRunCommand" value="false" />
+      <option name="customRunCommand" value="" />
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-6a121458b545-JavaScript-PY-251.25410.159" />
+        <option value="bundled-python-sdk-e0ed3721d81e-36ea0e71a18c-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-251.25410.159" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="508c94cb-4a46-461c-b031-2e0fbe154a57" name="Changes" comment="" />
+      <created>1748316670951</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1748316670951</updated>
+      <workItem from="1748316673964" duration="363000" />
+      <workItem from="1748317194130" duration="7022000" />
+      <workItem from="1748357303685" duration="3568000" />
+      <workItem from="1748362122887" duration="410000" />
+      <workItem from="1748424478943" duration="2034000" />
+      <workItem from="1748439930236" duration="3381000" />
+      <workItem from="1748451904282" duration="2668000" />
+      <workItem from="1748480450192" duration="7733000" />
+      <workItem from="1748698729185" duration="1106000" />
+      <workItem from="1748710024140" duration="1052000" />
+      <workItem from="1748777524889" duration="35000" />
+      <workItem from="1748920344186" duration="207000" />
+      <workItem from="1748998301713" duration="828000" />
+      <workItem from="1748999211753" duration="5041000" />
+      <workItem from="1749260440547" duration="6735000" />
+      <workItem from="1749390502585" duration="65000" />
+      <workItem from="1749471993901" duration="55000" />
+      <workItem from="1749472178277" duration="90000" />
+      <workItem from="1749660154449" duration="24000" />
+      <workItem from="1749818773797" duration="572000" />
+    </task>
+    <task id="LOCAL-00001" summary="feat: enhance user account and banking features&#10;&#10;- Updated user profile creation to use get_or_create to prevent IntegrityError.&#10;- Added post_save signal to automatically create UserProfile and accounts upon user registration.&#10;- Implemented deposit and payment functionalities with real-time processing.&#10;- Enhanced user experience with greeting messages based on the time of day.&#10;- Improved admin interface for banking models with better field organization and display.&#10;- Integrated Brevo API for email notifications and streamlined email sending process.&#10;- Added new forms for deposit and payment methods, ensuring proper validation.&#10;- Updated templates for a more responsive design and improved user navigation.">
+      <option name="closed" value="true" />
+      <created>1748447347616</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1748447347616</updated>
+    </task>
+    <task id="LOCAL-00002" summary="chore: update requirements to include dj-database-url">
+      <option name="closed" value="true" />
+      <created>1748447713035</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1748447713035</updated>
+    </task>
+    <task id="LOCAL-00003" summary="refactor: streamline build process and update environment variables">
+      <option name="closed" value="true" />
+      <created>1748453629635</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1748453629635</updated>
+    </task>
+    <task id="LOCAL-00004" summary="chore: add psycopg2-binary to requirements for PostgreSQL support">
+      <option name="closed" value="true" />
+      <created>1748453990701</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1748453990701</updated>
+    </task>
+    <task id="LOCAL-00005" summary="chore: update requirements to include gunicorn and packaging">
+      <option name="closed" value="true" />
+      <created>1748454332679</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1748454332679</updated>
+    </task>
+    <task id="LOCAL-00006" summary="chore: add whitenoise to requirements for improved static file handling">
+      <option name="closed" value="true" />
+      <created>1748454524087</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1748454524087</updated>
+    </task>
+    <task id="LOCAL-00007" summary="feat: implement security question feature for user registration and login&#10;&#10;- Added security question and answer fields to the CustomUser model.&#10;- Updated registration view to require a security question and answer.&#10;- Modified login view to verify user identity using the security question.&#10;- Adjusted templates to include security question selection during registration.&#10;- Removed email verification code generation and related logic.">
+      <option name="closed" value="true" />
+      <created>1748484482012</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1748484482012</updated>
+    </task>
+    <task id="LOCAL-00008" summary="feat: implement security question feature for user registration and login&#10;&#10;- Added security question and answer fields to the CustomUser model.&#10;- Updated registration view to require a security question and answer.&#10;- Modified login view to verify user identity using the security question.&#10;- Adjusted templates to include security question selection during registration.&#10;- Removed email verification code generation and related logic.">
+      <option name="closed" value="true" />
+      <created>1748484493486</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1748484493486</updated>
+    </task>
+    <task id="LOCAL-00009" summary="feat: add security question verification for user login&#10;&#10;- Implemented a new view to verify the user's security question during login.&#10;- Added logic to handle session expiration and incorrect answers.&#10;- Enhanced user experience with success and error messages.&#10;- Updated templates to render the security question form conditionally.">
+      <option name="closed" value="true" />
+      <created>1748484826319</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1748484826319</updated>
+    </task>
+    <task id="LOCAL-00010" summary="refactor: update CustomUserAdmin to display security question">
+      <option name="closed" value="true" />
+      <created>1748484984224</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1748484984224</updated>
+    </task>
+    <task id="LOCAL-00011" summary="fix: update URL name for pay bills path to use hyphen instead of underscore">
+      <option name="closed" value="true" />
+      <created>1748527687460</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1748527687460</updated>
+    </task>
+    <task id="LOCAL-00012" summary="refactor: clean up sidebar by removing unused links for Pay Bills and Loans">
+      <option name="closed" value="true" />
+      <created>1748528385916</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1748528385916</updated>
+    </task>
+    <task id="LOCAL-00013" summary="feat: enhance dashboard with investment and insurance details&#10;&#10;- Added new URL paths for investment and insurance details in the dashboard.&#10;- Updated views to include investment and insurance functionalities.&#10;- Included static file loading in the accounts template.&#10;- Refactored quick actions section to optimize layout and remove unused links.">
+      <option name="closed" value="true" />
+      <created>1748531490118</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1748531490118</updated>
+    </task>
+    <task id="LOCAL-00014" summary="feat: add more services section to dashboard&#10;&#10;- Introduced a new URL path for the more services feature in the dashboard.&#10;- Updated the quick actions template to link to the new more services page.&#10;- Enhanced the quick actions section with conditional styling for the active link.">
+      <option name="closed" value="true" />
+      <created>1748533241969</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1748533241969</updated>
+    </task>
+    <task id="LOCAL-00015" summary="refactor: overhaul more services page layout and structure&#10;&#10;- Replaced the template structure with a complete HTML document.&#10;- Updated the styling and layout to enhance user experience.&#10;- Improved accessibility and responsiveness with Tailwind CSS integration.&#10;- Adjusted navigation link to point directly to the dashboard.">
+      <option name="closed" value="true" />
+      <created>1748534642926</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1748534642926</updated>
+    </task>
+    <task id="LOCAL-00016" summary="fix: update navigation links to point to the home page and load static files in loans template">
+      <option name="closed" value="true" />
+      <created>1748535125936</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1748535125936</updated>
+    </task>
+    <task id="LOCAL-00017" summary="fix: update mobile navigation to consolidate profile and settings links into a single entry and ensure proper conditional rendering in accounts content">
+      <option name="closed" value="true" />
+      <created>1748535717555</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1748535717555</updated>
+    </task>
+    <task id="LOCAL-00018" summary="feat: add investment and insurance policy forms and views&#10;&#10;- Introduced InvestmentForm and InsurancePolicyForm for creating and updating investments and insurance policies.&#10;- Added new views for handling investment and insurance policy creation.&#10;- Updated URLs to include paths for new investment and insurance policy forms.&#10;- Enhanced templates to support dynamic loading of forms via HTMX.">
+      <option name="closed" value="true" />
+      <created>1748536960144</created>
+      <option name="number" value="00018" />
+      <option name="presentableId" value="LOCAL-00018" />
+      <option name="project" value="LOCAL" />
+      <updated>1748536960144</updated>
+    </task>
+    <task id="LOCAL-00019" summary="feat: add TradingView Ticker Tape widget to banking dashboard&#10;&#10;- Integrated TradingView Ticker Tape widget for displaying stock information.&#10;- Adjusted main content padding for better layout consistency.&#10;- Updated template structure to include the new widget while maintaining existing functionality.">
+      <option name="closed" value="true" />
+      <created>1749261228353</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1749261228353</updated>
+    </task>
+    <task id="LOCAL-00020" summary="feat: enhance login functionality and update dashboard metrics&#10;&#10;- Added a method to the LoginForm to retrieve the authenticated user after validation.&#10;- Removed the security question verification URL from accounts URLs.&#10;- Updated the user_login view to handle HTMX-aware redirects upon successful login.&#10;- Introduced a new metrics_update view to provide transaction metrics via HTMX.&#10;- Updated the dashboard home view to include transaction metrics and adjusted the template for better rendering.&#10;- Refactored recent transactions display for improved layout and performance.">
+      <option name="closed" value="true" />
+      <created>1749264459830</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1749264459830</updated>
+    </task>
+    <task id="LOCAL-00021" summary="feat: add SWIFT code display and enhance deposit form functionality&#10;&#10;- Added SWIFT code to user profile and accounts templates for better banking information visibility.&#10;- Updated DepositForm to filter accounts based on the authenticated user.&#10;- Implemented account number generation logic to ensure numeric-only account numbers upon creation.&#10;- Enhanced send_money view to create checking accounts with the new account number format.">
+      <option name="closed" value="true" />
+      <created>1749268098430</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1749268098430</updated>
+    </task>
+    <task id="LOCAL-00022" summary="feat: add news page and integrate real-time news fetching&#10;&#10;- Introduced a new view for the News page that fetches real-time headlines from Gnews.io using the NEWS_API_KEY.&#10;- Updated settings to include NEWS_API_KEY for API integration.&#10;- Added a new URL pattern for the News page in the pages app.&#10;- Enhanced landing page with a navigation link to the News page.&#10;- Improved CSS for hero backgrounds and other sections for better visual presentation.">
+      <option name="closed" value="true" />
+      <created>1749273305393</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1749273305398</updated>
+    </task>
+    <task id="LOCAL-00023" summary="feat: update requirements.txt with new dependencies for enhanced functionality&#10;&#10;- Added various libraries including aiodns, aiohttp, celery, and django-allauth to support asynchronous operations, task management, and user authentication.&#10;- Included additional packages for improved data handling, web scraping, and real-time features.&#10;- Updated existing dependencies to ensure compatibility with the latest versions.">
+      <option name="closed" value="true" />
+      <created>1749295781161</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1749295781161</updated>
+    </task>
+    <task id="LOCAL-00024" summary="feat: update requirements.txt with new dependencies for enhanced functionality">
+      <option name="closed" value="true" />
+      <created>1749296111741</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1749296111741</updated>
+    </task>
+    <task id="LOCAL-00025" summary="feat: update requirements.txt with new dependencies for enhanced functionality">
+      <option name="closed" value="true" />
+      <created>1749296233730</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1749296233735</updated>
+    </task>
+    <task id="LOCAL-00026" summary="feat: update requirements.txt with new dependencies for enhanced functionality">
+      <option name="closed" value="true" />
+      <created>1749296716652</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1749296716652</updated>
+    </task>
+    <task id="LOCAL-00027" summary="feat: update web manifest and image assets for improved branding&#10;&#10;- Updated site.webmanifest to include new icon paths and added purpose attributes for better compatibility.&#10;- Removed outdated favicon and logo images, replacing them with new assets for a refreshed look.&#10;- Adjusted image references in templates to point to the new logo files, ensuring consistent branding across the application.">
+      <option name="closed" value="true" />
+      <created>1749308424628</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1749308424628</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="feat: enhance user account and banking features&#10;&#10;- Updated user profile creation to use get_or_create to prevent IntegrityError.&#10;- Added post_save signal to automatically create UserProfile and accounts upon user registration.&#10;- Implemented deposit and payment functionalities with real-time processing.&#10;- Enhanced user experience with greeting messages based on the time of day.&#10;- Improved admin interface for banking models with better field organization and display.&#10;- Integrated Brevo API for email notifications and streamlined email sending process.&#10;- Added new forms for deposit and payment methods, ensuring proper validation.&#10;- Updated templates for a more responsive design and improved user navigation." />
+    <MESSAGE value="chore: update requirements to include dj-database-url" />
+    <MESSAGE value="refactor: streamline build process and update environment variables" />
+    <MESSAGE value="chore: add psycopg2-binary to requirements for PostgreSQL support" />
+    <MESSAGE value="chore: update requirements to include gunicorn and packaging" />
+    <MESSAGE value="chore: add whitenoise to requirements for improved static file handling" />
+    <MESSAGE value="feat: implement security question feature for user registration and login&#10;&#10;- Added security question and answer fields to the CustomUser model.&#10;- Updated registration view to require a security question and answer.&#10;- Modified login view to verify user identity using the security question.&#10;- Adjusted templates to include security question selection during registration.&#10;- Removed email verification code generation and related logic." />
+    <MESSAGE value="feat: add security question verification for user login&#10;&#10;- Implemented a new view to verify the user's security question during login.&#10;- Added logic to handle session expiration and incorrect answers.&#10;- Enhanced user experience with success and error messages.&#10;- Updated templates to render the security question form conditionally." />
+    <MESSAGE value="refactor: update CustomUserAdmin to display security question" />
+    <MESSAGE value="fix: update URL name for pay bills path to use hyphen instead of underscore" />
+    <MESSAGE value="refactor: clean up sidebar by removing unused links for Pay Bills and Loans" />
+    <MESSAGE value="feat: enhance dashboard with investment and insurance details&#10;&#10;- Added new URL paths for investment and insurance details in the dashboard.&#10;- Updated views to include investment and insurance functionalities.&#10;- Included static file loading in the accounts template.&#10;- Refactored quick actions section to optimize layout and remove unused links." />
+    <MESSAGE value="feat: add more services section to dashboard&#10;&#10;- Introduced a new URL path for the more services feature in the dashboard.&#10;- Updated the quick actions template to link to the new more services page.&#10;- Enhanced the quick actions section with conditional styling for the active link." />
+    <MESSAGE value="refactor: overhaul more services page layout and structure&#10;&#10;- Replaced the template structure with a complete HTML document.&#10;- Updated the styling and layout to enhance user experience.&#10;- Improved accessibility and responsiveness with Tailwind CSS integration.&#10;- Adjusted navigation link to point directly to the dashboard." />
+    <MESSAGE value="fix: update navigation links to point to the home page and load static files in loans template" />
+    <MESSAGE value="fix: update mobile navigation to consolidate profile and settings links into a single entry and ensure proper conditional rendering in accounts content" />
+    <MESSAGE value="feat: add investment and insurance policy forms and views&#10;&#10;- Introduced InvestmentForm and InsurancePolicyForm for creating and updating investments and insurance policies.&#10;- Added new views for handling investment and insurance policy creation.&#10;- Updated URLs to include paths for new investment and insurance policy forms.&#10;- Enhanced templates to support dynamic loading of forms via HTMX." />
+    <MESSAGE value="Add mobile layout fixes and safe area support" />
+    <MESSAGE value="feat: add TradingView Ticker Tape widget to banking dashboard&#10;&#10;- Integrated TradingView Ticker Tape widget for displaying stock information.&#10;- Adjusted main content padding for better layout consistency.&#10;- Updated template structure to include the new widget while maintaining existing functionality." />
+    <MESSAGE value="feat: enhance login functionality and update dashboard metrics&#10;&#10;- Added a method to the LoginForm to retrieve the authenticated user after validation.&#10;- Removed the security question verification URL from accounts URLs.&#10;- Updated the user_login view to handle HTMX-aware redirects upon successful login.&#10;- Introduced a new metrics_update view to provide transaction metrics via HTMX.&#10;- Updated the dashboard home view to include transaction metrics and adjusted the template for better rendering.&#10;- Refactored recent transactions display for improved layout and performance." />
+    <MESSAGE value="feat: add SWIFT code display and enhance deposit form functionality&#10;&#10;- Added SWIFT code to user profile and accounts templates for better banking information visibility.&#10;- Updated DepositForm to filter accounts based on the authenticated user.&#10;- Implemented account number generation logic to ensure numeric-only account numbers upon creation.&#10;- Enhanced send_money view to create checking accounts with the new account number format." />
+    <MESSAGE value="feat: add news page and integrate real-time news fetching&#10;&#10;- Introduced a new view for the News page that fetches real-time headlines from Gnews.io using the NEWS_API_KEY.&#10;- Updated settings to include NEWS_API_KEY for API integration.&#10;- Added a new URL pattern for the News page in the pages app.&#10;- Enhanced landing page with a navigation link to the News page.&#10;- Improved CSS for hero backgrounds and other sections for better visual presentation." />
+    <MESSAGE value="feat: update requirements.txt with new dependencies for enhanced functionality&#10;&#10;- Added various libraries including aiodns, aiohttp, celery, and django-allauth to support asynchronous operations, task management, and user authentication.&#10;- Included additional packages for improved data handling, web scraping, and real-time features.&#10;- Updated existing dependencies to ensure compatibility with the latest versions." />
+    <MESSAGE value="feat: update requirements.txt with new dependencies for enhanced functionality" />
+    <MESSAGE value="feat: update web manifest and image assets for improved branding&#10;&#10;- Updated site.webmanifest to include new icon paths and added purpose attributes for better compatibility.&#10;- Removed outdated favicon and logo images, replacing them with new assets for a refreshed look.&#10;- Adjusted image references in templates to point to the new logo files, ensuring consistent branding across the application." />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: update web manifest and image assets for improved branding&#10;&#10;- Updated site.webmanifest to include new icon paths and added purpose attributes for better compatibility.&#10;- Removed outdated favicon and logo images, replacing them with new assets for a refreshed look.&#10;- Adjusted image references in templates to point to the new logo files, ensuring consistent branding across the application." />
+  </component>
+</project>

@@ -85,6 +85,7 @@ class WebhookEndpoint(models.Model):
     timeout_seconds = models.PositiveIntegerField(default=30, help_text="Timeout for webhook requests")
     max_retries = models.PositiveIntegerField(default=3, help_text="Maximum number of retry attempts")
     retry_delay_seconds = models.PositiveIntegerField(default=60, help_text="Initial delay between retries")
+    email_notifications_enabled = models.BooleanField(default=False, help_text="Send email notifications for webhook events")
     
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)

@@ -9,6 +9,7 @@ from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.urls import path
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 import logging
 
 from .models import CustomUser, UserProfile
@@ -92,7 +93,27 @@ class CustomUserAdmin(UserAdmin):
     def security_status_display(self, obj):
         """Display security status with color coding"""
         try:
-            security_settings = obj.security_settings
+            # Check if security_settings exists, create if not
+            if hasattr(obj, 'security_settings'):
+                security_settings = obj.security_settings
+            else:
+                # Create SecuritySettings if it doesn't exist
+                from .models_security import SecuritySettings
+                from django.utils import timezone
+                security_settings, created = SecuritySettings.objects.get_or_create(
+                    user=obj,
+                    defaults={
+                        'two_factor_enabled': False,
+                        'security_score': 50,
+                        'password_last_changed': timezone.now(),
+                        'failed_login_attempts': 0,
+                        'login_notifications_enabled': True,
+                        'transaction_notifications_enabled': True,
+                        'security_alerts_enabled': True,
+                        'password_change_required': False,
+                    }
+                )
+            
             score = security_settings.security_score
             
             if score >= 80:
@@ -109,8 +130,9 @@ class CustomUserAdmin(UserAdmin):
                 '<span style="color: {}; font-weight: bold;">{} ({})</span>',
                 color, status, score
             )
-        except:
-            return format_html('<span style="color: red;">No Data</span>')
+        except Exception:
+            # Better error handling - no print, no logger.error
+            return format_html('<span style="color: gray;">Unavailable</span>')
     
     security_status_display.short_description = 'Security Score'
     
@@ -150,9 +172,55 @@ class CustomUserAdmin(UserAdmin):
             return "Save user first to see security information"
         
         try:
-            security_settings = obj.security_settings
-            devices = obj.user_devices.all()[:3]
-            recent_events = obj.security_events.all()[:5]
+            # Get or create security settings
+            if hasattr(obj, 'security_settings'):
+                security_settings = obj.security_settings
+            else:
+                from .models_security import SecuritySettings
+                from django.utils import timezone
+                security_settings, created = SecuritySettings.objects.get_or_create(
+                    user=obj,
+                    defaults={
+                        'two_factor_enabled': False,
+                        'security_score': 50,
+                        'password_last_changed': timezone.now(),
+                        'failed_login_attempts': 0,
+                        'login_notifications_enabled': True,
+                        'transaction_notifications_enabled': True,
+                        'security_alerts_enabled': True,
+                        'password_change_required': False,
+                    }
+                )
+            
+            # Get devices (using correct related name and field names)
+            devices = getattr(obj, 'devices', None)
+            if devices and hasattr(devices, 'all'):
+                devices_list = list(devices.all()[:3])
+                device_count = devices.count()
+            else:
+                devices_list = []
+                device_count = 0
+            
+            # Get security events
+            events = getattr(obj, 'security_events', None)
+            if events and hasattr(events, 'all'):
+                events_list = list(events.all()[:5])
+            else:
+                events_list = []
+            
+            # Safely get backup codes count
+            backup_codes_count = 0
+            if hasattr(security_settings, 'backup_codes'):
+                try:
+                    backup_codes_count = security_settings.backup_codes.count()
+                except:
+                    backup_codes_count = 0
+            
+            # Check account locked status
+            account_locked = False
+            if hasattr(security_settings, 'account_locked_until') and security_settings.account_locked_until:
+                from django.utils import timezone
+                account_locked = timezone.now() < security_settings.account_locked_until
             
             html = f"""
             <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0;">
@@ -163,38 +231,83 @@ class CustomUserAdmin(UserAdmin):
                         <h4>2FA Status</h4>
                         <p><strong>Enabled:</strong> {'Yes' if security_settings.two_factor_enabled else 'No'}</p>
                         <p><strong>Secret Set:</strong> {'Yes' if security_settings.two_factor_secret else 'No'}</p>
-                        <p><strong>Backup Codes:</strong> {security_settings.backup_codes.count()}</p>
+                        <p><strong>Backup Codes:</strong> {backup_codes_count}</p>
                     </div>
                     
                     <div>
                         <h4>Account Security</h4>
-                        <p><strong>Account Locked:</strong> {'Yes' if security_settings.account_locked else 'No'}</p>
+                        <p><strong>Account Locked:</strong> {'Yes' if account_locked else 'No'}</p>
                         <p><strong>Failed Attempts:</strong> {security_settings.failed_login_attempts}</p>
                         <p><strong>Security Score:</strong> {security_settings.security_score}/100</p>
                     </div>
                 </div>
                 
                 <div style="margin: 15px 0;">
-                    <h4>Recent Devices ({devices.count()})</h4>
-                    <ul>
-                        {''.join([f"<li>{device.device_name} - {device.trust_level} ({device.last_seen})</li>" for device in devices])}
+                    <h4>Recent Devices ({device_count})</h4>
+                    <ul style="max-height: 150px; overflow-y: auto;">
+            """
+            
+            if devices_list:
+                for device in devices_list:
+                    try:
+                        # Use correct field name: last_used instead of last_seen
+                        last_used = getattr(device, 'last_used', 'Unknown')
+                        device_name = getattr(device, 'device_name', 'Unknown Device')
+                        trust_level = getattr(device, 'trust_level', 'Unknown')
+                        html += f"<li>{device_name} - {trust_level} ({last_used})</li>"
+                    except Exception:
+                        html += f"<li>Device info unavailable</li>"
+            else:
+                html += "<li>No devices found</li>"
+            
+            html += """
                     </ul>
                 </div>
                 
                 <div style="margin: 15px 0;">
-                    <h4>Recent Security Events ({recent_events.count()})</h4>
-                    <ul>
-                        {''.join([f"<li>{event.event_type} - {event.timestamp} ({event.risk_level})</li>" for event in recent_events])}
+                    <h4>Recent Security Events</h4>
+                    <ul style="max-height: 150px; overflow-y: auto;">
+            """
+            
+            if events_list:
+                for event in events_list:
+                    try:
+                        event_type = getattr(event, 'event_type', 'Unknown')
+                        # Use correct field name: risk_level instead of severity
+                        risk_level = getattr(event, 'risk_level', 'Unknown')
+                        # Use correct field name: created_at instead of timestamp
+                        timestamp = getattr(event, 'created_at', 'Unknown')
+                        html += f"<li>{event_type} - {risk_level} ({timestamp})</li>"
+                    except Exception:
+                        html += f"<li>Event info unavailable</li>"
+            else:
+                html += "<li>No recent events</li>"
+            
+            html += f"""
                     </ul>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <a href="{reverse('admin:accounts_customuser_manage_2fa', args=[obj.id])}" class="button">
+                        Manage 2FA
+                    </a>
+                    <a href="{reverse('admin:accounts_customuser_security_details', args=[obj.id])}" class="button">
+                        Security Details
+                    </a>
                 </div>
             </div>
             """
             
-            return mark_safe(html)
+            return format_html(html)
             
         except Exception as e:
-            logger.error(f"Error generating security overview: {str(e)}")
-            return "Error loading security information"
+            # Better error handling without logger.error or print
+            return format_html(
+                '<div style="background: #ffebee; padding: 10px; border-radius: 5px; color: #c62828;">'
+                '<strong>Security Information Unavailable</strong><br>'
+                'Please contact administrator if this persists.'
+                '</div>'
+            )
     
     security_overview.short_description = 'Security Information'
     

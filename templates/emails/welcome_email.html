@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome to PrimeTrust Banking</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            margin-top: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        .welcome-banner {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .feature-box {
+            background-color: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .feature-box h4 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        .action-button {
+            display: inline-block;
+            padding: 12px 25px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 5px;
+        }
+        .action-button:hover {
+            background-color: #218838;
+        }
+        .security-tips {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .footer {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            margin-top: 30px;
+            border-top: 1px solid #dee2e6;
+            padding-top: 20px;
+        }
+        .contact-info {
+            background-color: #f1f3f4;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="welcome-banner">
+            <h1>🎉 Welcome to PrimeTrust Banking!</h1>
+            <p>Your account has been successfully created and verified</p>
+        </div>
+        
+        <p><strong>Dear {{ user_name }},</strong></p>
+        
+        <p>Congratulations! Your PrimeTrust banking account is now active and ready to use. We're excited to have you as part of our secure banking community.</p>
+        
+        <div class="feature-box">
+            <h4>🏦 What You Can Do Now:</h4>
+            <ul>
+                <li><strong>Send & Receive Money</strong> - Transfer funds instantly to other accounts</li>
+                <li><strong>Pay Bills</strong> - Set up automatic payments and manage your bills</li>
+                <li><strong>Digital Wallet</strong> - Access your Bitcoin wallet and crypto features</li>
+                <li><strong>Loans & Credit</strong> - Apply for personal loans and credit products</li>
+                <li><strong>Investment Services</strong> - Grow your wealth with our investment options</li>
+                <li><strong>Insurance Products</strong> - Protect what matters most</li>
+            </ul>
+        </div>
+        
+        <div style="text-align: center;">
+            <a href="{{ dashboard_url }}" class="action-button">Access Your Dashboard</a>
+            <a href="{{ mobile_app_url }}" class="action-button">Download Mobile App</a>
+        </div>
+        
+        <div class="security-tips">
+            <h4>🔒 Your Security is Our Priority</h4>
+            <p><strong>Your account includes these security features:</strong></p>
+            <ul>
+                <li>✅ Two-Factor Authentication (2FA) enabled</li>
+                <li>✅ Transaction PIN protection</li>
+                <li>✅ Real-time fraud monitoring</li>
+                <li>✅ Email notifications for all activities</li>
+                <li>✅ Secure device registration</li>
+            </ul>
+        </div>
+        
+        <div class="feature-box">
+            <h4>📱 Get Our Mobile App</h4>
+            <p>Download the PrimeTrust mobile app for banking on the go:</p>
+            <ul>
+                <li>Instant notifications</li>
+                <li>Touch ID / Face ID login</li>
+                <li>Quick transfers and payments</li>
+                <li>Real-time account monitoring</li>
+            </ul>
+        </div>
+        
+        <div class="contact-info">
+            <h4>📞 Need Help Getting Started?</h4>
+            <p><strong>Customer Support:</strong></p>
+            <ul>
+                <li>📧 Email: support@primetrust.com</li>
+                <li>📱 Phone: 1-800-PRIMETRUST (24/7)</li>
+                <li>💬 Live Chat: Available in your dashboard</li>
+                <li>🌐 Help Center: help.primetrust.com</li>
+            </ul>
+        </div>
+        
+        <p><strong>Next Steps:</strong></p>
+        <ol>
+            <li>Log in to your dashboard and explore your account</li>
+            <li>Set up your profile and preferences</li>
+            <li>Add funds to start using our services</li>
+            <li>Download our mobile app for convenience</li>
+        </ol>
+        
+        <p>Thank you for choosing PrimeTrust. We're here to help you achieve your financial goals with security, convenience, and innovation.</p>
+        
+        <p><strong>Welcome aboard!</strong><br>
+        The PrimeTrust Team</p>
+        
+        <div class="footer">
+            <p><strong>Important:</strong> Keep your login credentials secure and never share them with anyone.</p>
+            <hr>
+            <p>This welcome email was sent to {{ user_email }} on {{ date }}.</p>
+            <p>&copy; {% now "Y" %} PrimeTrust Banking. All rights reserved.</p>
+            <p>This is an automated message, please do not reply to this email.</p>
+        </div>
+    </div>
+</body>
+</html> 

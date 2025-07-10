@@ -476,54 +476,64 @@ class CardTransactionSerializer(serializers.Serializer):
 # ====== WEBHOOK SERIALIZERS ======
 
 class WebhookEndpointSerializer(serializers.ModelSerializer):
+    """Serializer for webhook endpoints"""
+    
     success_rate = serializers.ReadOnlyField()
     
     class Meta:
         model = WebhookEndpoint
         fields = [
             'id', 'name', 'url', 'events', 'secret', 'is_active',
-            'timeout_seconds', 'max_retries', 'retry_delay_seconds',
-            'total_deliveries', 'successful_deliveries', 'failed_deliveries',
-            'success_rate', 'created_at', 'updated_at', 'last_used_at'
+            'timeout_seconds', 'max_retries', 'retry_delay_seconds', 'email_notifications_enabled',
+            'created_at', 'updated_at', 'last_used_at',
+            'total_deliveries', 'successful_deliveries', 'failed_deliveries', 'success_rate'
         ]
-        read_only_fields = [
-            'id', 'total_deliveries', 'successful_deliveries', 'failed_deliveries',
-            'success_rate', 'created_at', 'updated_at', 'last_used_at'
-        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'last_used_at', 
+                           'total_deliveries', 'successful_deliveries', 'failed_deliveries']
         extra_kwargs = {
-            'secret': {'write_only': True}
+            'secret': {'write_only': True, 'required': False}
         }
 
     def validate_events(self, value):
-        if not value:
-            raise serializers.ValidationError("At least one event must be selected")
-        
+        """Validate that all events are valid choices"""
         valid_events = [choice[0] for choice in WebhookEndpoint.WEBHOOK_EVENTS]
         for event in value:
             if event not in valid_events:
                 raise serializers.ValidationError(f"Invalid event type: {event}")
-        
         return value
 
     def validate_url(self, value):
-        # Additional URL validation
+        """Validate webhook URL"""
         if not value.startswith(('http://', 'https://')):
             raise serializers.ValidationError("URL must start with http:// or https://")
         return value
 
 
 class WebhookEndpointCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating webhook endpoints"""
+    
     class Meta:
         model = WebhookEndpoint
         fields = [
-            'name', 'url', 'events', 'secret', 'timeout_seconds',
-            'max_retries', 'retry_delay_seconds'
+            'name', 'url', 'events', 'secret', 'is_active',
+            'timeout_seconds', 'max_retries', 'retry_delay_seconds', 'email_notifications_enabled'
         ]
+        extra_kwargs = {
+            'secret': {'write_only': True, 'required': False}
+        }
 
     def validate_events(self, value):
-        if not value:
-            raise serializers.ValidationError("At least one event must be selected")
+        """Validate that all events are valid choices"""
+        valid_events = [choice[0] for choice in WebhookEndpoint.WEBHOOK_EVENTS]
+        for event in value:
+            if event not in valid_events:
+                raise serializers.ValidationError(f"Invalid event type: {event}")
         return value
+
+    def create(self, validated_data):
+        # Set the user from request
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
 
 
 class WebhookEventSerializer(serializers.ModelSerializer):

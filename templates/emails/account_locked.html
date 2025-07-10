@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Account Security Lock - Immediate Action Required</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            margin-top: 20px;
+            border: 2px solid #dc3545;
+        }
+        .alert-header {
+            background-color: #dc3545;
+            color: white;
+            padding: 20px;
+            border-radius: 8px 8px 0 0;
+            margin: -30px -30px 20px -30px;
+            text-align: center;
+        }
+        .lock-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .reason-box {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .reason-box h4 {
+            color: #721c24;
+            margin-top: 0;
+        }
+        .unlock-steps {
+            background-color: #e7f3ff;
+            border-left: 4px solid #007bff;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .unlock-steps h4 {
+            color: #007bff;
+            margin-top: 0;
+        }
+        .unlock-button {
+            display: inline-block;
+            padding: 15px 30px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .unlock-button:hover {
+            background-color: #0056b3;
+        }
+        .security-contact {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .security-contact h4 {
+            color: #856404;
+            margin-top: 0;
+        }
+        .footer {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            margin-top: 30px;
+            border-top: 1px solid #dee2e6;
+            padding-top: 20px;
+        }
+        .emergency {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="alert-header">
+            <div class="lock-icon">🔒</div>
+            <h1>ACCOUNT TEMPORARILY LOCKED</h1>
+            <p>Immediate security action required</p>
+        </div>
+        
+        <p><strong>Dear {{ user_name }},</strong></p>
+        
+        <p><strong>Your PrimeTrust account has been temporarily locked for security reasons.</strong></p>
+        
+        <div class="reason-box">
+            <h4>🚨 Lock Reason:</h4>
+            <p><strong>{{ lock_reason }}</strong></p>
+            <p><strong>Locked At:</strong> {{ lock_timestamp }}</p>
+            <p><strong>Suspicious Activity Detected:</strong> {{ activity_details }}</p>
+        </div>
+        
+        <div class="emergency">
+            ⚠️ If you did NOT attempt to access your account, please contact our security team IMMEDIATELY
+        </div>
+        
+        <div class="unlock-steps">
+            <h4>🔓 To Unlock Your Account:</h4>
+            <ol>
+                <li><strong>Verify your identity</strong> using the secure link below</li>
+                <li><strong>Answer security questions</strong> to confirm it's really you</li>
+                <li><strong>Review recent account activity</strong> for any unauthorized access</li>
+                <li><strong>Update your password</strong> if security was compromised</li>
+                <li><strong>Enable additional security</strong> features if recommended</li>
+            </ol>
+        </div>
+        
+        <div style="text-align: center;">
+            <a href="{{ unlock_url }}" class="unlock-button">🔓 Unlock My Account Securely</a>
+        </div>
+        
+        <p><strong>Security Link Expires:</strong> {{ expiration_time }}</p>
+        
+        <div class="security-contact">
+            <h4>🆘 Need Immediate Help?</h4>
+            <p><strong>Security Hotline (24/7):</strong></p>
+            <ul>
+                <li>📞 <strong>1-800-SECURITY</strong> (1-800-732-8748)</li>
+                <li>📧 <strong>security@primetrust.com</strong></li>
+                <li>💬 <strong>Emergency Chat:</strong> Available in mobile app</li>
+            </ul>
+            <p><strong>Reference Number:</strong> {{ incident_reference }}</p>
+        </div>
+        
+        <p><strong>What Happens Next:</strong></p>
+        <ul>
+            <li>Your account remains protected until you verify your identity</li>
+            <li>No transactions can be processed while locked</li>
+            <li>Our security team is monitoring your account</li>
+            <li>You'll receive confirmation once the lock is removed</li>
+        </ul>
+        
+        <div class="reason-box">
+            <h4>🛡️ Why We Lock Accounts:</h4>
+            <p>We automatically lock accounts when we detect:</p>
+            <ul>
+                <li>Multiple failed login attempts</li>
+                <li>Unusual login locations or devices</li>
+                <li>Suspicious transaction patterns</li>
+                <li>Potential phishing or fraud attempts</li>
+                <li>Compromised device or network activity</li>
+            </ul>
+        </div>
+        
+        <p><strong>Important Security Reminders:</strong></p>
+        <ul>
+            <li>✅ PrimeTrust will never ask for your full password via email</li>
+            <li>✅ Always verify our official website URL before logging in</li>
+            <li>✅ Never click suspicious links or download unknown attachments</li>
+            <li>✅ Use only official PrimeTrust apps and websites</li>
+        </ul>
+        
+        <p>We apologize for any inconvenience, but your account security is our top priority.</p>
+        
+        <p><strong>Stay secure,</strong><br>
+        PrimeTrust Security Team</p>
+        
+        <div class="footer">
+            <p><strong>Fraud Prevention Notice:</strong> This security lock was triggered by our automated fraud detection system.</p>
+            <hr>
+            <p>Incident Reference: {{ incident_reference }} | Locked at: {{ lock_timestamp }}</p>
+            <p>&copy; {% now "Y" %} PrimeTrust Banking Security Division. All rights reserved.</p>
+            <p>This is an automated security alert. For assistance, use the contact methods above.</p>
+        </div>
+    </div>
+</body>
+</html> 

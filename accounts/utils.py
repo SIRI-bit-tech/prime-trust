@@ -10,6 +10,7 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
 from django.core.cache import cache
+from core.gmail_service import send_gmail
 import pyotp
 import qrcode
 import io
@@ -29,15 +30,23 @@ def generate_verification_code():
     """Generate a 6-digit verification code."""
     return ''.join(random.choices(string.digits, k=6))
 
-def send_verification_email(email, code, is_login=False):
+def send_verification_email(user, code, is_login=False):
     """
-    Send verification email with the provided code.
+    Send verification email with the provided code via Gmail API.
     
     Args:
-        email (str): The recipient's email address
+        user: User object or email string
         code (str): The verification code
         is_login (bool): Whether this is for login verification (True) or registration (False)
     """
+    # Handle both user objects and email strings
+    if hasattr(user, 'email'):
+        email = user.email
+        user_name = user.get_full_name() if hasattr(user, 'get_full_name') else email
+    else:
+        email = user
+        user_name = email
+    
     # Determine the subject and template based on the verification type
     if is_login:
         subject = 'Login Verification Code'
@@ -48,52 +57,151 @@ def send_verification_email(email, code, is_login=False):
         template = 'emails/verification_email.html'
         timeout = settings.EMAIL_VERIFICATION_TIMEOUT
 
-    # Render the HTML email template
-    html_message = render_to_string(template, {
-        'verification_code': code
-    })
-    plain_message = strip_tags(html_message)
-
     try:
-        # Send the email using the configured backend
-        send_mail(
-            subject=subject,
-            message=plain_message,
+        # Render the HTML email template
+        context = {
+            'verification_code': code,
+            'user_name': user_name,
+            'is_login': is_login
+        }
+        html_message = render_to_string(template, context)
+        text_message = strip_tags(html_message)
+
+        # Try Gmail API for production
+        if not settings.DEBUG and hasattr(settings, 'GMAIL_SENDER_EMAIL') and settings.GMAIL_SENDER_EMAIL:
+            try:
+                success, result = send_gmail(
+                    to_emails=[email],
+                    subject=subject,
+                    text_content=text_message,
+                    html_content=html_message,
+                    headers={'X-Verification-Type': 'login' if is_login else 'registration'}
+                )
+                
+                if success:
+                    # Store the verification code in cache
+                    cache_key = f"verification_code_{email}"
+                    cache.set(cache_key, code, timeout)
+                    
+                    logger.info(f"Verification email sent via Gmail API to {email} (login: {is_login})")
+                    return True
+                else:
+                    logger.error(f"Gmail API failed for {email}: {result}")
+                    # Fall through to Django backend
+                    
+            except Exception as gmail_error:
+                logger.error(f"Gmail API error for {email}: {str(gmail_error)}")
+                # Fall through to Django backend
+        
+        # Fallback to Django's email backend
+        sent = send_mail(
+            subject=f"{getattr(settings, 'GMAIL_SUBJECT_PREFIX', '[PrimeTrust] ')}{subject}",
+            message=text_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[email],
             html_message=html_message,
             fail_silently=False,
         )
         
-        # Store the verification code in cache
-        cache_key = f"verification_code_{email}"
-        cache.set(cache_key, code, timeout)
-        
-        return True
+        if sent:
+            # Store the verification code in cache
+            cache_key = f"verification_code_{email}"
+            cache.set(cache_key, code, timeout)
             
-    except Exception:
+            logger.info(f"Verification email sent via Django backend to {email} (login: {is_login})")
+            return True
+        else:
+            logger.error(f"Django email backend failed for {email}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Error sending verification email to {email}: {str(e)}", exc_info=True)
         return False
 
-def verify_code(email, code):
+def verify_code(email, provided_code):
     """
-    Verify the provided code against the stored code.
+    Verify the provided code against the cached code.
     
     Args:
-        email (str): The email address
-        code (str): The verification code to verify
+        email (str): The user's email address
+        provided_code (str): The code provided by the user
         
     Returns:
-        bool: True if verification successful, False otherwise
+        bool: True if the code is valid, False otherwise
     """
-    cache_key = f"verification_code_{email}"
-    stored_code = cache.get(cache_key)
+    try:
+        cache_key = f"verification_code_{email}"
+        stored_code = cache.get(cache_key)
+        
+        if stored_code and stored_code == provided_code:
+            # Remove the code from cache after successful verification
+            cache.delete(cache_key)
+            logger.info(f"Verification code verified successfully for {email}")
+            return True
+        else:
+            logger.warning(f"Invalid verification code provided for {email}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Error verifying code for {email}: {str(e)}")
+        return False
+
+def send_password_reset_email(user, reset_link):
+    """
+    Send password reset email via Gmail API
     
-    if stored_code and stored_code == code:
-        # Delete the code after successful verification
-        cache.delete(cache_key)
-        return True
-    
-    return False
+    Args:
+        user: User object
+        reset_link (str): Password reset link
+    """
+    try:
+        subject = 'Password Reset Request'
+        
+        context = {
+            'user_name': user.get_full_name(),
+            'reset_link': reset_link,
+            'site_name': 'PrimeTrust'
+        }
+        
+        html_message = render_to_string('emails/password_reset.html', context)
+        text_message = strip_tags(html_message)
+        
+        # Try Gmail API for production
+        if not settings.DEBUG and hasattr(settings, 'GMAIL_SENDER_EMAIL') and settings.GMAIL_SENDER_EMAIL:
+            success, result = send_gmail(
+                to_emails=[user.email],
+                subject=subject,
+                text_content=text_message,
+                html_content=html_message,
+                headers={'X-Password-Reset': 'true'}
+            )
+            
+            if success:
+                logger.info(f"Password reset email sent via Gmail API to {user.email}")
+                return True
+            else:
+                logger.error(f"Gmail API failed for password reset: {result}")
+        
+        # Fallback to Django backend
+        sent = send_mail(
+            subject=f"{getattr(settings, 'GMAIL_SUBJECT_PREFIX', '[PrimeTrust] ')}{subject}",
+            message=text_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            html_message=html_message,
+            fail_silently=False,
+        )
+        
+        if sent:
+            logger.info(f"Password reset email sent via Django backend to {user.email}")
+            return True
+        else:
+            logger.error(f"Failed to send password reset email to {user.email}")
+            return False
+            
+    except Exception as e:
+        logger.error(f"Error sending password reset email: {str(e)}", exc_info=True)
+        return False
 
 class TwoFactorAuth:
     """Production-grade 2FA implementation with TOTP and backup codes"""

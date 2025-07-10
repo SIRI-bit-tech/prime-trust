@@ -248,6 +248,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                 device_hash=device_hash,
                 defaults={
                     'device_name': self.extract_device_name(user_agent),
+                    'device_type': self.detect_device_type(user_agent),
                     'ip_address': ip_address,
                     'user_agent': user_agent,
                     'trust_level': 'new',
@@ -265,6 +266,28 @@ class CustomTokenObtainPairView(TokenObtainPairView):
                 
         except Exception as e:
             logger.error(f"Error updating device info: {str(e)}")
+
+    def detect_device_type(self, user_agent):
+        """Detect device type from user agent"""
+        user_agent_lower = user_agent.lower()
+        
+        # Check for mobile indicators
+        mobile_indicators = ['mobile', 'android', 'iphone', 'ipod', 'blackberry', 'nokia', 'opera mini']
+        if any(indicator in user_agent_lower for indicator in mobile_indicators):
+            return 'mobile'
+        
+        # Check for tablet indicators  
+        tablet_indicators = ['tablet', 'ipad', 'kindle', 'playbook', 'silk']
+        if any(indicator in user_agent_lower for indicator in tablet_indicators):
+            return 'tablet'
+        
+        # Check if it's likely an API client
+        api_indicators = ['curl', 'wget', 'python', 'postman', 'insomnia', 'httpie']
+        if any(indicator in user_agent_lower for indicator in api_indicators):
+            return 'api'
+        
+        # Default to web browser for desktop/laptop
+        return 'web'
     
     def extract_device_name(self, user_agent):
         """Extract device name from user agent"""

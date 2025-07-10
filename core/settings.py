@@ -170,19 +170,36 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Use WhiteNoise for static files in production
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Configure database for Render
-try:
-    import dj_database_url
+# Database Configuration
+if DEBUG:
+    # Development: Use PostgreSQL (hardcoded for now)
     DATABASES = {
-        'default': dj_database_url.config(
-            default='sqlite:///' + os.path.join(BASE_DIR, 'db.sqlite3'),
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'primetrust_db',
+            'USER': 'postgres',
+            'PASSWORD': 'derry221',
+            'HOST': 'localhost',
+            'PORT': '5433',
+            'OPTIONS': {
+                'options': '-c default_transaction_isolation=serializable'
+            },
+        }
     }
-except ImportError:
-    # Fallback if dj_database_url is not installed yet
-    pass
+else:
+    # Production: Use DATABASE_URL from environment
+    try:
+        import dj_database_url
+        DATABASES = {
+            'default': dj_database_url.config(
+                conn_max_age=600,
+                conn_health_checks=True,
+            )
+        }
+        if not DATABASES['default']:
+            raise ValueError("DATABASE_URL environment variable is required in production")
+    except ImportError:
+        raise ImportError("dj_database_url is required for production deployment")
 
 # Media files
 MEDIA_URL = '/media/'
@@ -219,20 +236,22 @@ if not DEBUG:
 origins = os.getenv('CSRF_TRUSTED_ORIGINS', '')
 CSRF_TRUSTED_ORIGINS = [o for o in origins.split(',') if o.startswith('http')]
 
-# Email Configuration
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_HOST = 'localhost'
-EMAIL_PORT = 25
-EMAIL_USE_TLS = False
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
-DEFAULT_FROM_EMAIL = 'noreply@primetrust.com'
+# Email Configuration - Gmail API for Production
+EMAIL_BACKEND = 'core.gmail_backend.GmailBackend'  # Custom Gmail backend
+DEFAULT_FROM_EMAIL = os.getenv('GMAIL_SENDER_EMAIL', 'noreply@primetrust.com')
+
+# Gmail API Configuration
+GMAIL_OAUTH_CREDENTIALS_FILE = os.getenv('GMAIL_OAUTH_CREDENTIALS_FILE', 'credentials/gmail-oauth.json')
+GMAIL_TOKEN_FILE = os.getenv('GMAIL_TOKEN_FILE', 'credentials/token.json')
+GMAIL_SENDER_EMAIL = os.getenv('GMAIL_SENDER_EMAIL')
+GMAIL_SUBJECT_PREFIX = os.getenv('GMAIL_SUBJECT_PREFIX', '[PrimeTrust] ')
+
+# Fallback SMTP configuration for development
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Email timeout settings
-EMAIL_TIMEOUT = 30  # increased timeout for production
-EMAIL_USE_SSL = False
-EMAIL_SSL_CERTFILE = None
-EMAIL_SSL_KEYFILE = None
+EMAIL_TIMEOUT = 30
 
 # Verification settings
 EMAIL_VERIFICATION_TIMEOUT = 3600  # 1 hour in seconds

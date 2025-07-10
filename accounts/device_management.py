@@ -158,6 +158,7 @@ class DeviceManager:
                 browser_fingerprint=device_hash,
                 defaults={
                     'device_name': self.generate_device_name(device_info),
+                    'device_type': self.detect_device_type(device_info),
                     'ip_address': device_info['ip_address'],
                     'user_agent': device_info['user_agent'],
                     'trust_level': trust_level,
@@ -182,6 +183,31 @@ class DeviceManager:
         except Exception as e:
             logger.error(f"Error registering device: {str(e)}")
             raise
+
+    def detect_device_type(self, device_info: Dict[str, Any]) -> str:
+        """Detect device type from device information"""
+        
+        # Check if it's mobile or tablet first
+        if device_info.get('is_mobile'):
+            return 'mobile'
+        elif device_info.get('is_tablet'):
+            return 'tablet'
+        else:
+            # Check user agent for more specific detection
+            user_agent = device_info.get('user_agent', '').lower()
+            
+            # Check for mobile indicators
+            mobile_indicators = ['mobile', 'android', 'iphone', 'ipod', 'blackberry', 'nokia', 'opera mini']
+            if any(indicator in user_agent for indicator in mobile_indicators):
+                return 'mobile'
+            
+            # Check for tablet indicators  
+            tablet_indicators = ['tablet', 'ipad', 'kindle', 'playbook', 'silk']
+            if any(indicator in user_agent for indicator in tablet_indicators):
+                return 'tablet'
+            
+            # Default to web browser for desktop/laptop
+            return 'web'
     
     def generate_device_name(self, device_info: Dict[str, Any]) -> str:
         """Generate human-readable device name"""

@@ -10,6 +10,7 @@ import logging
 from django.db import transaction
 from django.core.mail import EmailMessage
 from smtplib import SMTPException
+from core.gmail_service import send_gmail
 import random
 import string
 from datetime import datetime
@@ -93,7 +94,7 @@ def send_notification(user, notification_type, title, message, related_transacti
 
 def send_transaction_notification(user, transaction_obj, is_sender=True):
     """
-    Send transaction notification email for production
+    Send transaction notification email via Gmail API for production
     
     Args:
         user (CustomUser): The user to send the notification to
@@ -107,13 +108,13 @@ def send_transaction_notification(user, transaction_obj, is_sender=True):
         # Determine the message based on whether user is sender or receiver
         if is_sender:
             transaction_message = f"You just sent ${formatted_amount} to {transaction_obj.to_account.user.get_full_name()}"
-            subject = f"PrimeTrust: Money Sent - ${formatted_amount}"
+            subject = f"Money Sent - ${formatted_amount}"
         else:
             transaction_message = f"You just received ${formatted_amount} from {transaction_obj.from_account.user.get_full_name()}"
-            subject = f"PrimeTrust: Money Received - ${formatted_amount}"
+            subject = f"Money Received - ${formatted_amount}"
         
         # Get the logo URL
-        logo_url = f"{settings.SITE_URL}/static/img/Primetrust-logo-med.png"
+        logo_url = f"{getattr(settings, 'SITE_URL', 'https://primetrust.com')}/static/img/Primetrust-logo-med.png"
         
         # Prepare the email content
         context = {
@@ -127,11 +128,34 @@ def send_transaction_notification(user, transaction_obj, is_sender=True):
         
         # Render the HTML email template
         html_message = render_to_string('emails/transaction_notification.html', context)
+        text_message = strip_tags(html_message)
         
+        # Try Gmail API first for production
+        if not settings.DEBUG and hasattr(settings, 'GMAIL_SENDER_EMAIL') and settings.GMAIL_SENDER_EMAIL:
+            try:
+                success, result = send_gmail(
+                    to_emails=[user.email],
+                    subject=subject,
+                    text_content=text_message,
+                    html_content=html_message,
+                    headers={'X-Entity-Ref-ID': str(transaction_obj.id)}
+                )
+                
+                if success:
+                    logger.info(f"Transaction notification sent via Gmail API to {user.email} for transaction {transaction_obj.id}")
+                    return True
+                else:
+                    logger.error(f"Gmail API failed: {result}")
+                    # Fall through to Django email backend
+                    
+            except Exception as gmail_error:
+                logger.error(f"Gmail API error: {str(gmail_error)}")
+                # Fall through to Django email backend
+        
+        # Fallback to Django's email backend
         try:
-            # Create and send email
             email = EmailMessage(
-                subject=subject,
+                subject=f"{getattr(settings, 'GMAIL_SUBJECT_PREFIX', '[PrimeTrust] ')}{subject}",
                 body=html_message,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 to=[user.email],
@@ -139,17 +163,199 @@ def send_transaction_notification(user, transaction_obj, is_sender=True):
             )
             email.content_subtype = "html"
             
-            # Send immediately in production
-            email.send(fail_silently=False)
+            # Send with retry logic
+            sent = email.send(fail_silently=False)
             
-            logger.info(f"Transaction notification email sent successfully to {user.email} for transaction {transaction_obj.id}")
-            return True
+            if sent:
+                logger.info(f"Transaction notification email sent via Django backend to {user.email} for transaction {transaction_obj.id}")
+                return True
+            else:
+                logger.error(f"Django email backend failed for {user.email}")
+                return False
+                
+        except Exception as django_error:
+            logger.error(f"Django email error: {str(django_error)}")
             
-        except SMTPException as smtp_error:
-            logger.error(f"SMTP Error sending transaction email to {user.email}: {str(smtp_error)}")
-            # Attempt retry logic here if needed
-            raise
+            # Last resort: Log for manual follow-up
+            logger.critical(f"CRITICAL: Failed to send transaction notification to {user.email} for transaction {transaction_obj.id}. Manual intervention required.")
+            return False
             
     except Exception as e:
         logger.error(f"Error in send_transaction_notification: {str(e)}", exc_info=True)
+        return False
+
+
+def send_security_alert(user, alert_type, details):
+    """
+    Send security alert via Gmail API
+    
+    Args:
+        user (CustomUser): The user to alert
+        alert_type (str): Type of security alert
+        details (dict): Alert details
+    """
+    try:
+        subject = f"Security Alert: {alert_type}"
+        
+        context = {
+            'user_name': user.get_full_name(),
+            'alert_type': alert_type,
+            'details': details,
+            'timestamp': datetime.now().strftime('%B %d, %Y at %I:%M %p'),
+        }
+        
+        # Use a security alert template (you'll need to create this)
+        html_message = render_to_string('emails/security_alert.html', context)
+        text_message = strip_tags(html_message)
+        
+        # Send via Gmail API for production
+        if not settings.DEBUG and hasattr(settings, 'GMAIL_SENDER_EMAIL') and settings.GMAIL_SENDER_EMAIL:
+            success, result = send_gmail(
+                to_emails=[user.email],
+                subject=subject,
+                text_content=text_message,
+                html_content=html_message,
+                headers={'X-Alert-Type': alert_type}
+            )
+            
+            if success:
+                logger.info(f"Security alert sent to {user.email}: {alert_type}")
+                return True
+            else:
+                logger.error(f"Failed to send security alert: {result}")
+                
+        # Fallback to Django backend
+        email = EmailMessage(
+            subject=f"{getattr(settings, 'GMAIL_SUBJECT_PREFIX', '[PrimeTrust] ')}{subject}",
+            body=html_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[user.email],
+            headers={'X-Alert-Type': alert_type}
+        )
+        email.content_subtype = "html"
+        return bool(email.send(fail_silently=False))
+        
+    except Exception as e:
+        logger.error(f"Error sending security alert: {str(e)}", exc_info=True)
+        return False
+
+
+def send_welcome_email(user):
+    """
+    Send welcome email to new users via Gmail API
+    
+    Args:
+        user (CustomUser): The new user
+    """
+    try:
+        subject = "Welcome to PrimeTrust Banking!"
+        
+        context = {
+            'user_name': user.get_full_name(),
+            'user_email': user.email,
+            'dashboard_url': f"{getattr(settings, 'SITE_URL', 'https://primetrust.com')}/dashboard/",
+            'mobile_app_url': f"{getattr(settings, 'SITE_URL', 'https://primetrust.com')}/mobile/",
+            'date': datetime.now().strftime('%B %d, %Y'),
+        }
+        
+        html_message = render_to_string('emails/welcome_email.html', context)
+        text_message = strip_tags(html_message)
+        
+        # Send via Gmail API for production
+        if not settings.DEBUG and hasattr(settings, 'GMAIL_SENDER_EMAIL') and settings.GMAIL_SENDER_EMAIL:
+            success, result = send_gmail(
+                to_emails=[user.email],
+                subject=subject,
+                text_content=text_message,
+                html_content=html_message,
+                headers={'X-Email-Type': 'welcome'}
+            )
+            
+            if success:
+                logger.info(f"Welcome email sent to {user.email}")
+                return True
+            else:
+                logger.error(f"Failed to send welcome email: {result}")
+                
+        # Fallback to Django backend
+        email = EmailMessage(
+            subject=f"{getattr(settings, 'GMAIL_SUBJECT_PREFIX', '[PrimeTrust] ')}{subject}",
+            body=html_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[user.email],
+            headers={'X-Email-Type': 'welcome'}
+        )
+        email.content_subtype = "html"
+        return bool(email.send(fail_silently=False))
+        
+    except Exception as e:
+        logger.error(f"Error sending welcome email: {str(e)}", exc_info=True)
+        return False
+
+
+def send_account_locked_notification(user, lock_reason, activity_details, unlock_url):
+    """
+    Send account locked notification via Gmail API
+    
+    Args:
+        user (CustomUser): The user whose account is locked
+        lock_reason (str): Reason for the lock
+        activity_details (str): Details of suspicious activity
+        unlock_url (str): URL to unlock the account
+    """
+    try:
+        subject = "URGENT: Account Security Lock - Action Required"
+        
+        incident_reference = f"SEC-{datetime.now().strftime('%Y%m%d')}-{random.randint(1000, 9999)}"
+        
+        context = {
+            'user_name': user.get_full_name(),
+            'lock_reason': lock_reason,
+            'activity_details': activity_details,
+            'unlock_url': unlock_url,
+            'lock_timestamp': datetime.now().strftime('%B %d, %Y at %I:%M %p'),
+            'expiration_time': datetime.now().strftime('%B %d, %Y at %I:%M %p'),  # Add 24 hours
+            'incident_reference': incident_reference,
+        }
+        
+        html_message = render_to_string('emails/account_locked.html', context)
+        text_message = strip_tags(html_message)
+        
+        # Send via Gmail API for production
+        if not settings.DEBUG and hasattr(settings, 'GMAIL_SENDER_EMAIL') and settings.GMAIL_SENDER_EMAIL:
+            success, result = send_gmail(
+                to_emails=[user.email],
+                subject=subject,
+                text_content=text_message,
+                html_content=html_message,
+                headers={
+                    'X-Email-Type': 'security-lock',
+                    'X-Incident-Reference': incident_reference,
+                    'X-Priority': 'high'
+                }
+            )
+            
+            if success:
+                logger.critical(f"Account locked notification sent to {user.email}. Reference: {incident_reference}")
+                return True
+            else:
+                logger.error(f"Failed to send account locked notification: {result}")
+                
+        # Fallback to Django backend
+        email = EmailMessage(
+            subject=f"{getattr(settings, 'GMAIL_SUBJECT_PREFIX', '[PrimeTrust] ')}{subject}",
+            body=html_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[user.email],
+            headers={
+                'X-Email-Type': 'security-lock',
+                'X-Incident-Reference': incident_reference,
+                'X-Priority': 'high'
+            }
+        )
+        email.content_subtype = "html"
+        return bool(email.send(fail_silently=False))
+        
+    except Exception as e:
+        logger.error(f"Error sending account locked notification: {str(e)}", exc_info=True)
         return False

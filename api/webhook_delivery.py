@@ -6,15 +6,17 @@ proper retry logic, error handling, and logging.
 """
 
 import requests
-import hashlib
-import hmac
 import json
 import time
+import hmac
+import hashlib
 import logging
-from typing import Tuple, Dict, Any, Optional
+from datetime import datetime, timedelta
+from typing import Optional, Dict, Any, Tuple
 from django.utils import timezone
 from django.conf import settings
-from datetime import timedelta
+from django.core.cache import cache
+
 from .models import (
     WebhookEndpoint, WebhookEvent, WebhookDelivery, 
     WebhookSignature, WebhookTemplate, WebhookLog
@@ -25,98 +27,89 @@ logger = logging.getLogger(__name__)
 
 class WebhookDeliveryService:
     """
-    Service for delivering webhooks to external endpoints
+    Enhanced webhook delivery service with email notifications
     """
     
     def __init__(self):
         self.session = requests.Session()
         self.session.headers.update({
-            'User-Agent': 'PrimeTrust-Webhook/1.0',
-            'Content-Type': 'application/json'
+            'User-Agent': 'PrimeTrust-Webhook/1.0'
         })
     
     def deliver_webhook(self, endpoint: WebhookEndpoint, event: WebhookEvent) -> Tuple[bool, Dict[str, Any]]:
         """
-        Deliver a webhook event to an endpoint
-        
-        Args:
-            endpoint: The webhook endpoint to deliver to
-            event: The webhook event to deliver
-            
-        Returns:
-            Tuple of (success: bool, response_data: dict)
+        Deliver webhook to endpoint and optionally send email notification
         """
+        # Create delivery record
+        delivery = WebhookDelivery.objects.create(
+            webhook_endpoint=endpoint,
+            webhook_event=event,
+            status='pending',
+            started_at=timezone.now()
+        )
+        
+        # Update event delivery attempts
+        event.delivery_attempts += 1
+        
         start_time = time.time()
         
         try:
-            # Update event status
-            event.status = 'processing'
-            event.delivery_attempts += 1
-            event.save()
-            
-            # Prepare payload
+            # Prepare payload and headers
             payload = self._prepare_payload(endpoint, event)
             headers = self._prepare_headers(endpoint, event, payload)
             
-            # Create delivery record
-            delivery = WebhookDelivery.objects.create(
-                webhook_endpoint=endpoint,
-                webhook_event=event,
-                status='pending',
-                request_headers=headers,
-                request_body=payload,
-                attempt_number=event.delivery_attempts,
-                is_retry=event.delivery_attempts > 1
-            )
-            
             # Make the request
             response = self._make_request(endpoint, payload, headers)
-            
-            # Calculate response time
-            response_time_ms = int((time.time() - start_time) * 1000)
+            response_time = time.time() - start_time
             
             # Update delivery record
-            delivery.http_status_code = response.status_code
-            delivery.response_body = response.text[:10000]  # Limit response body size
-            delivery.response_time_ms = response_time_ms
+            delivery.status = 'success' if response.status_code < 400 else 'error'
+            delivery.response_code = response.status_code
+            delivery.response_body = response.text[:10000]  # Limit size
+            delivery.response_time_ms = int(response_time * 1000)
             delivery.completed_at = timezone.now()
+            delivery.save()
             
-            # Check if delivery was successful
-            if 200 <= response.status_code <= 299:
-                delivery.status = 'success'
+            # Update endpoint statistics
+            endpoint.total_deliveries += 1
+            if response.status_code >= 400:
+                endpoint.failed_deliveries += 1
+            endpoint.last_delivery_at = timezone.now()
+            endpoint.save()
+            
+            # Log the delivery
+            level = 'info' if response.status_code < 400 else 'warning'
+            self._log_webhook_event(
+                endpoint, event, delivery, level,
+                f"Webhook delivered with status {response.status_code}"
+            )
+            
+            # Send email notification if enabled and webhook was successful
+            if response.status_code < 400 and endpoint.email_notifications_enabled:
+                self._send_email_notification(endpoint, event)
+            
+            # Mark event as completed if successful
+            if response.status_code < 400:
                 event.status = 'completed'
                 event.processed_at = timezone.now()
-                
-                # Update endpoint statistics
-                endpoint.total_deliveries += 1
-                endpoint.successful_deliveries += 1
-                endpoint.last_used_at = timezone.now()
-                endpoint.save()
-                
-                self._log_webhook_event(
-                    endpoint, event, delivery, 'info',
-                    f"Webhook delivered successfully (HTTP {response.status_code})"
-                )
-                
-                delivery.save()
-                event.save()
-                
-                return True, {
-                    'status_code': response.status_code,
-                    'response_time_ms': response_time_ms,
-                    'delivery_id': str(delivery.id)
-                }
             else:
-                # Handle HTTP error
-                delivery.status = 'failed'
-                delivery.error_message = f"HTTP {response.status_code}: {response.text[:500]}"
-                
+                # Handle as failure for retry logic
                 return self._handle_delivery_failure(
-                    endpoint, event, delivery, 
-                    f"HTTP {response.status_code} error",
-                    response_time_ms
+                    endpoint, event, delivery,
+                    f"HTTP {response.status_code}: {response.text[:200]}",
+                    response_time
                 )
-                
+            
+            event.save()
+            
+            return True, {
+                'status_code': response.status_code,
+                'response_body': response.text[:1000],
+                'response_time_ms': int(response_time * 1000),
+                'delivery_id': str(delivery.id),
+                'email_sent': endpoint.email_notifications_enabled
+            }
+            
         except requests.exceptions.Timeout:
             return self._handle_delivery_failure(
                 endpoint, event, delivery if 'delivery' in locals() else None,
@@ -300,6 +293,167 @@ class WebhookDeliveryService:
         getattr(logger, level, logger.info)(
             f"Webhook {event.event_type} to {endpoint.name}: {message}"
         )
+
+    def _send_email_notification(self, endpoint: WebhookEndpoint, event: WebhookEvent):
+        """Send email notification for webhook event via Gmail API"""
+        try:
+            # Import here to avoid circular imports
+            from banking.utils import (
+                send_transaction_notification, 
+                send_security_alert, 
+                send_welcome_email,
+                send_account_locked_notification
+            )
+            
+            user = event.user
+            if not user or not user.email:
+                return
+            
+            # Rate limit email notifications (max 5 per user per hour)
+            cache_key = f"webhook_email_{user.id}"
+            email_count = cache.get(cache_key, 0)
+            if email_count >= 5:
+                logger.warning(f"Email notification rate limit exceeded for user {user.id}")
+                return
+            
+            cache.set(cache_key, email_count + 1, 3600)  # 1 hour
+            
+            # Route to appropriate email function based on event type
+            event_type = event.event_type
+            
+            if event_type == 'user.created':
+                # Send welcome email for new users
+                send_welcome_email(user)
+                logger.info(f"Welcome email sent for webhook event {event.id}")
+                
+            elif event_type == 'transaction.completed':
+                # Extract transaction details from payload
+                payload = event.payload
+                transaction_data = {
+                    'id': payload.get('transaction_id'),
+                    'amount': float(payload.get('amount', 0)),
+                    'transaction_type': payload.get('transaction_type'),
+                    'description': payload.get('description', ''),
+                    'reference': payload.get('reference', ''),
+                    'created_at': datetime.fromisoformat(payload.get('created_at', timezone.now().isoformat()))
+                }
+                
+                # Create mock transaction object for email template
+                class MockTransaction:
+                    def __init__(self, data):
+                        for key, value in data.items():
+                            setattr(self, key, value)
+                        # Mock account objects
+                        self.from_account = type('MockAccount', (), {
+                            'user': user,
+                            'account_number': payload.get('from_account', 'XXXX1234')
+                        })()
+                        self.to_account = type('MockAccount', (), {
+                            'user': user,
+                            'account_number': payload.get('to_account', 'XXXX5678')
+                        })()
+                
+                mock_transaction = MockTransaction(transaction_data)
+                send_transaction_notification(user, mock_transaction, is_sender=True)
+                logger.info(f"Transaction email sent for webhook event {event.id}")
+                
+            elif event_type.startswith('security.'):
+                # Send security alert
+                alert_type = event_type.replace('security.', '').replace('_', ' ').title()
+                details = event.payload.copy()
+                details.pop('user_id', None)  # Remove redundant user_id
+                
+                send_security_alert(user, alert_type, details)
+                logger.info(f"Security alert email sent for webhook event {event.id}")
+                
+            elif event_type == 'account.locked':
+                # Send account locked notification
+                payload = event.payload
+                send_account_locked_notification(
+                    user=user,
+                    lock_reason=payload.get('reason', 'Suspicious activity detected'),
+                    activity_details=payload.get('details', 'Multiple failed login attempts'),
+                    unlock_url=f"{getattr(settings, 'SITE_URL', 'https://primetrust.com')}/accounts/unlock/"
+                )
+                logger.info(f"Account locked email sent for webhook event {event.id}")
+                
+            else:
+                # Generic webhook notification email
+                self._send_generic_webhook_email(user, endpoint, event)
+                
+        except Exception as e:
+            logger.error(f"Failed to send email notification for webhook {event.id}: {str(e)}")
+    
+    def _send_generic_webhook_email(self, user, endpoint: WebhookEndpoint, event: WebhookEvent):
+        """Send generic webhook notification email"""
+        try:
+            from core.gmail_service import send_gmail
+            from django.template.loader import render_to_string
+            from django.utils.html import strip_tags
+            
+            subject = f"Webhook Event: {event.event_type.replace('_', ' ').title()}"
+            
+            # Create email context
+            context = {
+                'user_name': user.get_full_name(),
+                'event_type': event.event_type.replace('_', ' ').title(),
+                'endpoint_name': endpoint.name,
+                'timestamp': event.created_at.strftime('%B %d, %Y at %I:%M %p'),
+                'payload': event.payload,
+                'dashboard_url': f"{getattr(settings, 'SITE_URL', 'https://primetrust.com')}/dashboard/"
+            }
+            
+            # Simple HTML template for generic webhook notifications
+            html_content = f"""
+            <html>
+            <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px;">
+                    <h2 style="color: #007bff;">🔔 Webhook Event Notification</h2>
+                    
+                    <p><strong>Hello {context['user_name']},</strong></p>
+                    
+                    <p>A webhook event has been triggered for your PrimeTrust account:</p>
+                    
+                    <div style="background-color: white; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                        <h4 style="margin-top: 0;">Event Details:</h4>
+                        <ul>
+                            <li><strong>Event Type:</strong> {context['event_type']}</li>
+                            <li><strong>Endpoint:</strong> {context['endpoint_name']}</li>
+                            <li><strong>Time:</strong> {context['timestamp']}</li>
+                        </ul>
+                    </div>
+                    
+                    <p>You can view more details in your <a href="{context['dashboard_url']}" style="color: #007bff;">account dashboard</a>.</p>
+                    
+                    <hr style="margin: 20px 0;">
+                    <p style="font-size: 12px; color: #666;">
+                        This notification was sent because you have email notifications enabled for webhook events.
+                        You can manage your notification preferences in your account settings.
+                    </p>
+                </div>
+            </body>
+            </html>
+            """
+            
+            text_content = strip_tags(html_content)
+            
+            # Send via Gmail API
+            if not settings.DEBUG and hasattr(settings, 'GMAIL_SENDER_EMAIL') and settings.GMAIL_SENDER_EMAIL:
+                success, result = send_gmail(
+                    to_emails=[user.email],
+                    subject=subject,
+                    text_content=text_content,
+                    html_content=html_content,
+                    headers={'X-Webhook-Event': event.event_type}
+                )
+                
+                if success:
+                    logger.info(f"Generic webhook email sent for event {event.id}")
+                else:
+                    logger.error(f"Failed to send generic webhook email: {result}")
+                    
+        except Exception as e:
+            logger.error(f"Error sending generic webhook email: {str(e)}")
 
 
 class WebhookEventTrigger:

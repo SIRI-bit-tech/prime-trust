@@ -194,9 +194,12 @@ def setup_2fa_view(request):
                 totp_token = request.POST.get('totp_token')
                 
                 if two_fa.verify_totp(totp_token):
+                    # Generate secure backup codes
+                    backup_codes = two_fa.generate_backup_codes(count=5)  # Generate 5 secure codes
+                    
                     # Update session for next step
                     request.session['registration_step'] = 'backup_codes'
-                    request.session['backup_codes'] = ['12345678', '87654321', '11111111', '22222222', '33333333']  # Temporary codes
+                    request.session['backup_codes'] = backup_codes  # Now using secure codes
                     
                     return JsonResponse({
                         'success': True,

@@ -52,12 +52,21 @@ def create_user_accounts(sender, instance, created, **kwargs):
         import uuid
         
         # Create a single checking account with a unique account number
-        Account.objects.create(
+        account = Account.objects.create(
             user=instance,
             account_number=f"PT{uuid.uuid4().hex[:8].upper()}",
             account_type='checking',
             balance=0.00
         )
+        
+        # Trigger webhook event for account creation
+        try:
+            from api.webhook_delivery import trigger_account_created
+            trigger_account_created(account)
+        except Exception as webhook_error:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Failed to trigger account_created webhook for {instance.email}: {str(webhook_error)}")
         
         # Create Bitcoin wallet with a unique address
         wallet_seed = secrets.token_bytes(32)

@@ -277,26 +277,7 @@ def setup_pin_view(request):
                 user.is_active = True
                 user.save()
                 
-                # Create bank accounts
-                from banking.models import Account
-                checking_account = Account.objects.create(
-                    user=user,
-                    account_type='checking',
-                    balance=0.00
-                )
-                savings_account = Account.objects.create(
-                    user=user,
-                    account_type='savings',
-                    balance=0.00
-                )
-                
-                # Trigger webhook events for account creation
-                try:
-                    from api.webhook_delivery import trigger_account_created
-                    trigger_account_created(checking_account)
-                    trigger_account_created(savings_account)
-                except Exception as webhook_error:
-                    logger.error(f"Failed to trigger account_created webhooks for {user.email}: {str(webhook_error)}")
+                # Note: Bank account will be created automatically by signal in banking/signals.py
                 
                 # Register device
                 device_manager = DeviceManager(user)
@@ -324,7 +305,7 @@ def setup_pin_view(request):
                         'email': user.email,
                         'has_2fa': True,
                         'has_transaction_pin': True,
-                        'accounts_created': 2
+                        'accounts_created': 1  # Now only 1 account via signal
                     }
                 )
                 

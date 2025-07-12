@@ -32,8 +32,6 @@ if GLITCHTIP_DSN:
         release=os.getenv('APP_VERSION', '1.0.0'),
         environment='development' if DEBUG else 'production',
     )
-    print(f"GlitchTip initialized with environment: {'development' if DEBUG else 'production'}")
-
 # Configure SSL for production
 SECURE_SSL_REDIRECT = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG

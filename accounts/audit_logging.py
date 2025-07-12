@@ -13,6 +13,7 @@ from django.db.models import Q
 from django.core.serializers.json import DjangoJSONEncoder
 from accounts.models_security import SecurityEvent
 from accounts.models import CustomUser
+from django.contrib.gis.geoip2 import GeoIP2
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -89,7 +90,12 @@ class AuditLogger:
                 'critical': 'critical'
             }
             risk_level = severity_to_risk_map.get(severity, 'low')
-            
+
+            # Validate event_type
+            valid_event_types = [et[0] for et in SecurityEvent.EVENT_TYPES]
+            if event_type not in valid_event_types:
+                event_type = 'other'
+
             # Prepare metadata - store as additional_data since SecurityEvent uses JSONField
             audit_metadata = {
                 'session_id': self.session_id,
@@ -102,11 +108,22 @@ class AuditLogger:
                 'affected_object_type': affected_object.__class__.__name__ if affected_object else None,
                 'affected_object_id': affected_object_id or (str(affected_object.id) if affected_object and hasattr(affected_object, 'id') else None),
             }
-            
             # Add custom metadata
             if metadata:
                 audit_metadata.update(metadata)
-            
+
+            # GeoIP2 lookup for city/country
+            city = ''
+            country = ''
+            if self.ip_address and self.ip_address != '127.0.0.1':
+                try:
+                    geoip = GeoIP2()
+                    geo = geoip.city(self.ip_address)
+                    city = geo.get('city', '')
+                    country = geo.get('country_name', '')
+                except Exception:
+                    pass
+
             # Create security event with correct field names
             security_event = SecurityEvent.objects.create(
                 user=self.user,
@@ -115,6 +132,8 @@ class AuditLogger:
                 description=details,
                 ip_address=self.ip_address,
                 user_agent=self.user_agent,
+                city=city,
+                country=country,
                 additional_data=audit_metadata,  # Use additional_data instead of metadata
             )
             

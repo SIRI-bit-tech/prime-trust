@@ -22,6 +22,7 @@ from datetime import datetime, timedelta
 from django.contrib.auth.hashers import make_password, check_password
 from django.utils import timezone
 from typing import Tuple, List, Optional, Dict, Any
+from django.contrib.gis.geoip2 import GeoIP2
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -444,14 +445,35 @@ class TwoFactorAuth:
         """Log security event and send alert email for significant events"""
         try:
             from .models_security import SecurityEvent
-            
+            # Validate event_type
+            valid_event_types = [et[0] for et in SecurityEvent.EVENT_TYPES]
+            if event_type not in valid_event_types:
+                event_type = 'other'
+            # GeoIP2 lookup for city/country
+            city = ''
+            country = ''
+            ip_address = '127.0.0.1'
+            user_agent = ''
+            if hasattr(self, 'request') and self.request:
+                ip_address = self.get_client_ip(self.request)
+                user_agent = self.request.META.get('HTTP_USER_AGENT', '')
+            if ip_address and ip_address != '127.0.0.1':
+                try:
+                    geoip = GeoIP2()
+                    geo = geoip.city(ip_address)
+                    city = geo.get('city', '')
+                    country = geo.get('country_name', '')
+                except Exception:
+                    pass
             SecurityEvent.objects.create(
                 user=self.user,
                 event_type=event_type,
                 risk_level=risk_level,
                 description=description or "",
-                ip_address='127.0.0.1',  # Default IP, can be improved to get actual IP
-                user_agent='',  # Can be improved to get actual user agent
+                ip_address=ip_address,
+                user_agent=user_agent,
+                city=city,
+                country=country,
             )
             
             # Send security alert emails for significant events

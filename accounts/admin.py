@@ -579,28 +579,17 @@ class SecuritySettingsAdmin(admin.ModelAdmin):
     account_locked_display.short_description = 'Account Locked'
     account_locked_display.boolean = True
 
+@admin.register(UserDevice)
 class UserDeviceAdmin(admin.ModelAdmin):
-    """User Device Admin"""
-    
-    list_display = (
-        'user', 'device_name', 'device_type', 'trust_level', 
-        'is_active', 'last_used', 'created_at'
-    )
-    list_filter = ('trust_level', 'is_active', 'device_type', 'created_at')
-    search_fields = ('user__email', 'device_name', 'user_agent')
-    
-    readonly_fields = ('created_at', 'browser_fingerprint')
+    list_display = ('user', 'device_type', 'ip_address', 'city', 'country', 'latitude', 'longitude', 'last_used', 'is_active')
+    search_fields = ('user__username', 'ip_address', 'city', 'country')
+    list_filter = ('device_type', 'country', 'is_active')
 
+@admin.register(SecurityEvent)
 class SecurityEventAdmin(admin.ModelAdmin):
-    """Security Event Admin"""
-    
-    list_display = (
-        'user', 'event_type', 'risk_level', 'created_at', 'ip_address'
-    )
-    list_filter = ('event_type', 'risk_level', 'created_at')
-    search_fields = ('user__email', 'event_type', 'ip_address')
-    
-    readonly_fields = ('created_at',)
+    list_display = ('user', 'event_type', 'ip_address', 'city', 'country', 'created_at', 'resolved')
+    search_fields = ('user__username', 'ip_address', 'city', 'country', 'event_type')
+    list_filter = ('event_type', 'country', 'resolved')
 
 class LoginAttemptAdmin(admin.ModelAdmin):
     """Login Attempt Admin"""
@@ -626,8 +615,6 @@ class BackupCodeAdmin(admin.ModelAdmin):
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(SecuritySettings, SecuritySettingsAdmin)
-admin.site.register(UserDevice, UserDeviceAdmin)
-admin.site.register(SecurityEvent, SecurityEventAdmin)
 admin.site.register(LoginAttempt, LoginAttemptAdmin)
 admin.site.register(BackupCode, BackupCodeAdmin)
 

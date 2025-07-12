@@ -475,15 +475,34 @@ class DeviceManager:
         """Log device-related security event"""
         
         try:
+            from accounts.models_security import SecurityEvent
+            # Validate event_type
+            valid_event_types = [et[0] for et in SecurityEvent.EVENT_TYPES]
+            if event_type not in valid_event_types:
+                event_type = 'other'
+            # GeoIP2 lookup for city/country
+            city = ''
+            country = ''
+            ip_address = device.ip_address
+            user_agent = device.user_agent
+            if ip_address and ip_address != '127.0.0.1':
+                try:
+                    geoip = GeoIP2()
+                    geo = geoip.city(ip_address)
+                    city = geo.get('city', '')
+                    country = geo.get('country_name', '')
+                except Exception:
+                    pass
             SecurityEvent.objects.create(
                 user=self.user,
                 event_type=event_type,
                 risk_level='low',
                 description=details or "",
-                ip_address=device.ip_address,
-                user_agent=device.user_agent,
+                ip_address=ip_address,
+                user_agent=user_agent,
+                city=city,
+                country=country,
             )
-            
         except Exception as e:
             logger.error(f"Error logging device event: {str(e)}")
     

@@ -333,50 +333,53 @@ def setup_pin_view(request):
     return render(request, 'accounts/setup_pin.html', {'form': form, 'user': user})
 
 def login_view(request):
-    """Simplified login with HTMX support"""
+    """API-based login with 2FA support"""
     
+    # If user is already authenticated, redirect to dashboard
     if request.user.is_authenticated:
         return redirect('dashboard:home')
     
-    if request.method == 'POST':
-        email = request.POST.get('email')
-        password = request.POST.get('password')
+    # For GET requests or when JavaScript is disabled, just serve the login page
+    # All authentication logic is handled by JavaScript via API calls
+    return render(request, 'accounts/login.html')
+
+@require_POST
+@csrf_exempt
+def establish_session_view(request):
+    """Establish Django session after successful API authentication"""
+    
+    try:
+        import json
+        from rest_framework_simplejwt.tokens import AccessToken
+        from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
         
-        if not email or not password:
-            messages.error(request, 'Email and password are required.')
-            return render(request, 'accounts/partials/login_form.html')
+        data = json.loads(request.body)
+        access_token = data.get('access_token')
         
+        if not access_token:
+            return JsonResponse({'success': False, 'error': 'No access token provided'})
+        
+        # Verify the token and get user
         try:
-            user = CustomUser.objects.get(email=email)
-        except CustomUser.DoesNotExist:
-            messages.error(request, 'Invalid email or password.')
-            return render(request, 'accounts/partials/login_form.html')
-        
-        # Verify password
-        if not check_password(password, user.password):
-            messages.error(request, 'Invalid email or password.')
-            return render(request, 'accounts/partials/login_form.html')
-        
-        try:
-            # Simple login without complex security features
+            token = AccessToken(access_token)
+            user_id = token['user_id']
+            user = CustomUser.objects.get(id=user_id)
+            
+            # Establish Django session
             user.backend = 'django.contrib.auth.backends.ModelBackend'
             login(request, user)
             
-            messages.success(request, f'Welcome back, {user.first_name}!')
+            return JsonResponse({
+                'success': True,
+                'redirect_url': reverse('dashboard:home')
+            })
             
-            # Handle HTMX requests
-            if request.headers.get('HX-Request'):
-                response = HttpResponse()
-                response['HX-Redirect'] = reverse('dashboard:home')
-                return response
-            else:
-                return redirect('dashboard:home')
-                
-        except Exception as e:
-            messages.error(request, f'Login failed: {str(e)}')
-            return render(request, 'accounts/partials/login_form.html')
-    
-    return render(request, 'accounts/login.html')
+        except (InvalidToken, TokenError, CustomUser.DoesNotExist) as e:
+            return JsonResponse({'success': False, 'error': 'Invalid token'})
+            
+    except Exception as e:
+        logger.error(f"Session establishment error: {str(e)}")
+        return JsonResponse({'success': False, 'error': 'Session establishment failed'})
 
 @login_required
 def profile_view(request):

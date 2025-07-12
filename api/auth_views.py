@@ -16,7 +16,6 @@ from django.db import transaction
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.debug import sensitive_post_parameters
 import logging
 import json
 from datetime import datetime, timedelta
@@ -77,7 +76,6 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     """Custom token view with production security features"""
     serializer_class = CustomTokenObtainPairSerializer
     
-    @method_decorator(sensitive_post_parameters('password'))
     @method_decorator(never_cache)
     def post(self, request, *args, **kwargs):
         """Enhanced login with security checks"""
@@ -111,7 +109,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             
             # Check if account is locked
             two_fa = TwoFactorAuth(user)
-            if two_fa.security_settings.account_locked:
+            if two_fa.security_settings.is_account_locked():
                 self.log_security_event(user, 'LOGIN_BLOCKED', ip_address, user_agent, 'Account locked')
                 return Response({
                     'error': 'Account is locked due to security reasons'
@@ -219,7 +217,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         
         # Lock account after 5 failed attempts
         if two_fa.security_settings.failed_login_attempts >= 5:
-            two_fa.security_settings.account_locked = True
+            two_fa.security_settings.lock_account(30)  # Lock for 30 minutes
             two_fa.security_settings.save()
             
             # Log security event

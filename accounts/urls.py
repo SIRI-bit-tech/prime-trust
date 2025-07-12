@@ -15,6 +15,7 @@ urlpatterns = [
     # Authentication
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
+    path('establish-session/', views.establish_session_view, name='establish_session'),
     path('profile/', views.profile_view, name='profile'),
     path('change-password/', views.change_password, name='change_password'),
     path('change-transaction-pin/', views.change_transaction_pin, name='change_transaction_pin'),

@@ -1,0 +1,94 @@
+/* Login Step Transitions */
+.login-step {
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+.login-step.hidden {
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+}
+
+.login-step:not(.hidden) {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Button Loading States */
+.loading-spinner {
+    transition: opacity 0.2s ease-in-out;
+}
+
+.btn-text {
+    transition: opacity 0.2s ease-in-out;
+}
+
+/* Message Container Transitions */
+#message-container {
+    transition: opacity 0.3s ease-in-out, max-height 0.3s ease-in-out;
+    overflow: hidden;
+}
+
+#message-container.hidden {
+    opacity: 0;
+    max-height: 0;
+    margin: 0;
+    padding: 0;
+}
+
+#message-container:not(.hidden) {
+    opacity: 1;
+    max-height: 200px;
+}
+
+/* Input Focus States */
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="text"]:focus {
+    border-color: var(--primary-500, #6366f1);
+    box-shadow: 0 0 0 1px var(--primary-500, #6366f1);
+    outline: none;
+}
+
+/* Center the authentication codes */
+#totp-token,
+#backup-code {
+    text-align: center;
+    font-family: monospace;
+    letter-spacing: 0.1em;
+}
+
+/* Success state animation */
+@keyframes successPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.success-animation {
+    animation: successPulse 0.6s ease-in-out;
+}
+
+/* Error shake animation */
+@keyframes errorShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.error-animation {
+    animation: errorShake 0.5s ease-in-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .login-step {
+        padding: 1rem;
+    }
+    
+    #totp-token,
+    #backup-code {
+        font-size: 1.1rem;
+        padding: 0.75rem;
+    }
+} 

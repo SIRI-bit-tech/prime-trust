@@ -1,75 +1,181 @@
 {% load static %}
-<form method="post" hx-post="{% url 'accounts:login' %}" hx-target="this" hx-swap="outerHTML">
-    {% csrf_token %}
-    
-    <div class="space-y-6">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="rounded-md {% if message.tags == 'error' %}bg-red-50{% elif message.tags == 'success' %}bg-green-50{% else %}bg-blue-50{% endif %} p-4">
-                    <div class="flex">
-                        <div class="flex-shrink-0">
-                            {% if message.tags == 'error' %}
-                                <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+
+<!-- Login Form Container -->
+<div id="login-container">
+    <!-- Step 1: Email and Password -->
+    <div id="step-credentials" class="login-step">
+        <form id="credentials-form" method="post">
+            {% csrf_token %}
+            
+            <div class="space-y-6">
+                <!-- Messages Display -->
+                <div id="message-container" class="hidden">
+                    <div id="message-content" class="rounded-md p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg id="message-icon" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <!-- Icon will be updated via JavaScript -->
                                 </svg>
-                            {% elif message.tags == 'success' %}
-                                <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                </svg>
-                            {% endif %}
-                        </div>
-                        <div class="ml-3">
-                            <h3 class="text-sm font-medium {% if message.tags == 'error' %}text-red-800{% elif message.tags == 'success' %}text-green-800{% else %}text-blue-800{% endif %}">{{ message }}</h3>
+                            </div>
+                            <div class="ml-3">
+                                <h3 id="message-text" class="text-sm font-medium"></h3>
+                            </div>
                         </div>
                     </div>
                 </div>
-            {% endfor %}
-        {% endif %}
-        
-        <div>
-            <label for="email" class="block text-sm font-medium text-gray-700">
-                Email Address
-            </label>
-            <div class="mt-1">
-                <input type="email" name="email" id="email" required
-                       class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                       placeholder="you@example.com"
-                       autocomplete="email"
-                       value="{{ request.POST.email|default:'' }}">
-            </div>
-        </div>
+                
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">
+                        Email Address
+                    </label>
+                    <div class="mt-1">
+                        <input type="email" name="email" id="email" required
+                               class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                               placeholder="you@example.com"
+                               autocomplete="email"
+                               value="{{ request.POST.email|default:'' }}">
+                    </div>
+                </div>
 
-        <div>
-            <label for="password" class="block text-sm font-medium text-gray-700">
-                Password
-            </label>
-            <div class="mt-1">
-                <input type="password" name="password" id="password" required
-                       class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                       placeholder="••••••••"
-                       autocomplete="current-password">
-            </div>
-        </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">
+                        Password
+                    </label>
+                    <div class="mt-1">
+                        <input type="password" name="password" id="password" required
+                               class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                               placeholder="••••••••"
+                               autocomplete="current-password">
+                    </div>
+                </div>
 
-        <div>
-            <button type="submit" 
-                    class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                    hx-indicator="#form-indicator">
-                Sign In
-            </button>
-            <div id="form-indicator" class="htmx-indicator flex justify-center mt-2">
-                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span>Signing in...</span>
+                <div>
+                    <button type="submit" id="credentials-submit"
+                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                        <span class="btn-text">Sign In</span>
+                        <div class="loading-spinner hidden flex items-center">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Verifying...</span>
+                        </div>
+                    </button>
+                </div>
+                
+                <div class="text-sm text-center">
+                    <a href="{% url 'accounts:password_reset' %}" class="font-medium text-primary-600 hover:text-primary-500">
+                        Forgot your password?
+                    </a>
+                </div>
             </div>
-        </div>
-        
-        <div class="text-sm text-center">
-            <a href="{% url 'accounts:password_reset' %}" class="font-medium text-primary-600 hover:text-primary-500">
-                Forgot your password?
-            </a>
+        </form>
+    </div>
+
+    <!-- Step 2: 2FA Verification -->
+    <div id="step-2fa" class="login-step hidden">
+        <div class="space-y-6">
+            <div class="text-center">
+                <h3 class="text-lg font-medium text-gray-900">Two-Factor Authentication</h3>
+                <p class="mt-2 text-sm text-gray-600">
+                    Enter the 6-digit code from your authenticator app
+                </p>
+            </div>
+
+            <form id="totp-form">
+                <div>
+                    <label for="totp-token" class="block text-sm font-medium text-gray-700">
+                        Authentication Code
+                    </label>
+                    <div class="mt-1">
+                        <input type="text" id="totp-token" name="totp_token" maxlength="6" pattern="\d{6}"
+                               class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm text-center"
+                               placeholder="123456"
+                               autocomplete="one-time-code">
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <button type="submit" id="totp-submit"
+                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                        <span class="btn-text">Verify Code</span>
+                        <div class="loading-spinner hidden flex items-center">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Verifying...</span>
+                        </div>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Backup Code Option -->
+            <div class="text-center">
+                <button type="button" id="show-backup-code" class="text-sm text-primary-600 hover:text-primary-500">
+                    Can't access your authenticator? Use backup code
+                </button>
+            </div>
+
+            <!-- Back to credentials -->
+            <div class="text-center">
+                <button type="button" id="back-to-credentials" class="text-sm text-gray-500 hover:text-gray-700">
+                    ← Back to login
+                </button>
+            </div>
         </div>
     </div>
-</form>
+
+    <!-- Step 3: Backup Code -->
+    <div id="step-backup" class="login-step hidden">
+        <div class="space-y-6">
+            <div class="text-center">
+                <h3 class="text-lg font-medium text-gray-900">Backup Code</h3>
+                <p class="mt-2 text-sm text-gray-600">
+                    Enter one of your 8-digit backup codes
+                </p>
+            </div>
+
+            <form id="backup-form">
+                <div>
+                    <label for="backup-code" class="block text-sm font-medium text-gray-700">
+                        Backup Code
+                    </label>
+                    <div class="mt-1">
+                        <input type="text" id="backup-code" name="backup_code" maxlength="8" pattern="\d{8}"
+                               class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm text-center"
+                               placeholder="12345678"
+                               autocomplete="one-time-code">
+                    </div>
+                    <p class="mt-2 text-sm text-gray-500">
+                        Each backup code can only be used once
+                    </p>
+                </div>
+
+                <div class="mt-6">
+                    <button type="submit" id="backup-submit"
+                            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                        <span class="btn-text">Verify Backup Code</span>
+                        <div class="loading-spinner hidden flex items-center">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span>Verifying...</span>
+                        </div>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Back to 2FA -->
+            <div class="text-center">
+                <button type="button" id="back-to-2fa" class="text-sm text-primary-600 hover:text-primary-500">
+                    ← Back to authenticator code
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include Login JavaScript -->
+<script src="{% static 'js/api-login.js' %}"></script>

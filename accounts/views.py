@@ -384,37 +384,39 @@ def establish_session_view(request):
 @login_required
 def profile_view(request):
     """User profile view with security information"""
-    
     two_fa = TwoFactorAuth(request.user)
     device_manager = DeviceManager(request.user)
-    
-    # Get security information
     security_info = {
         '2fa_status': two_fa.get_2fa_status(),
-        'devices': device_manager.get_user_devices()[:5],  # Last 5 devices
+        'devices': device_manager.get_user_devices()[:5],
         'security_score': two_fa.security_settings.security_score,
         'account_locked': two_fa.security_settings.is_account_locked()
     }
-    
+
+    from .forms import UserProfileUpdateForm
+    user = request.user
+    profile = user.profile
+
     if request.method == 'POST':
-        form = ProfileUpdateForm(request.POST, instance=request.user.profile)
-        if form.is_valid():
-            form.save()
-            
-            # Log profile update
-            audit_logger = AuditLogger(user=request.user, request=request)
+        user_form = ProfileUpdateForm(request.POST, instance=user)
+        profile_form = UserProfileUpdateForm(request.POST, request.FILES, instance=profile)
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
+            audit_logger = AuditLogger(user=user, request=request)
             audit_logger.log_administrative_action(
                 'PROFILE_UPDATED',
-                changes={'fields_changed': list(form.changed_data)}
+                changes={'fields_changed': list(user_form.changed_data) + list(profile_form.changed_data)}
             )
-            
             messages.success(request, 'Profile updated successfully.')
             return redirect('accounts:profile')
     else:
-        form = ProfileUpdateForm(instance=request.user.profile)
-    
+        user_form = ProfileUpdateForm(instance=user)
+        profile_form = UserProfileUpdateForm(instance=profile)
+
     return render(request, 'accounts/profile.html', {
-        'form': form,
+        'user_form': user_form,
+        'profile_form': profile_form,
         'security_info': security_info
     })
 

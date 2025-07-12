@@ -27,15 +27,19 @@
             margin-top: 5px;
         }
         .wallet-info {
-            background: #f8f9fa;
+            background: #fff;
             border: 1px solid #dee2e6;
             border-radius: 5px;
             padding: 15px;
             margin-bottom: 20px;
+            color: #222;
         }
         .wallet-info h3 {
             margin-top: 0;
-            color: #28a745;
+            color: #218838;
+        }
+        .wallet-info p, .wallet-info strong, .wallet-info code {
+            color: #222;
         }
         .balance-info {
             display: grid;
@@ -45,7 +49,7 @@
         }
         .balance-item {
             padding: 10px;
-            background: white;
+            background: #fafbfc;
             border-radius: 4px;
             border: 1px solid #e9ecef;
         }
@@ -64,17 +68,21 @@
             color: #f7931a;
         }
         .usd-balance {
-            color: #28a745;
+            color: #218838;
         }
         .warning-box {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
+            background: #fffbe6;
+            border: 1px solid #ffe58f;
             border-radius: 4px;
             padding: 12px;
             margin-bottom: 20px;
-        }
-        .warning-box strong {
             color: #856404;
+        }
+        .warning-box strong, .warning-box li {
+            color: #856404;
+        }
+        .warning-box ul {
+            margin: 10px 0 0 20px;
         }
     </style>
 {% endblock %}
@@ -90,31 +98,33 @@
 {% endblock %}
 
 {% block content %}
-<h1>{{ title }}</h1>
 
 <div class="wallet-info">
     <h3>🪙 Bitcoin Wallet Information</h3>
-    <p><strong>User:</strong> {{ wallet.user.get_full_name|default:wallet.user.email }}</p>
-    <p><strong>Email:</strong> {{ wallet.user.email }}</p>
-    <p><strong>Wallet Address:</strong> <code>{{ wallet.address }}</code></p>
-    <p><strong>Status:</strong> 
-        {% if wallet.is_active %}
-            <span style="color: green;">✅ Active</span>
-        {% else %}
-            <span style="color: red;">❌ Inactive</span>
-        {% endif %}
-    </p>
-    
-    <div class="balance-info">
-        <div class="balance-item">
-            <strong>Current BTC Balance</strong>
-            <div class="balance-value btc-balance">{{ wallet.balance|floatformat:8 }} BTC</div>
+    <div style="display: flex; flex-wrap: wrap; gap: 30px; align-items: flex-start;">
+        <div style="flex: 1 1 250px; min-width: 220px;">
+            <p><strong>User:</strong> {{ wallet.user.get_full_name|default:wallet.user.email }}</p>
+            <p><strong>Email:</strong> {{ wallet.user.email }}</p>
+            <p><strong>Wallet Address:</strong> <code>{{ wallet.address }}</code></p>
+            <p><strong>Status:</strong> 
+                {% if wallet.is_active %}
+                    <span style="color: green;">✅ Active</span>
+                {% else %}
+                    <span style="color: red;">❌ Inactive</span>
+                {% endif %}
+            </p>
         </div>
-        <div class="balance-item">
-            <strong>USD Equivalent</strong>
-                         <div class="balance-value usd-balance">
-                 ${{ wallet.balance_usd|floatformat:2 }}
-             </div>
+        <div class="balance-info" style="flex: 1 1 250px; min-width: 220px;">
+            <div class="balance-item">
+                <strong>Current BTC Balance</strong>
+                <div class="balance-value btc-balance">{{ wallet.balance|floatformat:8 }} BTC</div>
+            </div>
+            <div class="balance-item">
+                <strong>USD Equivalent</strong>
+                <div class="balance-value usd-balance">
+                    ${{ wallet.balance_usd|floatformat:2 }}
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -131,7 +141,6 @@
 
 <form method="post" novalidate>
     {% csrf_token %}
-    
     <div class="form-group">
         <label for="{{ form.amount.id_for_label }}">{{ form.amount.label }}</label>
         {{ form.amount }}
@@ -140,7 +149,6 @@
         {% endif %}
         {{ form.amount.errors }}
     </div>
-    
     <div class="form-group">
         <label for="{{ form.reason.id_for_label }}">{{ form.reason.label }}</label>
         {{ form.reason }}
@@ -149,10 +157,9 @@
         {% endif %}
         {{ form.reason.errors }}
     </div>
-    
-    <div class="submit-row">
+    <div class="submit-row" style="display: flex; gap: 10px;">
         <input type="submit" value="Add Bitcoin Balance" class="default" />
-        <a href="{% url 'admin:banking_bitcoinwallet_change' wallet.pk %}" class="button cancel-link">Cancel</a>
+        <a href="{% url 'admin:banking_bitcoinwallet_change' wallet.pk %}" class="default" style="background: #dc3545; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; text-decoration: none; display: inline-block; text-align: center;">Cancel</a>
     </div>
 </form>
 

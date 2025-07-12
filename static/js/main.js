@@ -2,7 +2,6 @@
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('PrimeTrust main.js loaded');
     
     // Initialize common functionality
     initializeTooltips();

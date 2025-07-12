@@ -121,9 +121,6 @@ class APILogin {
         
         const totpToken = document.getElementById('totp-token').value;
 
-        console.log('TOTP submit - token:', totpToken);
-        console.log('TOTP submit - loginData:', this.loginData);
-
         if (!totpToken || totpToken.length !== 6) {
             this.showMessage('Please enter a 6-digit authentication code.', 'error');
             return;
@@ -133,7 +130,6 @@ class APILogin {
         this.hideMessage();
 
         try {
-            console.log('Making TOTP verification API call...');
             
             const response = await this.makeAPICall('/api/v1/auth/login/', {
                 email: this.loginData.email,
@@ -141,22 +137,15 @@ class APILogin {
                 totp_token: totpToken
             });
 
-            console.log('TOTP API response:', response);
-
             if (response.success && response.data) {
                 const data = response.data;
                 
-                console.log('TOTP verification successful, data:', data);
-                
                 if (data.access && data.refresh) {
-                    console.log('Tokens received, calling handleLoginSuccess...');
                     this.handleLoginSuccess(data);
                 } else {
-                    console.log('No tokens in response');
                     this.showMessage('Authentication failed. Please check your code.', 'error');
                 }
             } else {
-                console.log('TOTP verification failed:', response.error);
                 this.showMessage(response.error || 'Invalid authentication code.', 'error');
                 // Clear the input for retry
                 document.getElementById('totp-token').value = '';
@@ -219,34 +208,28 @@ class APILogin {
      * Handle successful login
      */
     async handleLoginSuccess(data) {
-        console.log('handleLoginSuccess called with data:', data);
         
         // Store tokens in sessionStorage
         sessionStorage.setItem('access_token', data.access);
         sessionStorage.setItem('refresh_token', data.refresh);
         
-        console.log('Tokens stored in sessionStorage');
         
         this.showMessage('Login successful! Establishing session...', 'success');
         
         try {
-            console.log('Attempting to establish Django session...');
             
             // Establish Django session
             const sessionResponse = await this.makeAPICall('/accounts/establish-session/', {
                 access_token: data.access
             });
             
-            console.log('Session establishment response:', sessionResponse);
             
             if (sessionResponse.success) {
-                console.log('Session established successfully, redirecting to:', sessionResponse.data.redirect_url);
                 // Redirect to dashboard
                 setTimeout(() => {
                     window.location.href = sessionResponse.data.redirect_url || '/dashboard/';
                 }, 500);
             } else {
-                console.log('Session establishment failed, using fallback redirect');
                 // Fall back to storing tokens and redirecting
                 this.showMessage('Login successful! Redirecting...', 'success');
                 setTimeout(() => {
@@ -255,7 +238,6 @@ class APILogin {
             }
         } catch (error) {
             console.error('Session establishment error:', error);
-            console.log('Using fallback redirect due to session error');
             // Fall back to storing tokens and redirecting
             this.showMessage('Login successful! Redirecting...', 'success');
             setTimeout(() => {

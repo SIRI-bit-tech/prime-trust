@@ -161,7 +161,6 @@ function downloadReceipt(isShare = false) {
                         text: 'Bitcoin transaction completed successfully',
                         files: [file]
                     }).catch(err => {
-                        console.log('Error sharing:', err);
                         // Fallback to download
                         downloadCanvas(canvas);
                     });
@@ -171,7 +170,6 @@ function downloadReceipt(isShare = false) {
                 downloadCanvas(canvas);
             }
         }).catch(function(error) {
-            console.log('Error generating receipt:', error);
             document.body.removeChild(tempContainer);
             alert('Error generating receipt. Please try again.');
         });

@@ -114,5 +114,5 @@ try {
     resetAutoRotate();
 });
 } catch (error) {
-    console.log('Carousel initialization skipped due to error:', error);
+    // Remove all console.log statements
 }

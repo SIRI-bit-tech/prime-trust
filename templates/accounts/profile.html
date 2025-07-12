@@ -60,6 +60,40 @@
                 </div>
             </main>
 {% endblock %}
+<script src="{% static 'js/cities.js' %}"></script>
+<script>
+// Dynamic city dropdown for profile form
+(function() {
+  var stateSelect = document.getElementById('id_profile_state');
+  var citySelect = document.getElementById('id_profile_city');
+  if (!stateSelect || !citySelect || !window.US_CITIES) return;
+
+  function populateCities(state) {
+    var cities = window.US_CITIES[state] || [];
+    citySelect.innerHTML = '<option value="">Select City</option>';
+    cities.forEach(function(city) {
+      var opt = document.createElement('option');
+      opt.value = city;
+      opt.textContent = city;
+      citySelect.appendChild(opt);
+    });
+    // If user had a previous value, try to restore it
+    if (citySelect.dataset.selected) {
+      citySelect.value = citySelect.dataset.selected;
+    }
+  }
+
+  // On page load, populate if state is already selected
+  if (stateSelect.value) {
+    citySelect.dataset.selected = citySelect.value;
+    populateCities(stateSelect.value);
+  }
+
+  stateSelect.addEventListener('change', function() {
+    populateCities(this.value);
+  });
+})();
+</script>
 <!-- Bank Info Section -->
 <div class="bg-white shadow overflow-hidden sm:rounded-lg mt-6">
     <div class="border-t border-gray-200 px-4 py-5 sm:p-6">

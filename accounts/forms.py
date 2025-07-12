@@ -312,17 +312,15 @@ class UserProfileUpdateForm(forms.ModelForm):
     city = forms.CharField(
         max_length=100,
         required=False,
-        widget=forms.TextInput(attrs={
+        widget=forms.Select(choices=[('', 'Select City')], attrs={
             'class': 'appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm',
-            'placeholder': 'City'
         })
     )
-    state = forms.CharField(
-        max_length=100,
+    state = forms.ChoiceField(
+        choices=[('', 'Select State')] + US_STATES,
         required=False,
-        widget=forms.TextInput(attrs={
+        widget=forms.Select(attrs={
             'class': 'appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm',
-            'placeholder': 'State'
         })
     )
     profile_picture = forms.ImageField(

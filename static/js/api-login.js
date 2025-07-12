@@ -143,10 +143,12 @@ class APILogin {
                 if (data.access && data.refresh) {
                     this.handleLoginSuccess(data);
                 } else {
-                    this.showMessage('Authentication failed. Please check your code.', 'error');
+                    this.showMessage('Authentication failed. Please check your code. If you believe your code is expired or you have lost access to your authenticator, <a href="/accounts/reset-2fa/" class="text-primary-600 underline">reset 2FA</a>.', 'error');
                 }
             } else {
-                this.showMessage(response.error || 'Invalid authentication code.', 'error');
+                let errorMsg = response.error || 'Invalid or expired authentication code.';
+                errorMsg += ' If you believe your code is expired or you have lost access to your authenticator, <a href="/accounts/reset-2fa/" class="text-primary-600 underline">reset 2FA</a>.';
+                this.showMessage(errorMsg, 'error');
                 // Clear the input for retry
                 document.getElementById('totp-token').value = '';
                 document.getElementById('totp-token').focus();
@@ -188,10 +190,12 @@ class APILogin {
                 if (data.access && data.refresh) {
                     this.handleLoginSuccess(data);
                 } else {
-                    this.showMessage('Authentication failed. Please check your backup code.', 'error');
+                    this.showMessage('Authentication failed. Please check your backup code. If you have lost access to your authenticator and backup codes, <a href="/accounts/reset-2fa/" class="text-primary-600 underline">reset 2FA</a>.', 'error');
                 }
             } else {
-                this.showMessage(response.error || 'Invalid backup code.', 'error');
+                let errorMsg = response.error || 'Invalid or expired backup code.';
+                errorMsg += ' If you have lost access to your authenticator and backup codes, <a href="/accounts/reset-2fa/" class="text-primary-600 underline">reset 2FA</a>.';
+                this.showMessage(errorMsg, 'error');
                 // Clear the input for retry
                 document.getElementById('backup-code').value = '';
                 document.getElementById('backup-code').focus();
